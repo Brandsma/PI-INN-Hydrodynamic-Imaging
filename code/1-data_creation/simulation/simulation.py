@@ -48,9 +48,9 @@ def save_simulation_data(vx_data, vy_data, path):
 def simulate(theta,
              a,
              norm_w,
-             sensor_range=(1, 33),
-             x_range=(1, 21),
-             y_range=(1, 11),
+             sensor_range=(1, 64),
+             x_range=(1, 10000),
+             y_range=(4, 6),
              sampling_rate=1,
              folder_path="../../data/"):
     sensors = list(range(sensor_range[0],
@@ -89,10 +89,10 @@ def simulate_new(theta,
                  a,
                  norm_w,
                  sensor_range=(0, 64),
-                 x_range=(0, 100),
-                 y_range=(0, 10),
-                 sampling_rate=10,
-                 folder_path="../../data/"):
+                 x_range=(0, 10000),
+                 y_range=(0, 5),
+                 sampling_rate=1,
+                 folder_path="../../../data/"):
 
     sensors = list(range(sensor_range[0], sensor_range[1] * sampling_rate))
     input_sensors = list(
