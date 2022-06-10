@@ -1,9 +1,6 @@
-simulation/data/
-data/
 *.png
 *.data
 PINNs/
-*.csv
 flycheck_*
 */created_model/*
 created_models/
