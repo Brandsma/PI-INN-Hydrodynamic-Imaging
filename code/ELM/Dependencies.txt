@@ -1,6 +1,0 @@
-Python          2.7.15rc1  
-Tensorflow      1.7.0
-Matplotlib      2.2.2
-Keras           2.1.6
-scipy           0.18.1
-numpy           1.14.2           
