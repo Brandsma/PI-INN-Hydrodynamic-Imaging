@@ -276,6 +276,22 @@ class LSTM_network:
         return tot_batches
 
     """
+    LSTM_network::save_model()
+    - public function
+    - used to save plots and text files of network performance. plots are train and validation loss over training time,
+      and plain txt files contain settings and loss values over time.
+    """
+
+    def save_model(self, model_location):
+        print("\nSaving model...")
+        isExist = os.path.exists(model_location)
+        if not isExist:
+            # Create a new directory because it does not exist
+            os.makedirs(model_location)
+
+        self.model.save(model_location)
+
+    """
     LSTM_network::save_results()
     - public function
     - used to save plots and text files of network performance. plots are train and validation loss over training time,
