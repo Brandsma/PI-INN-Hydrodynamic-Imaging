@@ -9,7 +9,7 @@ import numpy as np
 import pydot
 from scipy.spatial.distance import euclidean
 from tensorflow.keras import backend as K
-from tensorflow.keras import optimizers
+from tensorflow.keras import losses, optimizers
 from tensorflow.keras.layers import LSTM, Activation, Dense, Dropout, Masking
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import plot_model
@@ -81,7 +81,7 @@ class LSTM_network:
                                        epsilon=None,
                                        decay=decay,
                                        clipnorm=1.)
-        model.compile(loss=self.__euclidean_error_loss, optimizer=optimizer)
+        model.compile(loss=losses.MeanSquaredError(), optimizer=optimizer)
         # Return the resulting model
         return model
 
