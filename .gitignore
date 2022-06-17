@@ -4,7 +4,13 @@ PINNs/
 flycheck_*
 */created_model/*
 created_models/
+*/trained_models/*
+trained_models/
 *.~undo-tree~
+
+# May want this, but for now keep it out
+results/
+*/results/*
 
 thirdparty/
 
