@@ -9,37 +9,30 @@ from src import LSTM, params
 
 
 def read_inputs():
-    if len(sys.argv) == 11:
-        n_nodes, n_epochs, window_size, stride = [
-            int(i) for i in sys.argv[1:5]
-        ]
-        alpha, decay, data_split, dropout = [float(i) for i in sys.argv[5:9]]
-        train_loc, ac_fun = sys.argv[9:]
-        return n_nodes, n_epochs, window_size, stride, \
-               alpha, decay, data_split, dropout, train_loc, ac_fun
-    else:
-        print("[[WARNING]] Incorrect number of arguments specified.")
-        print("[[WARNING]] Using default arguments.")
-        # return [
-        #     100, 30, 15, 2, 0.05, 1e-9, 0.8, 0,
-        #     "../old/data/deflection-reconstructed_data/Experiment_II/clearsignal_close.mat",
-        #     "relu"
-        # ]
-        return [
-            100, 30, 15, 2, 0.05, 1e-9, 0.8, 0,
-            "../../data/a1_normw1_theta0.npy", "relu"
-        ]
+    n_nodes = 100
+    n_epochs = 10
+    window_size = 16
+    stride = 2
+    alpha = 0.05
+    decay = 1e-9
+    shuffle_data = True
+    data_split = 0.8
+    dropout = 0
+    train_loc = "../../data/a1_theta0.npy"
+    ac_fun = "relu"
+    return n_nodes, n_epochs, window_size, stride, \
+        alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
 
 
 if __name__ == "__main__":
 
     (n_nodes, n_epochs, window_size, stride, alpha, decay, \
-     data_split, dropout_ratio, train_location, ac_fun) =  \
+     shuffle_data, data_split, dropout_ratio, train_location, ac_fun) =  \
         read_inputs()
 
     # Load settings
     settings = params.Settings(window_size, stride, n_nodes, \
-               alpha, decay, n_epochs, data_split, dropout_ratio, \
+                               alpha, decay, n_epochs, shuffle_data, data_split, dropout_ratio, \
                train_location, ac_fun)
     # Load data
     data = params.Data(settings, train_location)
@@ -49,9 +42,11 @@ if __name__ == "__main__":
     # Train the network
     network.train()
     # Test the network
-    network.test(data.test_data, data.test_labels)
+    # network.test(data.test_data, data.test_labels)
 
-    network.save_model("./models/latest")
+    network.save_model(
+        f"./trained_models/win{window_size}_stride{stride}_epochs{n_epochs}_latest"
+    )
 
     # Save results
     network.save_results()
