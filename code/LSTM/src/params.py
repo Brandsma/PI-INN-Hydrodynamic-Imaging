@@ -12,7 +12,8 @@ Settings class.
 
 class Settings:
     def __init__(self, window_size, stride, n_nodes, alpha, decay, n_epochs,
-                 data_split, dropout_ratio, train_location, ac_fun):
+                 shuffle_data, data_split, dropout_ratio, train_location,
+                 ac_fun):
         # Window size
         self.window_size = window_size
         # Stride
@@ -25,6 +26,8 @@ class Settings:
         self.decay = decay  #0#1e-6
         # Number of Epochs (total iterations over all data)
         self.n_epochs = n_epochs  #30
+        # Whether or not to shuffle the data
+        self.shuffle_data = shuffle_data
         # Train-test split
         self.data_split = data_split  #0.80
         # Dropout layer ratio
@@ -57,6 +60,8 @@ class Settings:
         print("Number of Epochs: \t", self.n_epochs)
         print("Window size: \t\t", self.window_size)
         print("Stride:\t\t\t", self.stride)
+        print("Shuffling Data:\t\t\t", self.shuffle_data)
+        print("Data Split:\t\t\t", self.data_split)
         print("Learning rate (alpha): \t", self.alpha)
         print("Decay rate: \t\t", self.decay)
         print("Dropout ratio: \t\t", self.dropout_ratio)
@@ -84,11 +89,8 @@ class Data:
 
         self.settings = settings
         # load data
-        if os.path.splitext(location)[-1] == ".mat":
-            d_1, l_1, d_2, l_2, d_3, l_3, = self.__load_data(
-                location, settings.data_split)
-        elif os.path.splitext(location)[-1] == ".npy":
-            d_1, l_1, d_2, l_2, d_3, l_3, = self.__load_data_numpy(
+        if os.path.splitext(location)[-1] == ".npy":
+            d_1, l_1, d_2, l_2, d_3, l_3, t_1, t_2, t_3 = self.__load_data_numpy(
                 location, settings.data_split)
         else:
             print(
@@ -103,6 +105,10 @@ class Data:
         self.test_labels = l_2
         self.val_data = d_3
         self.val_labels = l_3
+
+        self.test_timestamp = t_1
+        self.val_timestamp = t_2
+        self.test_timestamp = t_3
 
         # extract dimensionality and length of data.
         self.n_inputs = np.shape(self.train_data[0])[1]
@@ -121,46 +127,16 @@ class Data:
     def __load_data_numpy(self, file_location, split_ratio):
         print("Loading numpy data")
         # Extract name of numpy struct from file and load it
-        label_name = os.path.splitext(file_location)
-        labels = np.load(f"{label_name[0]}_labels{label_name[-1]}")
+        base_name = os.path.splitext(file_location)
+        labels = np.load(f"{base_name[0]}_labels{base_name[-1]}")
         data = np.load(file_location)
+        timestamp = np.load(f"{base_name[0]}_timestamp{base_name[-1]}")
 
         # Split data into train, test and validation sets.
-        train_d, train_l, test_d, test_l, val_d, val_l = \
-            self.__split_data(data, labels, split_ratio)
+        train_d, train_l, test_d, test_l, val_d, val_l, train_t, val_t, test_t = \
+            self.__split_data(data, labels, timestamp, split_ratio)
 
-        return train_d, train_l, test_d, test_l, val_d, val_l
-
-    """
-    Data::__load_data(location):
-    - private function
-    - loads data provided by location, and returns split
-      train, test and validation data and label sets.
-    """
-
-    def __load_data(self, file_location, split_ratio):
-        # Extract name of matlab struct from file and load it
-        matfile_name = sio.whosmat(file_location)[0][0]
-        loaded_file = sio.loadmat(file_location)[matfile_name]
-
-        # Split into labels and data
-        # if first name is not label, switch them
-        if loaded_file.dtype.names[0].find('lab') == -1:
-            data_name, label_name = loaded_file.dtype.names
-        else:
-            label_name, data_name = loaded_file.dtype.names
-        all_data = loaded_file[data_name][0]
-        all_labels = loaded_file[label_name][0]
-
-        print(all_data.shape)
-        print(all_data[0].shape)
-        print(all_data[0][0].shape)
-
-        # Split data into train, test and validation sets.
-        train_d, train_l, test_d, test_l, val_d, val_l = \
-            self.__split_data(all_data, all_labels, split_ratio)
-
-        return train_d, train_l, test_d, test_l, val_d, val_l
+        return train_d, train_l, test_d, test_l, val_d, val_l, train_t, val_t, test_t
 
     """
     Data::__split_data(data, labels, train_test_ratio):
@@ -169,12 +145,15 @@ class Data:
       train_test_ratio.
     """
 
-    def __split_data(self, data, labels, train_test_ratio):
+    def __split_data(self, data, labels, timestamp, train_test_ratio):
         # Take the number of data points
         n_entries = len(data)
 
         # Generate a random permutation of indices
-        perm = np.random.permutation(n_entries)
+        if self.settings.shuffle_data:
+            perm = np.random.permutation(n_entries)
+        else:
+            perm = np.arange(n_entries)
 
         # Determine indices for train, validation and test sets
         train_idx = int(train_test_ratio * n_entries)
@@ -190,5 +169,9 @@ class Data:
         val_labels = labels[perm[train_idx:val_idx]]
         test_labels = labels[perm[val_idx:test_idx]]
 
+        train_timestamp = timestamp[perm[0:train_idx]]
+        val_timestamp = timestamp[perm[train_idx:val_idx]]
+        test_timestamp = timestamp[perm[val_idx:test_idx]]
+
         return (train_data, train_labels, test_data, test_labels, val_data,
-                val_labels)
+                val_labels, train_timestamp, val_timestamp, test_timestamp)
