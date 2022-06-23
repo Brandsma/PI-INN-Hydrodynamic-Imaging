@@ -3,6 +3,7 @@ import os
 import shutil
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -37,20 +38,24 @@ def v_y(s, x, y, theta, a, norm_w):
 def simulate(theta,
              a,
              norm_w,
-             sensor_range=(0, 64),
-             x_range=(-32, 32),
-             y_range=(2, 3),
+             sensor_range=(-200, 200),
+             number_of_sensors=64,
+             x_range=(-500, 500),
+             y_range=(0, 500),
              number_of_x_steps=1024,
-             number_of_runs=120,
-             sampling_rate=1,
+             number_of_y_steps=1,
+             simulation_area_offset=25,
+             number_of_runs=16,
+             add_noise=True,
              folder_path="../../../data/"):
 
     input_sensors = list(
-        np.arange(x_range[0], x_range[1], (x_range[1] - x_range[0]) /
-                  (sensor_range[1] * sampling_rate)))
-    x_input = list(
-        np.arange(x_range[0], x_range[1],
-                  (abs(x_range[0]) + abs(x_range[1])) / number_of_x_steps))
+        np.linspace(sensor_range[0], sensor_range[1], num=number_of_sensors))
+    x_input = list(np.linspace(x_range[0], x_range[1], num=number_of_x_steps))
+    y_input = list(
+        np.linspace(y_range[0] + simulation_area_offset,
+                    y_range[1] + simulation_area_offset,
+                    num=number_of_y_steps))
     time_step = abs(x_input[1] - x_input[0]) / norm_w
     start_time = 0
 
@@ -62,24 +67,24 @@ def simulate(theta,
         data = []
         labels = []
         timestamp = []
-        for y in range(y_range[0], y_range[1]):
+        for y_idx, y in enumerate(y_input):
             data.append([])
             labels.append([])
             timestamp.append([])
             for x_idx, x in enumerate(x_input):
-                data[y - y_range[0]].append([])
-                labels[y - y_range[0]].append([])
-                timestamp[y - y_range[0]].append([])
+                data[y_idx].append([])
+                labels[y_idx].append([])
+                timestamp[y_idx].append([])
                 for input_sensor in input_sensors:
                     # NOTE: the x and y coordinates are different than the array coordinates
-                    data[y - y_range[0]][x_idx].append(
+                    data[y_idx][x_idx].append(
                         v_x(input_sensor, x, y + 1, theta, a, norm_w))
-                    data[y - y_range[0]][x_idx].append(
+                    data[y_idx][x_idx].append(
                         v_y(input_sensor, x, y + 1, theta, a, norm_w))
 
-                labels[y - y_range[0]][x_idx].append(x)
-                labels[y - y_range[0]][x_idx].append(y + 1)
-                timestamp[y - y_range[0]][x_idx].append(time)
+                labels[y_idx][x_idx].append(x)
+                labels[y_idx][x_idx].append(y + 1)
+                timestamp[y_idx][x_idx].append(time)
                 time += time_step
 
         all_data.append(data)
@@ -93,6 +98,7 @@ def simulate(theta,
     all_data = np.array(all_data)
     all_labels = np.array(all_labels)
     all_timestamp = np.array(all_timestamp)
+
     all_data = np.reshape(all_data, (all_data.shape[0], all_data.shape[1] *
                                      all_data.shape[2], all_data.shape[3]))
     all_labels = np.reshape(all_labels,
@@ -101,6 +107,16 @@ def simulate(theta,
     all_timestamp = np.reshape(
         all_timestamp, (all_timestamp.shape[0], all_timestamp.shape[1] *
                         all_timestamp.shape[2], all_timestamp.shape[3]))
+
+    # x_pos = 127
+    # indices_to_plot = np.arange(x_pos % 2, len(all_data[0, x_pos]), 2)
+    # to_plot = np.take(all_data, indices_to_plot, axis=2)[0, x_pos]
+    # plt.plot(to_plot)
+    # x_pos = 128
+    # indices_to_plot = np.arange(x_pos % 2, len(all_data[0, x_pos]), 2)
+    # to_plot = np.take(all_data, indices_to_plot, axis=2)[0, x_pos]
+    # plt.plot(to_plot)
+    # plt.show()
 
     print(all_data.shape)
     print(all_labels.shape)
@@ -117,8 +133,9 @@ def main():
     # a_set = [
     #     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
     # ]
-    w_set = [1, 2, 3, 4, 5]
-    a_set = [1]
+    # w_set = [1, 2, 3, 4, 5]
+    w_set = [10, 20, 30, 40, 50]
+    a_set = [10]
     theta = 0
     count = 0
     for norm_w in w_set:
