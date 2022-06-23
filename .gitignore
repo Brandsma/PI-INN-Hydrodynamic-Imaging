@@ -20,6 +20,10 @@ results/
 results/
 */results/*
 
+# May want this, but for now keep it out
+results/
+*/results/*
+
 thirdparty/
 
 # Byte-compiled / optimized / DLL files
