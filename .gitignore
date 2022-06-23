@@ -8,7 +8,9 @@ created_models/
 trained_models/
 *.~undo-tree~
 data/
+*/data/*
 ..bfg-report/
+.#*
 
 # May want this, but for now keep it out
 results/
