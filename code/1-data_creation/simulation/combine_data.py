@@ -6,11 +6,11 @@ import numpy as np
 def main():
     folder_path = "../../../data/"
     base_names = [
-        "a1_normw1_theta0.npy",
-        "a1_normw2_theta0.npy",
-        "a1_normw3_theta0.npy",
-        "a1_normw4_theta0.npy",
-        "a1_normw5_theta0.npy",
+        "a10_normw10_theta0.npy",
+        "a10_normw20_theta0.npy",
+        "a10_normw30_theta0.npy",
+        "a10_normw40_theta0.npy",
+        "a10_normw50_theta0.npy",
     ]
     for idx in range(len(base_names)):
         base_names[idx] = folder_path + base_names[idx]
@@ -35,9 +35,9 @@ def main():
     print(all_labels.shape)
     print(all_timestamp.shape)
 
-    np.save("../../../data/a1_theta0.npy", all_data)
-    np.save("../../../data/a1_theta0_labels.npy", all_labels)
-    np.save("../../../data/a1_theta0_timestamp.npy", all_timestamp)
+    np.save("../../../data/a10_theta0.npy", all_data)
+    np.save("../../../data/a10_theta0_labels.npy", all_labels)
+    np.save("../../../data/a10_theta0_timestamp.npy", all_timestamp)
 
 
 if __name__ == '__main__':

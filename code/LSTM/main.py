@@ -10,7 +10,7 @@ from src import LSTM, params
 
 def read_inputs():
     n_nodes = 100
-    n_epochs = 10
+    n_epochs = 30
     window_size = 16
     stride = 2
     alpha = 0.05
@@ -18,7 +18,7 @@ def read_inputs():
     shuffle_data = True
     data_split = 0.8
     dropout = 0
-    train_loc = "../../data/a1_theta0.npy"
+    train_loc = "../../data/a10_theta0.npy"
     ac_fun = "relu"
     return n_nodes, n_epochs, window_size, stride, \
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
