@@ -45,8 +45,10 @@ def simulate(theta,
              number_of_x_steps=1024,
              number_of_y_steps=1,
              simulation_area_offset=25,
-             number_of_runs=16,
+             number_of_runs=128,
              add_noise=True,
+             noise_power=1.5e-5,
+             backward_and_forward_runs=True,
              folder_path="../../../data/"):
 
     input_sensors = list(
@@ -63,6 +65,8 @@ def simulate(theta,
     all_labels = []
     all_timestamp = []
     for _ in tqdm(range(number_of_runs)):
+        if backward_and_forward_runs:
+            x_input = list(reversed(x_input))
         time = start_time
         data = []
         labels = []
@@ -87,6 +91,9 @@ def simulate(theta,
                 timestamp[y_idx][x_idx].append(time)
                 time += time_step
 
+                if add_noise:
+                    data[y_idx][x_idx] += np.random.normal(
+                        0, noise_power, len(data[y_idx][x_idx]))
         all_data.append(data)
         all_labels.append(labels)
         all_timestamp.append(timestamp)
@@ -108,11 +115,11 @@ def simulate(theta,
         all_timestamp, (all_timestamp.shape[0], all_timestamp.shape[1] *
                         all_timestamp.shape[2], all_timestamp.shape[3]))
 
-    # x_pos = 127
+    # x_pos = 511
     # indices_to_plot = np.arange(x_pos % 2, len(all_data[0, x_pos]), 2)
     # to_plot = np.take(all_data, indices_to_plot, axis=2)[0, x_pos]
     # plt.plot(to_plot)
-    # x_pos = 128
+    # x_pos = 512
     # indices_to_plot = np.arange(x_pos % 2, len(all_data[0, x_pos]), 2)
     # to_plot = np.take(all_data, indices_to_plot, axis=2)[0, x_pos]
     # plt.plot(to_plot)

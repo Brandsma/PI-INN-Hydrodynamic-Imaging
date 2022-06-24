@@ -9,7 +9,7 @@ from src import LSTM, params
 
 
 def read_inputs():
-    n_nodes = 100
+    n_nodes = 128
     n_epochs = 30
     window_size = 16
     stride = 2
@@ -39,13 +39,14 @@ if __name__ == "__main__":
 
     # Initiate the LSTM network using data and settings
     network = LSTM.LSTM_network(data, settings)
+    network.model.summary()
     # Train the network
     network.train()
     # Test the network
-    # network.test(data.test_data, data.test_labels)
+    network.test(data.test_data, data.test_labels)
 
     network.save_model(
-        f"./trained_models/win{window_size}_stride{stride}_epochs{n_epochs}_latest"
+        f"./trained_models/win{window_size}_stride{stride}_epochs{n_epochs}_dropout{dropout_ratio}_latest"
     )
 
     # Save results
