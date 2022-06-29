@@ -58,6 +58,7 @@ def simulate(theta,
         np.linspace(y_range[0] + simulation_area_offset,
                     y_range[1] + simulation_area_offset,
                     num=number_of_y_steps))
+    print("y_input", y_input)
     time_step = abs(x_input[1] - x_input[0]) / norm_w
     start_time = 0
 
