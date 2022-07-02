@@ -2,6 +2,7 @@ import math
 import os
 import shutil
 from pathlib import Path
+from combine_data import get_scratch_dir
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,7 +46,7 @@ def simulate(theta,
              number_of_x_steps=1024,
              number_of_y_steps=1,
              simulation_area_offset=25,
-             number_of_runs=128,
+             number_of_runs=32,
              add_noise=True,
              noise_power=1.5e-5,
              backward_and_forward_runs=True,
@@ -58,7 +59,6 @@ def simulate(theta,
         np.linspace(y_range[0] + simulation_area_offset,
                     y_range[1] + simulation_area_offset,
                     num=number_of_y_steps))
-    print("y_input", y_input)
     time_step = abs(x_input[1] - x_input[0]) / norm_w
     start_time = 0
 
@@ -142,19 +142,19 @@ def main():
     #     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
     # ]
     # w_set = [1, 2, 3, 4, 5]
-    w_set = [10]
-    # w_set = [10, 20, 30, 40, 50]
+    # w_set = [10]
+    w_set = [10, 20, 30, 40, 50]
     # a_set = [10]
     a_set = [10, 20, 30, 40, 50]
+    folder_path = get_scratch_dir() + "/data/"
 
     theta = 0
     count = 0
     print("w_set", w_set, "a_set", a_set)
-    exit()
     for norm_w in w_set:
         for a in a_set:
             print(f"Simulating set {count}/{len(w_set)*len(a_set)}...")
-            simulate(theta, a, norm_w)
+            simulate(theta, a, norm_w, folder_path=folder_path)
             count += 1
 
 
