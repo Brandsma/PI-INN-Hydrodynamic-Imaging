@@ -1,16 +1,25 @@
 # Use modules to keep code organized
+from pathlib import Path
 import os
-import sys
-
-import numpy as np
-import scipy.io as sio
 
 from src import LSTM, params
 
 
+def get_scratch_dir():
+    # Find the folder where the data should be found and should be saved
+    data_folder_key = "SCRATCHDIR"
+    SCRATCHDIR = os.getenv(data_folder_key)
+    if SCRATCHDIR is None:
+        print(f"{data_folder_key} environment variable does not exist")
+        exit(1)
+    if SCRATCHDIR[-1] == "/":
+        SCRATCHDIR = SCRATCHDIR[:-1]
+
+    return SCRATCHDIR
+
 def read_inputs():
     n_nodes = 128
-    n_epochs = 30
+    n_epochs = 1
     window_size = 16
     stride = 2
     alpha = 0.05
@@ -18,7 +27,7 @@ def read_inputs():
     shuffle_data = True
     data_split = 0.8
     dropout = 0
-    train_loc = "../../data/a10_theta0.npy"
+    train_loc = get_scratch_dir() + "/data/combined.npy"
     ac_fun = "relu"
     return n_nodes, n_epochs, window_size, stride, \
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
@@ -42,12 +51,16 @@ if __name__ == "__main__":
     network.model.summary()
     # Train the network
     network.train()
-    # Test the network
-    network.test(data.test_data, data.test_labels)
 
+    # Save the network for later use
+    trained_models_folder = "/home/abe/thesis_data/trained_models/"
+    Path(trained_models_folder).mkdir(parents=True, exist_ok=True)
     network.save_model(
-        f"./trained_models/win{window_size}_stride{stride}_epochs{n_epochs}_dropout{dropout_ratio}_a_latest"
+        f"{trained_models_folder}win{window_size}_stride{stride}_epochs{n_epochs}_dropout{dropout_ratio}_latest"
     )
 
-    # Save results
-    network.save_results()
+
+    # # Test the network
+    # network.test(data.test_data, data.test_labels)
+    # # Save results
+    # network.save_results()
