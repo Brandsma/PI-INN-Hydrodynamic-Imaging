@@ -46,7 +46,7 @@ if __name__ == "__main__":
     network.test(data.test_data, data.test_labels)
 
     network.save_model(
-        f"./trained_models/win{window_size}_stride{stride}_epochs{n_epochs}_dropout{dropout_ratio}_latest"
+        f"./trained_models/win{window_size}_stride{stride}_epochs{n_epochs}_dropout{dropout_ratio}_a_latest"
     )
 
     # Save results

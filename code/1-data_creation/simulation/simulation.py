@@ -142,10 +142,15 @@ def main():
     #     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
     # ]
     # w_set = [1, 2, 3, 4, 5]
-    w_set = [10, 20, 30, 40, 50]
-    a_set = [10]
+    w_set = [10]
+    # w_set = [10, 20, 30, 40, 50]
+    # a_set = [10]
+    a_set = [10, 20, 30, 40, 50]
+
     theta = 0
     count = 0
+    print("w_set", w_set, "a_set", a_set)
+    exit()
     for norm_w in w_set:
         for a in a_set:
             print(f"Simulating set {count}/{len(w_set)*len(a_set)}...")

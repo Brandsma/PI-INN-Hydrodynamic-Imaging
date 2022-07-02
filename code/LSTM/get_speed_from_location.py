@@ -32,7 +32,7 @@ def get_speed_from_data(data, labels, timestamp, model, window_size = 16):
 
     speeds = []
     real_speeds = []
-    for idx in range(0, 1024, window_size * 32):
+    for idx in range(0, 1024, window_size * 8):
         input_data = data[idx:idx + window_size]
         input_data = np.reshape(input_data, (1, window_size, 128))
         y_pred = model.predict(input_data)
@@ -68,7 +68,7 @@ def get_speed_from_data(data, labels, timestamp, model, window_size = 16):
         prev_x = y_pred[0][0]
         prev_x_label = x_label
         prev_time = time
-    return speeds, real_speeds
+    return np.mean(speeds), np.mean(real_speeds)
 
 def main():
     (n_nodes, n_epochs, window_size, stride, alpha, decay, \
@@ -94,9 +94,9 @@ def main():
     # run_idx = 8
 
     for run_idx in tqdm(range(data.test_data.shape[0])):
-        temp_speeds, temp_real_speeds = get_speed_from_data(data.test_data[run_idx], data.test_labels[run_idx], data.test_timestamp[run_idx], new_model)
-        speeds.append(*temp_speeds)
-        real_speeds.append(*temp_real_speeds)
+        speed_results = get_speed_from_data(data.test_data[run_idx], data.test_labels[run_idx], data.test_timestamp[run_idx], new_model)
+        speeds.append(speed_results[0])
+        real_speeds.append(speed_results[1])
 
 
     plt.plot(speeds, "bo", label="Predicted Speed")
