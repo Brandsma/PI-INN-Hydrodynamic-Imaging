@@ -1,22 +1,11 @@
 # Use modules to keep code organized
 from pathlib import Path
 import os
+from lib.peregrine_util import get_scratch_dir
 
-from src import LSTM, params
+from lib import LSTM, params
 
-
-def get_scratch_dir():
-    # Find the folder where the data should be found and should be saved
-    data_folder_key = "SCRATCHDIR"
-    SCRATCHDIR = os.getenv(data_folder_key)
-    if SCRATCHDIR is None:
-        print(f"{data_folder_key} environment variable does not exist")
-        exit(1)
-    if SCRATCHDIR[-1] == "/":
-        SCRATCHDIR = SCRATCHDIR[:-1]
-
-    return SCRATCHDIR
-
+# TODO: remove read_inputs and replace it with CLI arguments
 def read_inputs():
     n_nodes = 128
     n_epochs = 30
@@ -27,7 +16,8 @@ def read_inputs():
     shuffle_data = True
     data_split = 0.8
     dropout = 0
-    train_loc = get_scratch_dir() + "/data/combined.npy"
+    # train_loc = get_scratch_dir() + "/data/combined.npy"
+    train_loc = "../data/simulation_data/combined.npy"
     ac_fun = "relu"
     return n_nodes, n_epochs, window_size, stride, \
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun

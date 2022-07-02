@@ -1,26 +1,24 @@
-import math
-import os
-import shutil
 from pathlib import Path
-from combine_data import get_scratch_dir
+import os
+from lib.peregrine_util import get_scratch_dir
+from lib.logger import setup_logger
 
-import matplotlib.pyplot as plt
+import math
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
 
+log = setup_logger(__name__)
+
+## Velocity Profiles ##
 
 def wavelet_e(p):
     return (1 - 2 * p**2) / ((1 + p**2)**(5 / 2))
 
-
 def wavelet_o(p):
     return (-3 * p) / ((1 + p**2)**(5 / 2))
 
-
 def wavelet_n(p):
     return (2 - p**2) / ((1 + p**2)**(5 / 2))
-
 
 def v_x(s, x, y, theta, a, norm_w):
     p = (s - x) / y
@@ -28,13 +26,13 @@ def v_x(s, x, y, theta, a, norm_w):
     return C * (wavelet_o(p) * math.sin(theta) -
                 wavelet_e(p) * math.cos(theta))
 
-
 def v_y(s, x, y, theta, a, norm_w):
     p = (s - x) / y
     C = (norm_w * a**3) / (2 * y**3)
     return C * (wavelet_n(p) * math.sin(theta) -
                 wavelet_o(p) * math.cos(theta))
 
+## Simulation ##
 
 def simulate(theta,
              a,
@@ -46,11 +44,11 @@ def simulate(theta,
              number_of_x_steps=1024,
              number_of_y_steps=1,
              simulation_area_offset=25,
-             number_of_runs=32,
+             number_of_runs=128,
              add_noise=True,
              noise_power=1.5e-5,
              backward_and_forward_runs=True,
-             folder_path="../../../data/"):
+             folder_path="../../data/simulation/"):
 
     input_sensors = list(
         np.linspace(sensor_range[0], sensor_range[1], num=number_of_sensors))
@@ -116,45 +114,34 @@ def simulate(theta,
         all_timestamp, (all_timestamp.shape[0], all_timestamp.shape[1] *
                         all_timestamp.shape[2], all_timestamp.shape[3]))
 
-    # x_pos = 511
-    # indices_to_plot = np.arange(x_pos % 2, len(all_data[0, x_pos]), 2)
-    # to_plot = np.take(all_data, indices_to_plot, axis=2)[0, x_pos]
-    # plt.plot(to_plot)
-    # x_pos = 512
-    # indices_to_plot = np.arange(x_pos % 2, len(all_data[0, x_pos]), 2)
-    # to_plot = np.take(all_data, indices_to_plot, axis=2)[0, x_pos]
-    # plt.plot(to_plot)
-    # plt.show()
-
-    print(all_data.shape)
-    print(all_labels.shape)
-    print(all_timestamp.shape)
+    log.debug(all_data.shape)
+    log.debug(all_labels.shape)
+    log.debug(all_timestamp.shape)
     np.save(data_path, all_data)
     np.save(labels_path, all_labels)
     np.save(timestamp_path, all_timestamp)
 
 
 def main():
-    # w_set = [
-    #     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
-    # ]
-    # a_set = [
-    #     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
-    # ]
-    # w_set = [1, 2, 3, 4, 5]
     # w_set = [10]
     w_set = [10, 20, 30, 40, 50]
-    # a_set = [10]
     a_set = [10, 20, 30, 40, 50]
-    folder_path = get_scratch_dir() + "/data/"
+    # a_set = [10, 20, 30, 40, 50]
+    # folder_path = get_scratch_dir() + "/data/"
+    folder_path = "../data/simulation_data/"
     Path(folder_path).mkdir(parents=True, exist_ok=True)
+
+    old_data_files = os.listdir(folder_path)
+    for old_data_file in old_data_files:
+        if old_data_file.endswith(".npy"):
+            os.remove(os.path.join(folder_path, old_data_file))
 
     theta = 0
     count = 0
-    print("w_set", w_set, "a_set", a_set)
+    log.debug("w_set", w_set, "a_set", a_set)
     for norm_w in w_set:
         for a in a_set:
-            print(f"Simulating set {count}/{len(w_set)*len(a_set)}...")
+            log.info(f"Simulating set {count}/{len(w_set)*len(a_set)}...")
             simulate(theta, a, norm_w, folder_path=folder_path)
             count += 1
 

@@ -1,40 +1,23 @@
-import os
+import glob, os
+# TODO: ensure scratch dir exists when getting it
+from lib.peregrine_util import ensure_scratch_dir
 from pathlib import Path
 
 import numpy as np
 
 def find_files(folder_path: str):
-    # a_set = [10, 20, 30, 40, 50]
-    # w_set = [10, 20, 30, 40, 50]
-    a_set = [10, 20]
-    w_set = [10]
-
     base_names = []
-
-    for a in a_set:
-        for w in w_set:
-            base_names.append(f"a{a}_normw{w}_theta0.npy")
-
-    for idx in range(len(base_names)):
-        base_names[idx] = folder_path + base_names[idx]
+    for filename in glob.glob(f"{folder_path}/*_theta0.npy"):
+        base_names.append(filename)
 
     return base_names
 
-def get_scratch_dir():
-    # Find the folder where the data should be found and should be saved
-    data_folder_key = "SCRATCHDIR"
-    SCRATCHDIR = os.getenv(data_folder_key)
-    if SCRATCHDIR is None:
-        print(f"{data_folder_key} environment variable does not exist")
-        exit(1)
-    if SCRATCHDIR[-1] == "/":
-        SCRATCHDIR = SCRATCHDIR[:-1]
-
-    return SCRATCHDIR
 
 def main():
-    SCRATCHDIR = get_scratch_dir()
-    folder_path = f"{SCRATCHDIR}/data/"
+    # TODO: Make this scratch dir dependent on Peregrine environment variables
+    # SCRATCHDIR = ensure_scratch_dir()
+    # folder_path = f"{SCRATCHDIR}/data/"
+    folder_path = "../data/simulation_data/"
     Path(folder_path).mkdir(parents=True, exist_ok=True)
 
     # Find the names of the files to be combined

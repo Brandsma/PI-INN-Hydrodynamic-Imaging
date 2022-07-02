@@ -7,7 +7,7 @@ import tensorflow as tf
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-from src.params import Data, Settings
+from lib.params import Data, Settings
 
 
 def read_inputs():
@@ -20,7 +20,7 @@ def read_inputs():
     shuffle_data = True
     data_split = 0.8
     dropout = 0
-    train_loc = "../../data/a10_theta0.npy"
+    train_loc = "../data/simulation_data/combined.npy"
     ac_fun = "relu"
     return n_nodes, n_epochs, window_size, stride, \
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
