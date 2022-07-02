@@ -147,6 +147,7 @@ def main():
     # a_set = [10]
     a_set = [10, 20, 30, 40, 50]
     folder_path = get_scratch_dir() + "/data/"
+    Path(folder_path).mkdir(parents=True, exist_ok=True)
 
     theta = 0
     count = 0
