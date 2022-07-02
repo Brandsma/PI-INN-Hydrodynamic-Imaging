@@ -19,7 +19,7 @@ def get_scratch_dir():
 
 def read_inputs():
     n_nodes = 128
-    n_epochs = 1
+    n_epochs = 30
     window_size = 16
     stride = 2
     alpha = 0.05
