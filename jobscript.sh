@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --time=04:59:59
+#SBATCH --time=02:59:59
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks=1
-#SBATCH --mem=8000
+#SBATCH --mem=3000
 #SBATCH --mail-type=BEGIN,END,TIME_LIMIT
 #SBATCH --mail-user=a.brandsma.6@student.rug.nl
  

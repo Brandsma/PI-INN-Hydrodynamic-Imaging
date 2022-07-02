@@ -1,9 +1,9 @@
 from scipy.optimize import curve_fit
 from scipy import integrate
-import tensorflow as tf
+# import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-from src.params import Data, Settings
+from lib.params import Data, Settings
 from get_speed_from_location import get_speed_from_data
 
 
@@ -17,7 +17,7 @@ def read_inputs():
     shuffle_data = True
     data_split = 0.8
     dropout = 0
-    train_loc = "../../data/a10_theta0.npy"
+    train_loc = "../data/simulation_data/combined.npy"
     ac_fun = "relu"
     return n_nodes, n_epochs, window_size, stride, \
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
@@ -83,15 +83,21 @@ def v_x(s, x, y, theta, a, norm_w):
 
 def extract_volume(speed, vx_data):
     # print(speed, vx_data.shape)
-    # plt.plot(vx_data[512,:])
-    # plt.show()
+    result_to_plot = vx_data[0, :]
+    for idx in range(vx_data.shape[0]):
+        if idx == 0:
+            continue
+        result_to_plot = result_to_plot + vx_data[idx, :]
+    plt.plot(result_to_plot)
+    plt.show()
 
-    integrations = []
-    for vx_idx in range(vx_data.shape[0]):
-        integrations.append( integrate.simpson(vx_data[vx_idx,:]) / speed)
+    # Note: Integration Technique
+    # integrations = []
+    # for vx_idx in range(vx_data.shape[0]):
+    #     integrations.append( integrate.simpson(vx_data[vx_idx,:]) / speed)
 
-    mean_integration = np.array(integrations).mean()
-    print(mean_integration)
+    # mean_integration = np.array(integrations).mean()
+    # print(mean_integration)
     # TODO: Transform this integration to the volume
 
     return "Working on it..."
@@ -108,19 +114,18 @@ def main():
     # Load data
     data = Data(settings, train_location)
 
-    new_model = tf.keras.models.load_model(
-        './trained_models/win16_stride2_epochs30_dropout0_latest')
+    # new_model = tf.keras.models.load_model(
+    #     '../data/trained_models/old_latest')
 
-    run_idx = 0
-    for run_idx in range(32):
-        speeds = get_speed_from_data(data.test_data[run_idx], data.test_labels[run_idx], data.test_timestamp[run_idx], new_model)
-        speed = speeds[0][0]
+    # for run_idx in range(1):
+    #     speeds = get_speed_from_data(data.test_data[run_idx], data.test_labels[run_idx], data.test_timestamp[run_idx], new_model)
+    #     speed = speeds[0]
+    speed = 10
 
-        vx_data = data.test_data[run_idx][:,::2]
-        # vx_data = data.test_data[run_idx]
+    vx_data = data.test_data[0][:,::2]
 
-        extract_volume(speed, vx_data)
-        print('--')
+    extract_volume(speed, vx_data)
+    print('--')
     # print(data.test_labels[run_idx])
 
     print(" -- DONE -- ")
