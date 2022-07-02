@@ -35,6 +35,8 @@ def main():
     print(all_labels.shape)
     print(all_timestamp.shape)
 
+    print("Saving to a10_theta0.npy")
+
     np.save("../../../data/a10_theta0.npy", all_data)
     np.save("../../../data/a10_theta0_labels.npy", all_labels)
     np.save("../../../data/a10_theta0_timestamp.npy", all_timestamp)

@@ -1,4 +1,5 @@
 from scipy.optimize import curve_fit
+from scipy import integrate
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -62,10 +63,36 @@ def attempt1():
     plt.legend()
     plt.show()
 
+def wavelet_e(p):
+    return (1 - 2 * p**2) / ((1 + p**2)**(5 / 2))
+
+
+def wavelet_o(p):
+    return (-3 * p) / ((1 + p**2)**(5 / 2))
+
+
+def wavelet_n(p):
+    return (2 - p**2) / ((1 + p**2)**(5 / 2))
+
+
+def v_x(s, x, y, theta, a, norm_w):
+    p = (s - x) / y
+    C = (norm_w * a**3) / (2 * y**3)
+    return C * (wavelet_o(p) * math.sin(theta) -
+                wavelet_e(p) * math.cos(theta))
+
 def extract_volume(speed, vx_data):
-    print(speed, vx_data.shape)
-    plt.plot(vx_data[:,0])
-    plt.show()
+    # print(speed, vx_data.shape)
+    # plt.plot(vx_data[512,:])
+    # plt.show()
+
+    integrations = []
+    for vx_idx in range(vx_data.shape[0]):
+        integrations.append( integrate.simpson(vx_data[vx_idx,:]) / speed)
+
+    mean_integration = np.array(integrations).mean()
+    print(mean_integration)
+    # TODO: Transform this integration to the volume
 
     return "Working on it..."
 
@@ -85,12 +112,16 @@ def main():
         './trained_models/win16_stride2_epochs30_dropout0_latest')
 
     run_idx = 0
-    speeds = get_speed_from_data(data.test_data[run_idx], data.test_labels[run_idx], data.test_timestamp[run_idx], new_model)
-    speed = speeds[0][0]
+    for run_idx in range(32):
+        speeds = get_speed_from_data(data.test_data[run_idx], data.test_labels[run_idx], data.test_timestamp[run_idx], new_model)
+        speed = speeds[0][0]
 
-    vx_data = np.reshape(data.test_data[run_idx], (1024,2,64))[:,0,:]
+        vx_data = data.test_data[run_idx][:,::2]
+        # vx_data = data.test_data[run_idx]
 
-    print(extract_volume(speed, vx_data))
+        extract_volume(speed, vx_data)
+        print('--')
+    # print(data.test_labels[run_idx])
 
     print(" -- DONE -- ")
 
