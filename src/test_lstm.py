@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     network = LSTM.LSTM_network(data, settings)
     network.model = tf.keras.models.load_model(
-        '../data/trained_models/peregrine/win16_stride2_epochs30_dropout0_latest')
+        '../data/trained_models/peregrine/win16_stride2_epochs128_dropout0_latest')
 
     # Test the network
     network.test(data.test_data, data.test_labels)

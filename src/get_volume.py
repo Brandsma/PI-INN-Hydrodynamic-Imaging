@@ -7,17 +7,27 @@ from lib.params import Data, Settings
 from get_speed_from_location import get_speed_from_data
 
 
-def read_inputs():
+def read_inputs(train_loc):
     n_nodes = 100
     n_epochs = 30
     window_size = 16
     stride = 2
     alpha = 0.05
     decay = 1e-9
-    shuffle_data = True
+    shuffle_data = False
     data_split = 0.8
     dropout = 0
-    train_loc = "../data/simulation_data/combined.npy"
+    # train_loc = "../data/simulation_data/combined.npy"
+    # train_loc = "../data/simulation_data/a10_normw10_theta0.npy"
+    # train_loc = "../data/simulation_data/a20_normw10_theta0.npy"
+    # train_loc = "../data/simulation_data/a30_normw10_theta0.npy"
+    # train_loc = "../data/simulation_data/a40_normw10_theta0.npy"
+    # train_loc = "../data/simulation_data/a50_normw10_theta0.npy"
+    # train_loc = "../data/simulation_data/a10_normw10_theta0.npy"
+    # train_loc = "../data/simulation_data/a10_normw20_theta0.npy"
+    # train_loc = "../data/simulation_data/a10_normw30_theta0.npy"
+    # train_loc = "../data/simulation_data/a10_normw40_theta0.npy"
+    # train_loc = "../data/simulation_data/a10_normw50_theta0.npy"
     ac_fun = "relu"
     return n_nodes, n_epochs, window_size, stride, \
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
@@ -81,7 +91,7 @@ def v_x(s, x, y, theta, a, norm_w):
     return C * (wavelet_o(p) * math.sin(theta) -
                 wavelet_e(p) * math.cos(theta))
 
-def extract_volume(speed, vx_data):
+def extract_volume(speed, vx_data, a, w):
     # print(speed, vx_data.shape)
     result_to_plot = vx_data[0, :]
     for idx in range(vx_data.shape[0]):
@@ -89,7 +99,10 @@ def extract_volume(speed, vx_data):
             continue
         result_to_plot = result_to_plot + vx_data[idx, :]
     plt.plot(result_to_plot)
-    plt.show()
+    plt.xlabel("Sensors")
+    # plt.ylim((0,-5))
+    # plt.show()
+    plt.savefig(f"../results/a{a}_w{w}_combined_vxdata_plot.png")
 
     # Note: Integration Technique
     # integrations = []
@@ -102,10 +115,11 @@ def extract_volume(speed, vx_data):
 
     return "Working on it..."
 
-def main():
+def start_volume_extraction(a, w):
+    train_loc = f"../data/simulation_data/a{a}_normw{w}_theta0.npy"
     (n_nodes, n_epochs, window_size, stride, alpha, decay, \
      shuffle_data, data_split, dropout_ratio, train_location, ac_fun) =  \
-        read_inputs()
+        read_inputs(train_loc)
 
     # Load settings
     settings = Settings(window_size, stride, n_nodes, \
@@ -124,13 +138,22 @@ def main():
 
     vx_data = data.test_data[0][:,::2]
 
-    extract_volume(speed, vx_data)
+    extract_volume(speed, vx_data, a, w)
     print('--')
     # print(data.test_labels[run_idx])
 
     print(" -- DONE -- ")
 
 
+def main():
+    a_set = [10,20,30,40,50]
+    w_set = [10,20,30,40,50]
+
+    for a in a_set:
+        plt.figure()
+        for w in w_set:
+            print(f"Running a{a} and w{w} now...")
+            start_volume_extraction(a, w)
 
 if __name__ == '__main__':
     main()
