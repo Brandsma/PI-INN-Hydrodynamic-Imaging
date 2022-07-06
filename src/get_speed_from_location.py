@@ -25,7 +25,8 @@ def read_inputs():
     return n_nodes, n_epochs, window_size, stride, \
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
 
-def get_speed_from_data(data, labels, timestamp, model, window_size = 16):
+
+def get_speed_from_data(data, labels, timestamp, model, window_size=16):
     prev_x = 0
     prev_time = 0
     prev_x_label = 0
@@ -43,13 +44,11 @@ def get_speed_from_data(data, labels, timestamp, model, window_size = 16):
         # print(time)
         # print(y_pred)
 
-
         if idx != 0:
             # prev_x = labels[0][idx + window_size - 1:idx + window_size][0][0]
             # y_pred[0][0] = labels[0][idx + window_size:idx + 16][0][0]
             speed = abs(y_pred[0][0] - prev_x) / abs(time - prev_time)
-            real_speed = abs(x_label - prev_x_label) / abs(time -
-                                                               prev_time)
+            real_speed = abs(x_label - prev_x_label) / abs(time - prev_time)
 
             # print("real loc1:", x_label)
             # print("real loc0:", prev_x_label)
@@ -70,6 +69,7 @@ def get_speed_from_data(data, labels, timestamp, model, window_size = 16):
         prev_time = time
     return np.mean(speeds), np.mean(real_speeds)
 
+
 def main():
     (n_nodes, n_epochs, window_size, stride, alpha, decay, \
      shuffle_data, data_split, dropout_ratio, train_location, ac_fun) =  \
@@ -83,21 +83,20 @@ def main():
     data = Data(settings, train_location)
 
     new_model = tf.keras.models.load_model(
-        './trained_models/win16_stride2_epochs30_dropout0_latest')
+        '../data/trained_models/win16_stride2_epochs30_dropout0_latest')
     new_model.summary()
-    prev_x = 0
-    prev_time = 0
-    prev_x_label = 0
 
     speeds = []
     real_speeds = []
     # run_idx = 8
 
     for run_idx in tqdm(range(data.test_data.shape[0])):
-        speed_results = get_speed_from_data(data.test_data[run_idx], data.test_labels[run_idx], data.test_timestamp[run_idx], new_model)
+        speed_results = get_speed_from_data(data.test_data[run_idx],
+                                            data.test_labels[run_idx],
+                                            data.test_timestamp[run_idx],
+                                            new_model)
         speeds.append(speed_results[0])
         real_speeds.append(speed_results[1])
-
 
     plt.plot(speeds, "bo", label="Predicted Speed")
     plt.plot(real_speeds, "r.", label="Real Speed")
@@ -111,8 +110,7 @@ def main():
     plt.ylabel("Speed (mm/s)")
     MSE = np.square(np.subtract(real_speeds, speeds)).mean()
     plt.text(0, 60, f"MSE: {MSE:.2f} mm/s")
-    plt.title(
-        f"Estimated vs Real speed per run")
+    plt.title(f"Estimated vs Real speed per run")
     plt.legend()
     plt.show()
 

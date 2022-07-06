@@ -1,9 +1,11 @@
-import glob, os
-# TODO: ensure scratch dir exists when getting it
-from lib.peregrine_util import ensure_scratch_dir
+import glob
+import os
 from pathlib import Path
 
 import numpy as np
+
+from lib.peregrine_util import ensure_scratch_dir
+
 
 def find_files(folder_path: str):
     base_names = []
@@ -48,11 +50,12 @@ def main():
     # Save it to disk
     result_filename = "combined"
     result_ext = "npy"
-    print(f"Saving to {result_filename}_(data, labels, timestamp).{result_ext}")
+    print(f"Saving to {result_filename}_(..., labels, timestamp).{result_ext}")
 
     np.save(f"{folder_path}{result_filename}.{result_ext}", all_data)
     np.save(f"{folder_path}{result_filename}_labels.{result_ext}", all_labels)
-    np.save(f"{folder_path}{result_filename}_timestamp.{result_ext}", all_timestamp)
+    np.save(f"{folder_path}{result_filename}_timestamp.{result_ext}",
+            all_timestamp)
 
 
 if __name__ == '__main__':

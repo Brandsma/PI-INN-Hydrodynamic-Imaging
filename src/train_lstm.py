@@ -43,7 +43,7 @@ if __name__ == "__main__":
     network.train()
 
     # Save the network for later use
-    trained_models_folder = "/home/abe/thesis_data/trained_models/"
+    trained_models_folder = "../data/trained_models/"
     Path(trained_models_folder).mkdir(parents=True, exist_ok=True)
     network.save_model(
         f"{trained_models_folder}win{window_size}_stride{stride}_epochs{n_epochs}_dropout{dropout_ratio}_latest"
