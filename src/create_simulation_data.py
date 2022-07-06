@@ -1,24 +1,29 @@
-from pathlib import Path
-import os
-from lib.peregrine_util import get_scratch_dir
-from lib.logger import setup_logger
-
 import math
+import os
+from pathlib import Path
+
 import numpy as np
 from tqdm import tqdm
+
+from lib.logger import setup_logger
+from lib.peregrine_util import get_scratch_dir
 
 log = setup_logger(__name__)
 
 ## Velocity Profiles ##
 
+
 def wavelet_e(p):
     return (1 - 2 * p**2) / ((1 + p**2)**(5 / 2))
+
 
 def wavelet_o(p):
     return (-3 * p) / ((1 + p**2)**(5 / 2))
 
+
 def wavelet_n(p):
     return (2 - p**2) / ((1 + p**2)**(5 / 2))
+
 
 def v_x(s, x, y, theta, a, norm_w):
     p = (s - x) / y
@@ -26,13 +31,16 @@ def v_x(s, x, y, theta, a, norm_w):
     return C * (wavelet_o(p) * math.sin(theta) -
                 wavelet_e(p) * math.cos(theta))
 
+
 def v_y(s, x, y, theta, a, norm_w):
     p = (s - x) / y
     C = (norm_w * a**3) / (2 * y**3)
     return C * (wavelet_n(p) * math.sin(theta) -
                 wavelet_o(p) * math.cos(theta))
 
+
 ## Simulation ##
+
 
 def simulate(theta,
              a,
@@ -125,8 +133,8 @@ def simulate(theta,
 def main():
     # w_set = [10]
     w_set = [10, 20, 30, 40, 50]
-    a_set = [10, 20, 30, 40, 50]
     # a_set = [10, 20, 30, 40, 50]
+    a_set = [10]
     # folder_path = get_scratch_dir() + "/data/"
     folder_path = "../data/simulation_data/"
     Path(folder_path).mkdir(parents=True, exist_ok=True)
