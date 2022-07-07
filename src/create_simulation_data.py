@@ -55,7 +55,7 @@ def simulate(theta,
              number_of_runs=32,
              add_noise=True,
              noise_power=1.5e-5,
-             backward_and_forward_runs=True,
+             backward_and_forward_runs=False,
              folder_path="../../data/simulation/"):
 
     input_sensors = list(
