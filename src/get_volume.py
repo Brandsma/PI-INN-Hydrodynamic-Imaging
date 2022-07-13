@@ -7,6 +7,10 @@ import tensorflow as tf
 from get_speed_from_location import get_speed_from_data
 from lib.params import Data, Settings
 
+count_idx = 1
+MSE = 0
+error = {10: [], 20: [], 30: [], 40: [], 50: []}
+
 
 def read_inputs(train_loc):
     n_nodes = 100
@@ -80,7 +84,6 @@ def extract_volume(speed, vx_data, vy_data):
     volumes_vx = []
     volumes_vy = []
     for position in range(vx_data.shape[0]):
-        plt.plot(vx_data[position, :])
         x = x_input[position]
         for sensor_idx in range(vx_data.shape[1]):
             volume_vx = inverse_volume_vx_calculation(
@@ -97,8 +100,9 @@ def extract_volume(speed, vx_data, vy_data):
     return np.mean(volumes)
 
 
-def start_volume_extraction():
-    train_loc = f"../data/simulation_data/combined.npy"
+def start_volume_extraction(a, w, new_model):
+    global count_idx, MSE, error
+    train_loc = f"../data/simulation_data/a{a}_normw{w}_theta0.npy"
     (n_nodes, n_epochs, window_size, stride, alpha, decay, \
      shuffle_data, data_split, dropout_ratio, train_location, ac_fun) =  \
         read_inputs(train_loc)
@@ -110,10 +114,8 @@ def start_volume_extraction():
     # Load data
     data = Data(settings, train_location)
 
-    new_model = tf.keras.models.load_model(
-        '../data/trained_models/win16_stride2_epochs30_dropout0_latest')
-
-    for run_idx in range(16):
+    volumes = []
+    for run_idx in range(3):
         speeds = get_speed_from_data(data.test_data[run_idx],
                                      data.test_labels[run_idx],
                                      data.test_timestamp[run_idx], new_model)
@@ -123,17 +125,55 @@ def start_volume_extraction():
         vy_data = data.test_data[run_idx][:, 1::2]
 
         volume = extract_volume(speed, vx_data, vy_data)
-        print(f"Real speed: {speeds[1]} mm/s")
-        print(f"Speed: {speed} mm/s")
-        print(f"Volume: {volume} mm")
+        volumes.append(volume)
+        # print(f"Real speed: {speeds[1]} mm/s")
+        # print(f"Speed: {speed} mm/s")
+        # print(f"Volume: {volume} mm")
+        # print(f"Error: {volume - a} mm")
 
-        print('--')
+    # print(volumes)
+    # print([a for _ in range(len(volumes))])
+
+    # plt.plot(volumes, label="Predicted Speed")
+    # plt.plot([a for _ in range(len(volumes))], label="Real Speed")
+
+    for idx in range(len(volumes)):
+        line_x_values = [count_idx, count_idx]
+        count_idx += 1
+        line_y_values = [volumes[idx], a]
+        plt.plot(line_x_values, line_y_values, "k-", linestyle="-")
+    plt.ylim((0, 70))
+    plt.xlabel("run")
+    plt.ylabel("Size (mm)")
+    error[a].append(np.square(np.subtract([a for _ in range(len(volumes))], volumes)).mean())
+    plt.title(f"Estimated vs Real size per run")
 
     print(" -- DONE -- ")
 
 
 def main():
-    start_volume_extraction()
+    a_set = [10,20,30,40,50]
+    w_set = [10,20,30,40,50]
+
+    # a_set = [10,20]
+    # w_set = [10,20]
+
+    new_model = tf.keras.models.load_model(
+        '../data/trained_models/peregrine/win16_stride2_epochs120_dropout0_latest')
+
+
+    cur_idx = 1
+    for a in a_set:
+        for w in w_set:
+            print(f"Running {cur_idx}/{len(a_set) * len(w_set)}...")
+            start_volume_extraction(a, w, new_model)
+            cur_idx += 1
+
+    for key in error:
+        print(f"{key}: {np.mean(error[key])}")
+
+    # plt.text(0, 65, f"MSE: {MSE/(len(a_set) * len(w_set)):.2f} mm")
+    # plt.show()
 
 
 if __name__ == '__main__':
