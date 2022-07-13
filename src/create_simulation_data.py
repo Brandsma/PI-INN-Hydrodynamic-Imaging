@@ -51,7 +51,7 @@ def simulate(theta,
              y_range=(0, 500),
              number_of_x_steps=1024,
              number_of_y_steps=1,
-             simulation_area_offset=25,
+             simulation_area_offset=75,
              number_of_runs=32,
              add_noise=True,
              noise_power=1.5e-5,
@@ -133,8 +133,8 @@ def simulate(theta,
 def main():
     # w_set = [10]
     w_set = [10, 20, 30, 40, 50]
-    # a_set = [10, 20, 30, 40, 50]
-    a_set = [10]
+    a_set = [10, 20, 30, 40, 50]
+    # a_set = [10]
     # folder_path = get_scratch_dir() + "/data/"
     folder_path = "../data/simulation_data/"
     Path(folder_path).mkdir(parents=True, exist_ok=True)
@@ -145,7 +145,7 @@ def main():
             os.remove(os.path.join(folder_path, old_data_file))
 
     theta = 0
-    count = 0
+    count = 1
     log.debug("w_set", w_set, "a_set", a_set)
     for norm_w in w_set:
         for a in a_set:
