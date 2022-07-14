@@ -91,9 +91,9 @@ def main():
     log.info(
         f"Saving to {result_filename}_(..., labels, timestamp).{result_ext}")
 
-    np.save(f"{folder_path}{result_filename}.{result_ext}", all_data)
-    np.save(f"{folder_path}{result_filename}_labels.{result_ext}", all_labels)
-    np.save(f"{folder_path}{result_filename}_timestamp.{result_ext}",
+    np.save(f"{folder_path}/{result_filename}.{result_ext}", all_data)
+    np.save(f"{folder_path}/{result_filename}_labels.{result_ext}", all_labels)
+    np.save(f"{folder_path}/{result_filename}_timestamp.{result_ext}",
             all_timestamp)
 
 

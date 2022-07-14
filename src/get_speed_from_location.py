@@ -1,29 +1,15 @@
 import os
 import sys
 
+if __name__ == "__main__":
+    sys.path.insert(1, os.path.join(sys.path[0], '..'))
+
 import numpy as np
-import scipy.io as sio
 import tensorflow as tf
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from lib.params import Data, Settings
-
-
-def read_inputs():
-    n_nodes = 100
-    n_epochs = 30
-    window_size = 16
-    stride = 2
-    alpha = 0.05
-    decay = 1e-9
-    shuffle_data = True
-    data_split = 0.8
-    dropout = 0
-    train_loc = "../data/simulation_data/combined.npy"
-    ac_fun = "relu"
-    return n_nodes, n_epochs, window_size, stride, \
-        alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
 
 
 def get_speed_from_data(data, labels, timestamp, model, window_size=16):
@@ -38,29 +24,12 @@ def get_speed_from_data(data, labels, timestamp, model, window_size=16):
         input_data = np.reshape(input_data, (1, window_size, 128))
         y_pred = model.predict(input_data)
         time = timestamp[idx][0]
-        # print(time)
         x_label = labels[idx][0]
-        # print(input_data)
-        # print(time)
-        # print(y_pred)
 
         if idx != 0:
-            # prev_x = labels[0][idx + window_size - 1:idx + window_size][0][0]
-            # y_pred[0][0] = labels[0][idx + window_size:idx + 16][0][0]
             speed = abs(y_pred[0][0] - prev_x) / abs(time - prev_time)
             real_speed = abs(x_label - prev_x_label) / abs(time - prev_time)
 
-            # print("real loc1:", x_label)
-            # print("real loc0:", prev_x_label)
-            # print("loc1:", y_pred[0][0])
-            # print("loc0:", prev_x)
-            # print("delta meter:", (y_pred[0][0] - prev_x),
-            #       "delta seconds:", (time - prev_time))
-            # print("Speed:", speed)
-            # print("Real Speed:", real_speed)
-            # print(
-            #     "---------------------------------------------------------"
-            # )
             speeds.append(speed)
             real_speeds.append(real_speed)
 
@@ -71,22 +40,18 @@ def get_speed_from_data(data, labels, timestamp, model, window_size=16):
 
 
 def main():
-    (n_nodes, n_epochs, window_size, stride, alpha, decay, \
-     shuffle_data, data_split, dropout_ratio, train_location, ac_fun) =  \
-        read_inputs()
+    train_location = "../data/simulation_data/combined.npy"
+    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:1&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
 
-    # Load settings
-    settings = Settings(window_size, stride, n_nodes, \
-                        alpha, decay, n_epochs, shuffle_data, data_split, dropout_ratio, \
-               train_location, ac_fun)
+    settings = Settings.from_model_location(trained_model_location,
+                                            data_location=train_location)
+
     # Load data
     data = Data(settings, train_location)
 
     data.normalize()
 
-    new_model = tf.keras.models.load_model(
-        '../data/trained_models/win16_stride2_epochs5_dropout0_latest')
-    new_model.summary()
+    new_model = tf.keras.models.load_model(trained_model_location)
 
     speeds = []
     real_speeds = []

@@ -48,9 +48,7 @@ if __name__ == "__main__":
     # Save the network for later use
     trained_models_folder = "../data/trained_models/"
     Path(trained_models_folder).mkdir(parents=True, exist_ok=True)
-    network.save_model(
-        f"{trained_models_folder}win{window_size}_stride{stride}_epochs{n_epochs}_dropout{dropout_ratio}_latest"
-    )
+    network.save_model(f"{trained_models_folder}{settings.name}")
 
     # # Test the network
     # network.test(data.test_data, data.test_labels)
