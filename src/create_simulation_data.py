@@ -1,3 +1,4 @@
+import argparse
 import math
 import os
 from pathlib import Path
@@ -5,8 +6,8 @@ from pathlib import Path
 import numpy as np
 from tqdm import tqdm
 
-from lib.logger import setup_logger
-from lib.peregrine_util import get_scratch_dir, is_running_on_peregrine
+from lib.logger import LOGGING_LEVELS, set_global_logging_level, setup_logger
+from lib.peregrine_util import ensure_scratch_dir, is_running_on_peregrine
 
 log = setup_logger(__name__)
 
@@ -42,9 +43,9 @@ def v_y(s, x, y, theta, a, norm_w):
 ## Simulation ##
 
 
-def simulate(theta,
-             a,
-             norm_w,
+def simulate(theta=0,
+             a=10,
+             norm_w=10,
              sensor_range=(-200, 200),
              number_of_sensors=64,
              x_range=(-500, 500),
@@ -55,7 +56,7 @@ def simulate(theta,
              number_of_runs=32,
              add_noise=True,
              noise_power=1.5e-5,
-             backward_and_forward_runs=False,
+             forward_and_backward_runs=False,
              folder_path="../../data/simulation/"):
 
     input_sensors = list(
@@ -72,7 +73,7 @@ def simulate(theta,
     all_labels = []
     all_timestamp = []
     for _ in tqdm(range(number_of_runs)):
-        if backward_and_forward_runs:
+        if forward_and_backward_runs:
             x_input = list(reversed(x_input))
         time = start_time
         data = []
@@ -105,9 +106,9 @@ def simulate(theta,
         all_labels.append(labels)
         all_timestamp.append(timestamp)
 
-    data_path = folder_path + f"a{a}_normw{norm_w}_theta{theta}.npy"
-    labels_path = folder_path + f"a{a}_normw{norm_w}_theta{theta}_labels.npy"
-    timestamp_path = folder_path + f"a{a}_normw{norm_w}_theta{theta}_timestamp.npy"
+    data_path = folder_path / f"a{a}_normw{norm_w}_theta{theta}.npy"
+    labels_path = folder_path / f"a{a}_normw{norm_w}_theta{theta}_labels.npy"
+    timestamp_path = folder_path / f"a{a}_normw{norm_w}_theta{theta}_timestamp.npy"
 
     all_data = np.array(all_data)
     all_labels = np.array(all_labels)
@@ -130,28 +131,154 @@ def simulate(theta,
     np.save(timestamp_path, all_timestamp)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description=
+        "Simulation program that 'moves' a sphere through water and measures the movement of the water at discrete locations (i.e. at the sensor locations). The water movement is described using the velocity profiles, which are derivatives of the Velocity Potential function."
+    )
+
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default="../data/simulation_data/",
+        help="Folder where the results of the simulation should be stored.")
+    parser.add_argument(
+        "--without-noise",
+        action='store_true',
+        help=
+        "Normally the simulation adds Gaussian white noise, this can be turned off with this flag."
+    )
+    parser.add_argument(
+        "--noise-power",
+        type=int,
+        default=1.5e-5,
+        help=
+        "The standard deviation of the Gaussian White noise that is added to the simulation. Default is 1.5e-5 based on existing sensors (see bot et al.)."
+    )
+    parser.add_argument("--forward-and-backward-runs",
+                        action='store_true',
+                        help="Half of the runs will be reversed runs.")
+    parser.add_argument(
+        "--number-of-runs",
+        type=int,
+        default=32,
+        help="The number of separate runs the simulation should perform")
+    parser.add_argument(
+        "--simulation-area-offset",
+        type=int,
+        default=75,
+        help=
+        "Offset of the area in which the sphere moves as compared to the sensor array (on the y-axis)"
+    )
+    parser.add_argument("--size",
+                        type=int,
+                        default=10,
+                        help="The size of the sphere (in mm)")
+    parser.add_argument("--speed",
+                        type=int,
+                        default=10,
+                        help="The speed of the sphere (in mm/s)")
+    parser.add_argument(
+        "--theta",
+        type=int,
+        default=0,
+        help=
+        "Azimuth angle under which the sphere moves (relative to sensor array)"
+    )
+
+    parser.add_argument(
+        "--number_of_sensors",
+        type=int,
+        default=64,
+        help=
+        "Number of discrete locations that are measured. Equidistantly spaced in the sensor range."
+    )
+
+    parser.add_argument(
+        "--number_of_x_steps",
+        type=int,
+        default=1024,
+        help=
+        "Number of separate positions for the sphere along the x-axis equidistantly spaced in the x range.",
+    )
+    parser.add_argument(
+        "--number_of_y_steps",
+        type=int,
+        default=1,
+        help=
+        "Number of separate positions for the sphere along the y-axis equidistantly spaced in the y range.",
+    )
+
+    parser.add_argument(
+        "--sensor-range",
+        help=
+        "The range (in mm) along which the sensors are placed (equidistantly). default is (-200, 200). example usage: \"--sensor-range -200 200\"",
+        type=int,
+        nargs=2,
+        default=[-200, 200])
+    parser.add_argument(
+        "--x-range",
+        help=
+        "The range (in mm) along which the sphere is moved for the specified axis. default is (-500, 500). example usage: \"--x-range -500 500\"",
+        type=int,
+        nargs=2,
+        default=[-500, 500])
+    parser.add_argument(
+        "--y-range",
+        help=
+        "The range (in mm) along which the sphere is moved for the specified axis. Note that this is still offset by the simulation offset. default is (0, 500). example usage: \"--y-range 0 500\"",
+        type=int,
+        nargs=2,
+        default=[0, 500])
+    parser.add_argument("--logging-level",
+                        help=("Provide logging level. "
+                              "Example --log debug', default='info'"),
+                        choices=LOGGING_LEVELS.keys(),
+                        default="info",
+                        type=str.lower)
+
+    return parser.parse_args()
+
+
 def main():
-    # w_set = [10]
-    w_set = [10, 20, 30, 40, 50]
-    a_set = [10, 20, 30, 40, 50]
-    # a_set = [10]
-    # folder_path = get_scratch_dir() + "/data/"
-    folder_path = "../data/simulation_data/"
+    # Get arguments from command line
+    args = parse_args()
+    set_global_logging_level(LOGGING_LEVELS[args.logging_level])
+
+    log.debug(f"Running program with following parameters: {args}")
+
+    # Ensure
+    if is_running_on_peregrine():
+        folder_path = ensure_scratch_dir(subfolder_path="/data/")
+    else:
+        log.debug("Running locally (getting output folder from arguments)...")
+        folder_path = args.output_dir
     Path(folder_path).mkdir(parents=True, exist_ok=True)
 
+    # Replace any old data files
+    # TODO: Maybe add a --force flag to remove old files, instead of just removing them
     old_data_files = os.listdir(folder_path)
     for old_data_file in old_data_files:
         if old_data_file.endswith(".npy"):
             os.remove(os.path.join(folder_path, old_data_file))
 
-    theta = 0
-    count = 1
-    log.debug("w_set", w_set, "a_set", a_set)
-    for norm_w in w_set:
-        for a in a_set:
-            log.info(f"Simulating set {count}/{len(w_set)*len(a_set)}...")
-            simulate(theta, a, norm_w, folder_path=folder_path)
-            count += 1
+    simulate(theta=args.theta,
+             a=args.size,
+             norm_w=args.speed,
+             sensor_range=args.sensor_range,
+             number_of_sensors=args.number_of_sensors,
+             x_range=args.x_range,
+             y_range=args.y_range,
+             number_of_x_steps=args.number_of_x_steps,
+             number_of_y_steps=args.number_of_y_steps,
+             simulation_area_offset=args.simulation_area_offset,
+             number_of_runs=args.number_of_runs,
+             add_noise=not args.without_noise,
+             noise_power=args.noise_power,
+             forward_and_backward_runs=args.forward_and_backward_runs,
+             folder_path=folder_path)
+
+    log.debug("-- DONE --")
 
 
 if __name__ == "__main__":
