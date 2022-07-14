@@ -1,18 +1,17 @@
 # Required libraries
 import datetime as dt
-import math
 import os
 import sys
 
 import matplotlib as mpl
 import numpy as np
-import pydot
 from scipy.spatial.distance import euclidean
 from tensorflow.keras import backend as K
 from tensorflow.keras import losses, optimizers
-from tensorflow.keras.layers import LSTM, Activation, Dense, Dropout, Masking
+from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import plot_model
+from tqdm import tqdm
 
 if os.environ.get('DISPLAY', '') == '':
     print('no display found. Using non-interactive Agg backend')
@@ -96,7 +95,6 @@ class LSTM_network:
         print("Training network...")
         # Read from settings and data (for readability)
         epochs = self.settings.n_epochs
-        labels = self.data.train_labels
         window_size = self.settings.window_size
         stride = self.settings.stride
         train_dat = self.data.train_data
@@ -108,7 +106,7 @@ class LSTM_network:
         val_steps = int(self.__num_batches(val_dat))
 
         # Train the model
-        self.hist = self.model.fit_generator( \
+        self.hist = self.model.fit( \
                     self.__generator(train_dat, train_lab, window_size, stride), \
                     steps_per_epoch = train_steps, \
                     epochs = epochs, \
@@ -128,86 +126,69 @@ class LSTM_network:
     - test() always tests with a stride of 1.
     """
 
-    def test(self, data, labels):
-        # Only test the network if self.hist exists (i.e. the network was trained)
-        self.hist = []
-        if hasattr(self, 'hist'):
-            print("Testing network...")
+    def test(self, data, labels, dirname=None):
+        # TODO: Check that network is trained
+        print("Testing network...")
 
+        if dirname is None:
             # Create directory for test results
             dirname = "../results/" + self.init_time + "_" + str(self.settings.n_nodes) + "_" + str(self.settings.n_epochs) \
-             + "_" + str(self.settings.window_size) + "_" + str(self.settings.stride) + "_" + str(self.settings.alpha) \
-             + "_" + str(self.settings.decay) + "_" + str(self.settings.data_split) \
-             + "_" + str(self.settings.dropout_ratio)
+                + "_" + str(self.settings.window_size) + "_" + str(self.settings.stride) + "_" + str(self.settings.alpha) \
+                + "_" + str(self.settings.decay) + "_" + str(self.settings.data_split) \
+                + "_" + str(self.settings.dropout_ratio)
 
-            if not os.path.isdir(dirname):
-                os.mkdir(dirname)
+        if not os.path.isdir(dirname):
+            os.mkdir(dirname)
 
-            # Read from settings and data (for readability)
-            n_sensors = self.data.n_inputs
-            stride = self.settings.stride
-            win_size = self.settings.window_size
-            steps = int(len(data) / stride)
+        # Read from settings and data (for readability)
+        win_size = self.settings.window_size
 
-            self.errors = np.zeros((0, 1))
-            self.labels = np.zeros((0, self.data.n_outputs))
-            self.pred = np.zeros((0, self.data.n_outputs))
+        self.errors = np.zeros((0, 1))
+        self.labels = np.zeros((0, self.data.n_outputs))
+        self.pred = np.zeros((0, self.data.n_outputs))
 
-            # Test all windows in the test set
-            for lab_idx in range(0, len(labels)):
-                progressBar(lab_idx, len(labels))
-                y_pred = np.zeros((0, self.data.n_outputs))
-                y_true = np.zeros((0, self.data.n_outputs))
-                for idx in range(0, len(data[lab_idx]) - win_size + 1):
-                    dat = data[lab_idx][idx:idx + win_size]
-                    if np.shape(dat) != (win_size, self.data.n_inputs):
-                        print("ERROR: invalid size: ", np.shape(dat))
-                    else:
-                        dat = np.reshape(dat,
-                                         (1, win_size, self.data.n_inputs))
+        # Test all windows in the test set
+        for lab_idx in tqdm(range(0, len(labels))):
+            y_pred = np.zeros((0, self.data.n_outputs))
+            y_true = np.zeros((0, self.data.n_outputs))
+            for idx in range(0, len(data[lab_idx]) - win_size + 1):
+                dat = data[lab_idx][idx:idx + win_size]
+                if np.shape(dat) != (win_size, self.data.n_inputs):
+                    print("ERROR: invalid size: ", np.shape(dat))
+                else:
+                    dat = np.reshape(dat, (1, win_size, self.data.n_inputs))
 
-                        test_result = self.model.predict(dat)
-                        true_label = labels[lab_idx][idx + win_size - 1:idx +
-                                                     win_size][0]
+                    test_result = self.model.predict(dat)
+                    true_label = labels[lab_idx][idx + win_size - 1:idx +
+                                                 win_size][0]
 
-                        y_pred = np.vstack((y_pred, test_result))
-                        y_true = np.vstack((y_true, true_label))
+                    y_pred = np.vstack((y_pred, test_result))
+                    y_true = np.vstack((y_true, true_label))
 
-                        error = euclidean(test_result, true_label)
-                        self.errors = np.vstack((self.errors, error))
-                        self.labels = np.vstack((self.labels, true_label))
-                        self.pred = np.vstack((self.pred, test_result))
+                    error = euclidean(test_result, true_label)
+                    self.errors = np.vstack((self.errors, error))
+                    self.labels = np.vstack((self.labels, true_label))
+                    self.pred = np.vstack((self.pred, test_result))
 
-                # Automatically make figure every 10th window
-                if lab_idx % 10 == 0:
-                    plt.plot(y_pred)
-                    plt.plot(y_true)
-                    plt.legend(['x_pred', 'y_pred', 'x_true', 'y_true'],
-                               loc='upper left')
-                    # plt.ylim(-35, 35)
-                    plt.savefig(dirname + '/lab_vs_out_' + str(lab_idx) +
-                                '.png')
-                    plt.clf()
-                    plt.cla()
-                    plt.close()
+            # Automatically make figure every 10th window
+            if lab_idx % 10 == 0:
+                plt.plot(y_pred)
+                plt.plot(y_true)
+                plt.legend(['x_pred', 'y_pred', 'x_true', 'y_true'],
+                           loc='upper left')
+                # plt.ylim(-35, 35)
+                plt.savefig(dirname + '/lab_vs_out_' + str(lab_idx) + '.png')
+                plt.clf()
+                plt.cla()
+                plt.close()
 
-                    np.savetxt(
-                        dirname + "/" + "pred_ " + str(lab_idx) + ".out",
-                        y_pred)
-                    np.savetxt(dirname + "/" + "true_" + str(lab_idx) + ".out",
-                               y_true)
+                np.savetxt(dirname + "/" + "pred_ " + str(lab_idx) + ".out",
+                           y_pred)
+                np.savetxt(dirname + "/" + "true_" + str(lab_idx) + ".out",
+                           y_true)
 
-            # print errors
-            print("\n", np.mean(self.errors), "+/-", np.std(self.errors))
-
-        # Otherwise give an error
-        else:
-            print(
-                "\nERROR: The network needs to be trained before it can be tested. "
-            )
-            print(
-                "Run the network by calling the \'.train()\' method on the LSTM object.\n"
-            )
+        # print errors
+        print("\n", np.mean(self.errors), "+/-", np.std(self.errors))
 
     """
     LSTM_network()::generator(data, labels)
@@ -243,17 +224,6 @@ class LSTM_network:
                                                   window_size],
                                        (1, self.data.n_outputs))))
                 yield (x, y)
-
-    """
-    LSTM_network::euclidean_error_loss(y_true, y_pred)
-    - private function
-    - loss function which calculates the euclidean error between
-      the predicted value y_pred and actual (teacher) output y_pred
-    - used by model.Compile in init_network().
-    """
-
-    def __euclidean_error_loss(self, y_true, y_pred):
-        return K.sqrt(K.sum(K.square(y_true - y_pred), axis=-1))
 
     """
     LSTM_network::__num_batches(data)
@@ -292,6 +262,9 @@ class LSTM_network:
 
         self.model.save(model_location)
 
+        # TODO: Load hist at some point
+        np.save(model_location + "/loss_history.npy", self.hist)
+
     """
     LSTM_network::save_results()
     - public function
@@ -299,14 +272,15 @@ class LSTM_network:
       and plain txt files contain settings and loss values over time.
     """
 
-    def save_results(self):
+    def save_results(self, dirname=None):
         print("\nSaving results...")
 
-        # determine directory name based on time of program start and settings
-        dirname = "../results/" + self.init_time + "_" + str(self.settings.n_nodes) + "_" + str(self.settings.n_epochs) \
-          + "_" + str(self.settings.window_size) + "_" + str(self.settings.stride) + "_" + str(self.settings.alpha) \
-          + "_" + str(self.settings.decay) + "_" + str(self.settings.data_split) \
-          + "_" + str(self.settings.dropout_ratio)
+        if dirname is None:
+            # determine directory name based on time of program start and settings
+            dirname = "../results/" + self.init_time + "_" + str(self.settings.n_nodes) + "_" + str(self.settings.n_epochs) \
+                + "_" + str(self.settings.window_size) + "_" + str(self.settings.stride) + "_" + str(self.settings.alpha) \
+                + "_" + str(self.settings.decay) + "_" + str(self.settings.data_split) \
+                + "_" + str(self.settings.dropout_ratio)
 
         # only create the directory if it does not yet exist
         if not os.path.isdir(dirname):
@@ -349,25 +323,3 @@ class LSTM_network:
         np.savetxt(dirname + "/" + "pred.out", self.pred)
 
         print("Results saved.")
-
-
-"""
-LSTM::progressBar(value, endvalue, bar_length)
-- free function
-- based on the current value and an endvalue, creates
-  an arrow of length at most bar_length indicating the
-  progress as a fraction of value/endvalue.
-- based on code found somewhere on the internet, cannot find where.
-"""
-
-
-def progressBar(value, endvalue, bar_length=70):
-
-    percent = float(value) / endvalue
-    arrow = '-' * int(round(percent * bar_length) - 1) + '>'
-    spaces = ' ' * (bar_length - len(arrow))
-
-    sys.stdout.write("\rProgress: [{0}] {1}%".format(arrow + spaces,
-                                                     int(round(percent *
-                                                               100))))
-    sys.stdout.flush()

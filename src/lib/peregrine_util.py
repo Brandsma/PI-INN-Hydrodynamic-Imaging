@@ -1,8 +1,20 @@
 import os
 from pathlib import Path
 
+SCRATCHDIR_ENV_KEY = "SCRATCHDIR"
+
+
+def is_running_on_peregrine():
+    """Checks if the program is currently running on Peregrine. Returns True if it is running on Peregrine.
+
+    This relies on a hacky check whether or not the $SCRATCHDIR environment variable is present.
+    TODO: Find a better way to check this.
+    """
+    return (SCRATCHDIR_ENV_KEY in os.environ)
+
+
 def get_scratch_dir(subfolder_path: str = ""):
-    """returns the scratch directory in peregrine, with an optional added subfolder path
+    """Returns the scratch directory in peregrine, with an optional added subfolder path
 
     for example, calling this function without parameters would return the scratch directory for a specific job ('scratch/jobs/$JOB_ID') without trailing slash.
 
@@ -13,10 +25,9 @@ def get_scratch_dir(subfolder_path: str = ""):
 
     """
     # Find the folder where the data should be found and should be saved
-    data_folder_key = "SCRATCHDIR"
-    SCRATCHDIR = os.getenv(data_folder_key)
+    SCRATCHDIR = os.getenv(SCRATCHDIR_ENV_KEY)
     if SCRATCHDIR is None:
-        print(f"{data_folder_key} environment variable does not exist")
+        print(f"{SCRATCHDIR_ENV_KEY} environment variable does not exist")
         exit(1)
 
     if SCRATCHDIR[-1] == "/":
@@ -29,6 +40,7 @@ def get_scratch_dir(subfolder_path: str = ""):
         SCRATCHDIR = SCRATCHDIR[:-1]
 
     return SCRATCHDIR
+
 
 def ensure_scratch_dir(subfolder_path: str = ""):
     """The same as 'get_scratch_dir' function, but also ensures that the folder exists. If it does not exist, it creates the folder

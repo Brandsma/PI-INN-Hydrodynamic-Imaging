@@ -1,6 +1,7 @@
 # Use modules to keep code organized
-from pathlib import Path
 import os
+from pathlib import Path
+
 import tensorflow as tf
 
 from lib import LSTM, params
@@ -36,11 +37,12 @@ def read_inputs():
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
 
 
-if __name__ == "__main__":
-
+def main(a, w, new_model):
+    train_loc = f"../data/simulation_data/a{a}_normw{w}_theta0.npy"
     (n_nodes, n_epochs, window_size, stride, alpha, decay, \
      shuffle_data, data_split, dropout_ratio, train_location, ac_fun) =  \
         read_inputs()
+    train_location = train_loc
 
     # Load settings
     settings = params.Settings(window_size, stride, n_nodes, \
@@ -49,11 +51,29 @@ if __name__ == "__main__":
     # Load data
     data = params.Data(settings, train_location)
 
+    data.normalize()
+
     network = LSTM.LSTM_network(data, settings)
-    network.model = tf.keras.models.load_model(
-        '../data/trained_models/peregrine/win16_stride2_epochs128_dropout0_latest')
+    network.model = new_model
 
     # Test the network
-    network.test(data.test_data, data.test_labels)
+    network.test(data.test_data,
+                 data.test_labels,
+                 dirname=f"../results/a{a}_w{w}")
     # Save results
-    network.save_results()
+    network.save_results(dirname=f"../results/a{a}_w{w}")
+
+
+if __name__ == "__main__":
+    a_set = [10, 20, 30, 40, 50]
+    w_set = [10, 20, 30, 40, 50]
+
+    model = tf.keras.models.load_model(
+        '../data/trained_models/win16_stride2_epochs5_dropout0_latest')
+
+    count = 1
+    for a in a_set:
+        for w in w_set:
+            print(f"Running {count}/{len(a_set) * len(w_set)}...")
+            main(a, w, model)
+            count += 1

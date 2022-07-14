@@ -1,14 +1,15 @@
 # Use modules to keep code organized
-from pathlib import Path
 import os
-from lib.peregrine_util import get_scratch_dir
+from pathlib import Path
 
 from lib import LSTM, params
+from lib.peregrine_util import get_scratch_dir
+
 
 # TODO: remove read_inputs and replace it with CLI arguments
 def read_inputs():
     n_nodes = 128
-    n_epochs = 30
+    n_epochs = 1
     window_size = 16
     stride = 2
     alpha = 0.05
@@ -36,6 +37,8 @@ if __name__ == "__main__":
     # Load data
     data = params.Data(settings, train_location)
 
+    data.normalize()
+
     # Initiate the LSTM network using data and settings
     network = LSTM.LSTM_network(data, settings)
     network.model.summary()
@@ -48,7 +51,6 @@ if __name__ == "__main__":
     network.save_model(
         f"{trained_models_folder}win{window_size}_stride{stride}_epochs{n_epochs}_dropout{dropout_ratio}_latest"
     )
-
 
     # # Test the network
     # network.test(data.test_data, data.test_labels)
