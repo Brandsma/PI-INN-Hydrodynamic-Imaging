@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import scipy.io as sio
+from sklearn.preprocessing import normalize
 
 """
 Settings class.
@@ -175,3 +176,14 @@ class Data:
 
         return (train_data, train_labels, test_data, test_labels, val_data,
                 val_labels, train_timestamp, val_timestamp, test_timestamp)
+
+    def normalize(self):
+        for run_idx in range(self.train_data.shape[0]):
+            self.train_data[run_idx, :, :] = normalize(
+                self.train_data[run_idx, :, :])
+        for run_idx in range(self.test_data.shape[0]):
+            self.test_data[run_idx, :, :] = normalize(
+                self.test_data[run_idx, :, :])
+        for run_idx in range(self.val_data.shape[0]):
+            self.val_data[run_idx, :, :] = normalize(
+                self.val_data[run_idx, :, :])

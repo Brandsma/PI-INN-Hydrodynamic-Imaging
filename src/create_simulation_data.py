@@ -6,7 +6,7 @@ import numpy as np
 from tqdm import tqdm
 
 from lib.logger import setup_logger
-from lib.peregrine_util import get_scratch_dir
+from lib.peregrine_util import get_scratch_dir, is_running_on_peregrine
 
 log = setup_logger(__name__)
 

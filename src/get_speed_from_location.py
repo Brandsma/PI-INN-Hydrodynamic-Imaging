@@ -82,8 +82,10 @@ def main():
     # Load data
     data = Data(settings, train_location)
 
+    data.normalize()
+
     new_model = tf.keras.models.load_model(
-        '../data/trained_models/peregrine/win16_stride2_epochs120_dropout0_latest')
+        '../data/trained_models/win16_stride2_epochs5_dropout0_latest')
     new_model.summary()
 
     speeds = []

@@ -1,4 +1,5 @@
 import math
+from copy import deepcopy
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -114,11 +115,14 @@ def start_volume_extraction(a, w, new_model):
     # Load data
     data = Data(settings, train_location)
 
+    speed_data = deepcopy(data)
+    speed_data.normalize()
+
     volumes = []
     for run_idx in range(3):
-        speeds = get_speed_from_data(data.test_data[run_idx],
-                                     data.test_labels[run_idx],
-                                     data.test_timestamp[run_idx], new_model)
+        speeds = get_speed_from_data(speed_data.test_data[run_idx],
+                                     speed_data.test_labels[run_idx],
+                                     speed_data.test_timestamp[run_idx], new_model)
         speed = speeds[0]
 
         vx_data = data.test_data[run_idx][:, ::2]
@@ -159,7 +163,7 @@ def main():
     # w_set = [10,20]
 
     new_model = tf.keras.models.load_model(
-        '../data/trained_models/peregrine/win16_stride2_epochs120_dropout0_latest')
+        '../data/trained_models/win16_stride2_epochs5_dropout0_latest')
 
 
     cur_idx = 1

@@ -11,6 +11,7 @@ data/
 */data/*
 ..bfg-report/
 .#*
+*.mat
 
 # May want this, but for now keep it out
 results/
