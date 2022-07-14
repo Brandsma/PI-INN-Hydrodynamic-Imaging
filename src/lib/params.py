@@ -4,6 +4,8 @@ import numpy as np
 import scipy.io as sio
 from sklearn.preprocessing import normalize
 
+from lib.util import is_boolean, is_float, is_int
+
 """
 Settings class.
 - contains all meta-parameters such as number of
@@ -53,7 +55,35 @@ class Settings:
             )
             exit(1)
 
-        self.__printSettings()
+        # self.__printSettings()
+
+    @classmethod
+    def from_model_location(cls, folder_path, data_location=None):
+        settings_folder = os.path.basename(os.path.normpath(folder_path))
+        setting_elements = [x.split(':') for x in settings_folder.split('&')]
+        for elem in setting_elements:
+            if is_float(elem[1]):
+                elem[1] = float(elem[1])
+            elif is_int(elem[1]):
+                elem[1] = int(elem[1])
+            elif is_boolean(elem[1]):
+                elem[1] = bool(elem[1])
+
+        return cls(setting_elements[0][1], setting_elements[1][1],
+                   setting_elements[2][1], setting_elements[3][1],
+                   setting_elements[4][1], setting_elements[5][1],
+                   setting_elements[6][1], setting_elements[7][1],
+                   setting_elements[8][1], data_location,
+                   setting_elements[9][1])
+
+    @property
+    def name(self):
+        setting_values = self.__dict__
+        del setting_values['train_location']
+        del setting_values['len_data']
+        settings_name = "&".join(
+            [f"{k}:{setting_values[k]}" for k in setting_values])
+        return settings_name
 
     def __printSettings(self):
         print("Starting a run with the following settings: ")
