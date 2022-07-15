@@ -9,6 +9,7 @@ from pathlib import Path
 
 from lib.logger import LOGGING_LEVELS, set_global_logging_level, setup_logger
 from lib.peregrine_util import ensure_scratch_dir, is_running_on_peregrine
+from lib.util import coords
 
 from simulation import simulate
 
@@ -81,18 +82,11 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--number_of_x_steps",
+        "--number_of_steps",
         type=int,
         default=1024,
         help=
-        "Number of separate positions for the sphere along the x-axis equidistantly spaced in the x range.",
-    )
-    parser.add_argument(
-        "--number_of_y_steps",
-        type=int,
-        default=1,
-        help=
-        "Number of separate positions for the sphere along the y-axis equidistantly spaced in the y range.",
+        "Number of total separate positions for the sphere along the path. Equidistantly spaced for each subpath (between two points) with the length of the subpath being equal to 'NUM_STEPS // (len(PATH) - 1)'.",
     )
 
     parser.add_argument(
@@ -103,19 +97,12 @@ def parse_args():
         nargs=2,
         default=[-200, 200])
     parser.add_argument(
-        "--x-range",
+        "--path",
         help=
-        "The range (in mm) along which the sphere is moved for the specified axis. default is (-500, 500). example usage: \"--x-range -500 500\"",
+        "The points along which the path of the sphere will run. example usage: '--path -500,0 500,0'",
         type=int,
-        nargs=2,
-        default=[-500, 500])
-    parser.add_argument(
-        "--y-range",
-        help=
-        "The range (in mm) along which the sphere is moved for the specified axis. Note that this is still offset by the simulation offset. default is (0, 500). example usage: \"--y-range 0 500\"",
-        type=int,
-        nargs=2,
-        default=[0, 500])
+        nargs='+',
+        default=[-500, 0, 500, 0])
     parser.add_argument("--logging-level",
                         help=("Provide logging level. "
                               "Example --log debug', default='info'"),
@@ -148,6 +135,15 @@ def main():
     #     if old_data_file.endswith(".npy"):
     #         os.remove(os.path.join(folder_path, old_data_file))
 
+    # Setup the sphere path (points)
+    if len(args.path) < 4 or len(args.path) % 2 != 0:
+        raise Exception(
+            "Incorrect format of sphere point path was given. Should be at least 4 values and even number"
+        )
+    points = []
+    for idx in range(len(args.path) // 2):
+        points.append([args.path[idx * 2], args.path[idx * 2 + 1]])
+
     count = 1
     for w in args.speed:
         for a in args.size:
@@ -159,10 +155,8 @@ def main():
                      norm_w=w,
                      sensor_range=args.sensor_range,
                      number_of_sensors=args.number_of_sensors,
-                     x_range=args.x_range,
-                     y_range=args.y_range,
-                     number_of_x_steps=args.number_of_x_steps,
-                     number_of_y_steps=args.number_of_y_steps,
+                     points=points,
+                     number_of_steps=args.number_of_steps,
                      simulation_area_offset=args.simulation_area_offset,
                      number_of_runs=args.number_of_runs,
                      add_noise=not args.without_noise,

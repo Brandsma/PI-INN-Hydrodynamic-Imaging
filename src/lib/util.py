@@ -1,3 +1,6 @@
+import argparse
+
+
 def is_int(n):
     try:
         float_n = float(n)
@@ -10,7 +13,7 @@ def is_int(n):
 
 def is_float(n):
     try:
-        float_n = float(n)
+        _ = float(n)
     except ValueError:
         return False
     else:
@@ -19,3 +22,12 @@ def is_float(n):
 
 def is_boolean(n):
     return n == "True" or n == "False"
+
+
+def coords(s):
+    """coords type for use in argparse. takes x,y as input and returns tuple"""
+    try:
+        x, y = map(int, s.split(' , '))
+        return x, y
+    except:
+        raise argparse.ArgumentTypeError("Coordinates must be 'x,y' and int")
