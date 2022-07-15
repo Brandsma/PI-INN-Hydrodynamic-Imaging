@@ -75,6 +75,7 @@ def simulate(theta=0,
     input_sensors = list(
         np.linspace(sensor_range[0], sensor_range[1], num=number_of_sensors))
 
+    # TODO: Update theta
     path = calculate_path([[-500, 0], [500, 0]],
                           1024,
                           simulation_area_offset=simulation_area_offset)
