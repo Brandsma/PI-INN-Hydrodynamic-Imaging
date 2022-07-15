@@ -18,7 +18,7 @@ log = setup_logger(__name__)
 
 def find_files(folder_path: str):
     base_names = []
-    for filename in glob.glob(f"{folder_path}/*_theta0.npy"):
+    for filename in glob.glob(f"{folder_path}/*_data.npy"):
         base_names.append(filename)
 
     return base_names
