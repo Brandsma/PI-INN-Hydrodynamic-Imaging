@@ -62,10 +62,10 @@ class Settings:
         settings_folder = os.path.basename(os.path.normpath(folder_path))
         setting_elements = [x.split(':') for x in settings_folder.split('&')]
         for elem in setting_elements:
-            if is_float(elem[1]):
-                elem[1] = float(elem[1])
-            elif is_int(elem[1]):
+            if is_int(elem[1]):
                 elem[1] = int(elem[1])
+            elif is_float(elem[1]):
+                elem[1] = float(elem[1])
             elif is_boolean(elem[1]):
                 elem[1] = bool(elem[1])
 

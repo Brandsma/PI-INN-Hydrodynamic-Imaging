@@ -9,7 +9,7 @@ from lib.peregrine_util import get_scratch_dir
 # TODO: remove read_inputs and replace it with CLI arguments
 def read_inputs():
     n_nodes = 128
-    n_epochs = 1
+    n_epochs = 4
     window_size = 16
     stride = 2
     alpha = 0.05

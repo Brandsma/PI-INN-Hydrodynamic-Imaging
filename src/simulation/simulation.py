@@ -54,10 +54,15 @@ def calculate_path(points, num_steps, simulation_area_offset=75):
 
 
 def calculate_angle(start_point, terminal_point):
-    dir_vector = np.array(terminal_point) - np.array(start_point)
+    if type(start_point) is not np.ndarray:
+        start_point = np.array(start_point)
+    if type(terminal_point) is not np.ndarray:
+        terminal_point = np.array(terminal_point)
+
+    dir_vector = terminal_point - start_point
     if dir_vector[0] == 0:
-        # TODO: Is this correct? It seems logical that if the y-position
-        # does not change it is parallel to the x-axis
+        # TODO: Is this correct? It seems logical that if the x-position
+        # does not change it is parallel to the y-axis
         return 90
     return np.arctan(dir_vector[1] / dir_vector[0]) * (180 / math.pi)
 
@@ -126,9 +131,9 @@ def simulate(theta=0,
         all_labels.append(labels)
         all_timestamp.append(timestamp)
 
-    data_path = folder_path / f"a{a}_normw{norm_w}_theta{theta}.npy"
-    labels_path = folder_path / f"a{a}_normw{norm_w}_theta{theta}_labels.npy"
-    timestamp_path = folder_path / f"a{a}_normw{norm_w}_theta{theta}_timestamp.npy"
+    data_path = folder_path / f"a{a}_normw{norm_w}_data.npy"
+    labels_path = folder_path / f"a{a}_normw{norm_w}_data_labels.npy"
+    timestamp_path = folder_path / f"a{a}_normw{norm_w}_data_timestamp.npy"
 
     all_data = np.array(all_data)
     all_labels = np.array(all_labels)

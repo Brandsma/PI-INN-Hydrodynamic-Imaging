@@ -22,7 +22,7 @@ def get_speed_from_data(data, labels, timestamp, model, window_size=16):
     for idx in range(0, 1024, window_size * 8):
         input_data = data[idx:idx + window_size]
         input_data = np.reshape(input_data, (1, window_size, 128))
-        y_pred = model.predict(input_data)
+        y_pred = model.predict(input_data, verbose=0)
         time = timestamp[idx][0]
         x_label = labels[idx][0]
 
@@ -41,7 +41,7 @@ def get_speed_from_data(data, labels, timestamp, model, window_size=16):
 
 def main():
     train_location = "../data/simulation_data/combined.npy"
-    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:1&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
+    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:4&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
 
     settings = Settings.from_model_location(trained_model_location,
                                             data_location=train_location)
@@ -55,7 +55,6 @@ def main():
 
     speeds = []
     real_speeds = []
-    # run_idx = 8
 
     for run_idx in tqdm(range(data.test_data.shape[0])):
         speed_results = get_speed_from_data(data.test_data[run_idx],
@@ -71,7 +70,7 @@ def main():
     for idx in range(len(speeds)):
         line_x_values = [idx, idx]
         line_y_values = [speeds[idx], real_speeds[idx]]
-        plt.plot(line_x_values, line_y_values, "k-", linestyle="-")
+        plt.plot(line_x_values, line_y_values, "k-")
     plt.ylim((0, 70))
     plt.xlabel("run")
     plt.ylabel("Speed (mm/s)")
