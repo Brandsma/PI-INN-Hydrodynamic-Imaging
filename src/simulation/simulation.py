@@ -53,6 +53,15 @@ def calculate_path(points, num_steps, simulation_area_offset=75):
     return path
 
 
+def calculate_angle(start_point, terminal_point):
+    dir_vector = np.array(terminal_point) - np.array(start_point)
+    if dir_vector[0] == 0:
+        # TODO: Is this correct? It seems logical that if the y-position
+        # does not change it is parallel to the x-axis
+        return 90
+    return np.arctan(dir_vector[1] / dir_vector[0]) * (180 / math.pi)
+
+
 ## Simulation ##
 
 
@@ -61,10 +70,8 @@ def simulate(theta=0,
              norm_w=10,
              sensor_range=(-200, 200),
              number_of_sensors=64,
-             x_range=(-500, 500),
-             y_range=(0, 500),
-             number_of_x_steps=1024,
-             number_of_y_steps=1,
+             points=[(-500, 0), (500, 0)],
+             number_of_steps=1024,
              simulation_area_offset=75,
              number_of_runs=32,
              add_noise=True,
@@ -75,16 +82,10 @@ def simulate(theta=0,
     input_sensors = list(
         np.linspace(sensor_range[0], sensor_range[1], num=number_of_sensors))
 
-    # TODO: Update theta
-    path = calculate_path([[-500, 0], [500, 0]],
-                          1024,
+    path = calculate_path(points,
+                          number_of_steps,
                           simulation_area_offset=simulation_area_offset)
 
-    # path = list(np.linspace(x_range[0], x_range[1], num=number_of_x_steps))
-    # y_input = list(
-    #     np.linspace(y_range[0] + simulation_area_offset,
-    #                 y_range[1] + simulation_area_offset,
-    #                 num=number_of_y_steps))
     time_step = np.linalg.norm(np.array(path[0]) - np.array(path[1])) / norm_w
     start_time = 0
 
@@ -99,6 +100,10 @@ def simulate(theta=0,
         labels = []
         timestamp = []
         for path_idx, (x, y) in enumerate(path):
+
+            # TODO: Update theta
+            if path_idx != (len(path) - 1):
+                theta = calculate_angle([x, y], path[path_idx + 1])
             data.append([])
             labels.append([])
             timestamp.append([])
@@ -128,15 +133,6 @@ def simulate(theta=0,
     all_data = np.array(all_data)
     all_labels = np.array(all_labels)
     all_timestamp = np.array(all_timestamp)
-
-    # all_data = np.reshape(all_data, (all_data.shape[0], all_data.shape[1] *
-    #                                  all_data.shape[2], all_data.shape[3]))
-    # all_labels = np.reshape(all_labels,
-    #                         (all_labels.shape[0], all_labels.shape[1] *
-    #                          all_labels.shape[2], all_labels.shape[3]))
-    # all_timestamp = np.reshape(
-    #     all_timestamp, (all_timestamp.shape[0], all_timestamp.shape[1] *
-    #                     all_timestamp.shape[2], all_timestamp.shape[3]))
 
     log.debug(all_data.shape)
     log.debug(all_labels.shape)
