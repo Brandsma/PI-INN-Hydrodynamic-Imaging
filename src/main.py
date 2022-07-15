@@ -1,10 +1,9 @@
 import numpy as np
-from scipy.io import loadmat
+from lib import params
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, normalize
 
 from elm import ELM
-from lib import params
 
 
 def main(data):
@@ -42,7 +41,7 @@ def main(data):
     X_train, X_test, y_train, y_test = train_test_split(
         train_data, le.transform(train_labels), test_size=0.3)
 
-    elm = ELM(hid_num=8000).fit(X_train, y_train)
+    elm = ELM(hid_num=4000).fit(X_train, y_train)
 
     print("ELM Accuracy %0.3f " % elm.score(X_test, y_test))
 
@@ -77,5 +76,7 @@ if __name__ == "__main__":
                train_location, ac_fun)
     # Load data
     data = params.Data(settings, train_location)
+
+    data.normalize()
 
     main(data)
