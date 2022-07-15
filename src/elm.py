@@ -1,25 +1,19 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-
 """
 Extreme Learning Machine
 This script is ELM for binary and multiclass classification.
 """
 
 import numpy as np
-
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 
-class ELM (BaseEstimator, ClassifierMixin):
-
+class ELM(BaseEstimator, ClassifierMixin):
     """
     3 step model ELM
     """
-
-    def __init__(self,
-                 hid_num: int,
-                 sigmoidConstant: int=1):
+    def __init__(self, hid_num: int, sigmoidConstant: int = 1):
         """
         Args:
         hid_num: number of hidden neurons
@@ -30,7 +24,7 @@ class ELM (BaseEstimator, ClassifierMixin):
 
     def sigmoid(self, x: float):
         return 1 / (1 + np.exp(-self.sigmoidConstant * x))
-    
+
     def add_bias(self, X):
         """add bias to list
 
@@ -98,8 +92,7 @@ class ELM (BaseEstimator, ClassifierMixin):
 
         # generate weights between input layer and hidden layer
         np.random.seed()
-        self.W = np.random.uniform(-1., 1.,
-                                   (self.hid_num, X.shape[1]))
+        self.W = np.random.uniform(-1., 1., (self.hid_num, X.shape[1]))
 
         # find inverse weight matrix
         _H = np.linalg.pinv(self.sigmoid(np.dot(self.W, X.T)))
@@ -130,15 +123,16 @@ class ELM (BaseEstimator, ClassifierMixin):
 def main():
     from sklearn import preprocessing
     from sklearn.datasets import fetch_openml as fetch_mldata
-    from sklearn.model_selection import ShuffleSplit, KFold, cross_val_score
+    from sklearn.model_selection import KFold, ShuffleSplit, cross_val_score
 
     db_name = 'australian'
     hid_nums = [100, 200, 300]
 
     data_set = fetch_mldata(db_name)
     data_set.data = preprocessing.normalize(data_set.data)
-    data_set.target = [1 if i == 1 else -1
-                       for i in  data_set.target.astype(int)]
+    data_set.target = [
+        1 if i == 1 else -1 for i in data_set.target.astype(int)
+    ]
 
     for hid_num in hid_nums:
         print(hid_num, end=' ')
@@ -147,9 +141,12 @@ def main():
         ave = 0
         for i in range(10):
             cv = KFold(n_splits=5, shuffle=True)
-            scores = cross_val_score(
-                e, data_set.data, data_set.target,
-                cv=cv, scoring='accuracy', n_jobs=-1)
+            scores = cross_val_score(e,
+                                     data_set.data,
+                                     data_set.target,
+                                     cv=cv,
+                                     scoring='accuracy',
+                                     n_jobs=-1)
             ave += scores.mean()
 
         ave /= 10

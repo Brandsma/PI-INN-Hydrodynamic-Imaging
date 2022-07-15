@@ -56,12 +56,14 @@ def parse_args():
     )
     parser.add_argument("--size",
                         type=int,
-                        default=10,
-                        help="The size of the sphere (in mm)")
+                        nargs='+',
+                        default=[10],
+                        help="The size(s) of the sphere (in mm)")
     parser.add_argument("--speed",
                         type=int,
-                        default=10,
-                        help="The speed of the sphere (in mm/s)")
+                        nargs='+',
+                        default=[10],
+                        help="The speed(s) of the sphere (in mm/s)")
     parser.add_argument(
         "--theta",
         type=int,
@@ -146,21 +148,28 @@ def main():
     #     if old_data_file.endswith(".npy"):
     #         os.remove(os.path.join(folder_path, old_data_file))
 
-    simulate(theta=args.theta,
-             a=args.size,
-             norm_w=args.speed,
-             sensor_range=args.sensor_range,
-             number_of_sensors=args.number_of_sensors,
-             x_range=args.x_range,
-             y_range=args.y_range,
-             number_of_x_steps=args.number_of_x_steps,
-             number_of_y_steps=args.number_of_y_steps,
-             simulation_area_offset=args.simulation_area_offset,
-             number_of_runs=args.number_of_runs,
-             add_noise=not args.without_noise,
-             noise_power=args.noise_power,
-             forward_and_backward_runs=args.forward_and_backward_runs,
-             folder_path=folder_path)
+    count = 1
+    for w in args.speed:
+        for a in args.size:
+            log.info(
+                f"Running experiment {count}/{len(args.speed) * len(args.size)} with (a = {a}, w = {w})..."
+            )
+            simulate(theta=args.theta,
+                     a=a,
+                     norm_w=w,
+                     sensor_range=args.sensor_range,
+                     number_of_sensors=args.number_of_sensors,
+                     x_range=args.x_range,
+                     y_range=args.y_range,
+                     number_of_x_steps=args.number_of_x_steps,
+                     number_of_y_steps=args.number_of_y_steps,
+                     simulation_area_offset=args.simulation_area_offset,
+                     number_of_runs=args.number_of_runs,
+                     add_noise=not args.without_noise,
+                     noise_power=args.noise_power,
+                     forward_and_backward_runs=args.forward_and_backward_runs,
+                     folder_path=folder_path)
+            count += 1
 
     log.debug("-- DONE --")
 

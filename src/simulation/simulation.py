@@ -35,6 +35,24 @@ def v_y(s, x, y, theta, a, norm_w):
                 wavelet_o(p) * math.cos(theta))
 
 
+def calculate_path(points, num_steps, simulation_area_offset=75):
+    subpath_steps = num_steps // (len(points) - 1)
+    path = []
+
+    for idx in range(len(points) - 1):
+        x_input = list(
+            np.linspace(points[idx][0], points[idx + 1][0], num=subpath_steps))
+
+        y_input = list(
+            np.linspace(points[idx][1] + simulation_area_offset,
+                        points[idx + 1][1] + simulation_area_offset,
+                        num=subpath_steps))
+        subpath = list(zip(x_input, y_input))
+        path.extend(subpath)
+
+    return path
+
+
 ## Simulation ##
 
 
@@ -56,12 +74,17 @@ def simulate(theta=0,
 
     input_sensors = list(
         np.linspace(sensor_range[0], sensor_range[1], num=number_of_sensors))
-    x_input = list(np.linspace(x_range[0], x_range[1], num=number_of_x_steps))
-    y_input = list(
-        np.linspace(y_range[0] + simulation_area_offset,
-                    y_range[1] + simulation_area_offset,
-                    num=number_of_y_steps))
-    time_step = abs(x_input[1] - x_input[0]) / norm_w
+
+    path = calculate_path([[-500, 0], [500, 0]],
+                          1024,
+                          simulation_area_offset=simulation_area_offset)
+
+    # path = list(np.linspace(x_range[0], x_range[1], num=number_of_x_steps))
+    # y_input = list(
+    #     np.linspace(y_range[0] + simulation_area_offset,
+    #                 y_range[1] + simulation_area_offset,
+    #                 num=number_of_y_steps))
+    time_step = np.linalg.norm(np.array(path[0]) - np.array(path[1])) / norm_w
     start_time = 0
 
     all_data = []
@@ -69,34 +92,30 @@ def simulate(theta=0,
     all_timestamp = []
     for _ in tqdm(range(number_of_runs)):
         if forward_and_backward_runs:
-            x_input = list(reversed(x_input))
+            path = list(reversed(path))
         time = start_time
         data = []
         labels = []
         timestamp = []
-        for y_idx, y in enumerate(y_input):
+        for path_idx, (x, y) in enumerate(path):
             data.append([])
             labels.append([])
             timestamp.append([])
-            for x_idx, x in enumerate(x_input):
-                data[y_idx].append([])
-                labels[y_idx].append([])
-                timestamp[y_idx].append([])
-                for input_sensor in input_sensors:
-                    # NOTE: the x and y coordinates are different than the array coordinates
-                    data[y_idx][x_idx].append(
-                        v_x(input_sensor, x, y + 1, theta, a, norm_w))
-                    data[y_idx][x_idx].append(
-                        v_y(input_sensor, x, y + 1, theta, a, norm_w))
+            for input_sensor in input_sensors:
+                # NOTE: the x and y coordinates are different than the array coordinates
+                data[path_idx].append(
+                    v_x(input_sensor, x, y + 1, theta, a, norm_w))
+                data[path_idx].append(
+                    v_y(input_sensor, x, y + 1, theta, a, norm_w))
 
-                labels[y_idx][x_idx].append(x)
-                labels[y_idx][x_idx].append(y + 1)
-                timestamp[y_idx][x_idx].append(time)
-                time += time_step
+            labels[path_idx].append(x)
+            labels[path_idx].append(y + 1)
+            timestamp[path_idx].append(time)
+            time += time_step
 
-                if add_noise:
-                    data[y_idx][x_idx] += np.random.normal(
-                        0, noise_power, len(data[y_idx][x_idx]))
+            if add_noise:
+                data[path_idx] += np.random.normal(0, noise_power,
+                                                   len(data[path_idx]))
         all_data.append(data)
         all_labels.append(labels)
         all_timestamp.append(timestamp)
@@ -109,14 +128,14 @@ def simulate(theta=0,
     all_labels = np.array(all_labels)
     all_timestamp = np.array(all_timestamp)
 
-    all_data = np.reshape(all_data, (all_data.shape[0], all_data.shape[1] *
-                                     all_data.shape[2], all_data.shape[3]))
-    all_labels = np.reshape(all_labels,
-                            (all_labels.shape[0], all_labels.shape[1] *
-                             all_labels.shape[2], all_labels.shape[3]))
-    all_timestamp = np.reshape(
-        all_timestamp, (all_timestamp.shape[0], all_timestamp.shape[1] *
-                        all_timestamp.shape[2], all_timestamp.shape[3]))
+    # all_data = np.reshape(all_data, (all_data.shape[0], all_data.shape[1] *
+    #                                  all_data.shape[2], all_data.shape[3]))
+    # all_labels = np.reshape(all_labels,
+    #                         (all_labels.shape[0], all_labels.shape[1] *
+    #                          all_labels.shape[2], all_labels.shape[3]))
+    # all_timestamp = np.reshape(
+    #     all_timestamp, (all_timestamp.shape[0], all_timestamp.shape[1] *
+    #                     all_timestamp.shape[2], all_timestamp.shape[3]))
 
     log.debug(all_data.shape)
     log.debug(all_labels.shape)
