@@ -100,7 +100,7 @@ def main():
     Debugger.enabled = True
 
     # Define the input data
-    geom = dde.geometry.Rectangle(xmin=[1, 1], xmax=[10, 10])
+    geom = dde.geometry.Rectangle(xmin=[-500, 75], xmax=[500, 75])
     # TODO: Find the correct Boundary Conditions for V_xy to XY
     bc = dde.DirichletBC(
         geom,
@@ -132,7 +132,7 @@ def main():
     losshistory, train_state = model.train()
 
     # Show the results of training
-    dde.postprocessing.plot_best_state(train_state)
+    dde.utils.external.plot_best_state(train_state)
     plt.show()
 
     # TEST the model
