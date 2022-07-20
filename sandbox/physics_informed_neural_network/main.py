@@ -77,21 +77,16 @@ def positional_solution(x):
 
 # PDE
 
-W = dde.Variable(5.0)
-
-
-def additional_term(x, y):
-    # TODO: Make this depend on the speed variable instead of hardcoding it
-    return ((3 * (W * x + W * y)) / ((x**2 + y**2)**(5 / 2)))
-
+W = dde.Variable(1.0)
 
 def pde(x, y):
     dvx_x = dde.grad.jacobian(y, x, i=0, j=0)
     dvy_y = dde.grad.jacobian(y, x, i=1, j=1)
 
     x1, y1 = x[:, 0:1], x[:, 1:2]
-    vx1, vy1 = y[:, 0:1], y[:, 1:2]
-    return dvx_x + dvy_y + additional_term(x1, y1)
+    # vx1, vy1 = y[:, 0:1], y[:, 1:2]
+    # TODO: This should use the normalized (i.e. sensor-relative positions)
+    return dvx_x + dvy_y + ((3 * (W * x1 + W * y1)) / ((x1**2 + y1**2)**(5 / 2)))
 
 # MAIN
 
@@ -116,24 +111,19 @@ def main():
         lambda _, on_boundary: on_boundary,
     )
 
-    observed_data = data.train_data[0, :, 64].reshape(data.train_data[0, :, 64].shape[0], 1)
+    observed_data_vx = data.train_data[0, :, 0].reshape(data.train_data[0, :, 0].shape[0], 1)
+    observed_data_vy = data.train_data[0, :, 1].reshape(data.train_data[0, :, 1].shape[0], 1)
     # print(x_input.shape, observed_data.shape)
-    observe_w = dde.icbc.PointSetBC(coord_input, observed_data, component=0)
-
-    # print(geom.dim, end = "\n\n\n\n\n\n")
+    observe_w_vx = dde.icbc.PointSetBC(coord_input, observed_data_vx, component=0)
+    observe_w_vy = dde.icbc.PointSetBC(coord_input, observed_data_vy, component=1)
 
     # Define the data together with the PDE
     data = dde.data.PDE(geom,
                         pde,
-                        [bc, observe_w],
+                        [bc, observe_w_vx, observe_w_vy],
                         num_domain=1024,
                         num_boundary=30,
                         anchors=coord_input)
-    # gen_data = load_gendata()
-
-    # Add the simulated data as training points
-    # data.add_anchors(gen_data)
-    # data.resample_train_points()
 
     # Define the neural network
     net = dde.nn.FNN([2] + [32] * 3 + [2], "tanh", "Glorot normal")
@@ -141,30 +131,12 @@ def main():
     # Create the PINN and train it
     model = dde.Model(data, net)
     model.compile("adam", lr=1e-3, external_trainable_variables=[W])
-    variable = dde.callbacks.VariableValue([W], period = 600, filename="variables.data")
-    # model.train(epochs=20000)
-    # model.compile("L-BFGS")
+    variable = dde.callbacks.VariableValue([W], period = 600, filename="variables.dat")
     losshistory, train_state = model.train(iterations=60000, callbacks=[variable])
 
     # Show the results of training
     dde.utils.external.saveplot(losshistory, train_state)
     
-    print(W)
-
-    # TEST the model
-    # X = gen_testdata()
-    # y_true = load_gendata()
-    # y_true_single_sensor = list(
-    #     zip(y_true[0].iloc[:, SENSOR].to_numpy(),
-    #         y_true[1].iloc[:, SENSOR].to_numpy()))
-
-    # y_pred = model.predict(X)
-    # f = model.predict(X, operator=pde)
-
-    # print("Mean residual:", np.mean(np.absolute(f)))
-    # print("L2 relative error:",
-    #       dde.metrics.l2_relative_error(y_true_single_sensor, y_pred))
-
 
 if __name__ == "__main__":
     main()
