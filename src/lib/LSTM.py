@@ -158,7 +158,7 @@ class LSTM_network:
                 else:
                     dat = np.reshape(dat, (1, win_size, self.data.n_inputs))
 
-                    test_result = self.model.predict(dat)
+                    test_result = self.model.predict(dat, verbose=0)
                     true_label = labels[lab_idx][idx + win_size - 1:idx +
                                                  win_size][0]
 
@@ -174,7 +174,7 @@ class LSTM_network:
             if lab_idx % 10 == 0:
                 plt.plot(y_pred)
                 plt.plot(y_true)
-                plt.legend(['x_pred', 'y_pred', 'x_true', 'y_true'],
+                plt.legend(['x_pred', 'y_pred', 'x_true', 'y_true', 'theta_pred', 'theta_true'],
                            loc='upper left')
                 # plt.ylim(-35, 35)
                 plt.savefig(dirname + '/lab_vs_out_' + str(lab_idx) + '.png')

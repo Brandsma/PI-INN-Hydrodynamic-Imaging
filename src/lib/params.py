@@ -79,8 +79,10 @@ class Settings:
     @property
     def name(self):
         setting_values = self.__dict__
-        del setting_values['train_location']
-        del setting_values['len_data']
+        if 'train_location' in setting_values:
+            del setting_values['train_location']
+        if 'len_data' in setting_values:
+            del setting_values['len_data']
         settings_name = "&".join(
             [f"{k}:{setting_values[k]}" for k in setting_values])
         return settings_name
@@ -121,7 +123,7 @@ class Data:
         self.settings = settings
         # load data
         if os.path.splitext(location)[-1] == ".npy":
-            d_1, l_1, d_2, l_2, d_3, l_3, t_1, t_2, t_3 = self.__load_data_numpy(
+            d_1, l_1, d_2, l_2, d_3, l_3, t_1, t_2, t_3, v_1, v_2, v_3 = self.__load_data_numpy(
                 location, settings.data_split)
         else:
             print(
@@ -140,6 +142,11 @@ class Data:
         self.test_timestamp = t_1
         self.val_timestamp = t_2
         self.test_timestamp = t_3
+
+        self.test_volumes = v_1
+        self.val_volumes = v_2
+        self.test_volumes = v_3
+
 
         # extract dimensionality and length of data.
         self.n_inputs = np.shape(self.train_data[0])[1]
@@ -162,12 +169,13 @@ class Data:
         labels = np.load(f"{base_name[0]}_labels{base_name[-1]}")
         data = np.load(file_location)
         timestamp = np.load(f"{base_name[0]}_timestamp{base_name[-1]}")
+        volumes = np.load(f"{base_name[0]}_volumes{base_name[-1]}")
 
         # Split data into train, test and validation sets.
-        train_d, train_l, test_d, test_l, val_d, val_l, train_t, val_t, test_t = \
-            self.__split_data(data, labels, timestamp, split_ratio)
+        train_d, train_l, test_d, test_l, val_d, val_l, train_t, val_t, test_t, train_v, val_v, test_v = \
+            self.__split_data(data, labels, timestamp, volumes, split_ratio)
 
-        return train_d, train_l, test_d, test_l, val_d, val_l, train_t, val_t, test_t
+        return train_d, train_l, test_d, test_l, val_d, val_l, train_t, val_t, test_t, train_v, val_v, test_v
 
     """
     Data::__split_data(data, labels, train_test_ratio):
@@ -176,7 +184,7 @@ class Data:
       train_test_ratio.
     """
 
-    def __split_data(self, data, labels, timestamp, train_test_ratio):
+    def __split_data(self, data, labels, timestamp, volumes, train_test_ratio):
         # Take the number of data points
         n_entries = len(data)
 
@@ -204,8 +212,12 @@ class Data:
         val_timestamp = timestamp[perm[train_idx:val_idx]]
         test_timestamp = timestamp[perm[val_idx:test_idx]]
 
+        train_volumes = volumes[perm[0:train_idx]]
+        val_volumes = volumes[perm[train_idx:val_idx]]
+        test_volumes = volumes[perm[val_idx:test_idx]]
+
         return (train_data, train_labels, test_data, test_labels, val_data,
-                val_labels, train_timestamp, val_timestamp, test_timestamp)
+                val_labels, train_timestamp, val_timestamp, test_timestamp, train_volumes, val_volumes, test_volumes)
 
     def normalize(self):
         for run_idx in range(self.train_data.shape[0]):

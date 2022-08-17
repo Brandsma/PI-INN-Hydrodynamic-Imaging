@@ -96,6 +96,7 @@ def simulate(theta=0,
 
     all_data = []
     all_labels = []
+    all_volumes = []
     all_timestamp = []
     for _ in tqdm(range(number_of_runs)):
         if forward_and_backward_runs:
@@ -104,9 +105,9 @@ def simulate(theta=0,
         data = []
         labels = []
         timestamp = []
+        all_volumes.append(a)
         for path_idx, (x, y) in enumerate(path):
 
-            # TODO: Update theta
             if path_idx != (len(path) - 1):
                 theta = calculate_angle([x, y], path[path_idx + 1])
             data.append([])
@@ -121,6 +122,7 @@ def simulate(theta=0,
 
             labels[path_idx].append(x)
             labels[path_idx].append(y + 1)
+            labels[path_idx].append(theta)
             timestamp[path_idx].append(time)
             time += time_step
 
@@ -134,14 +136,18 @@ def simulate(theta=0,
     data_path = folder_path / f"a{a}_normw{norm_w}_data.npy"
     labels_path = folder_path / f"a{a}_normw{norm_w}_data_labels.npy"
     timestamp_path = folder_path / f"a{a}_normw{norm_w}_data_timestamp.npy"
+    volumes_path = folder_path / f"a{a}_normw{norm_w}_data_volumes.npy"
 
     all_data = np.array(all_data)
     all_labels = np.array(all_labels)
     all_timestamp = np.array(all_timestamp)
+    all_volumes = np.array(all_volumes)
 
     log.debug(all_data.shape)
     log.debug(all_labels.shape)
     log.debug(all_timestamp.shape)
+    log.debug(all_volumes.shape)
     np.save(data_path, all_data)
     np.save(labels_path, all_labels)
     np.save(timestamp_path, all_timestamp)
+    np.save(volumes_path, all_volumes)
