@@ -4,8 +4,6 @@ import sys
 if __name__ == "__main__":
     sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-import math
-
 import numpy as np
 import tensorflow as tf
 from matplotlib import pyplot as plt
@@ -14,42 +12,18 @@ from tqdm import tqdm
 from lib.params import Data, Settings
 
 
-def calculate_angle(start_point, terminal_point):
-    if type(start_point) is not np.ndarray:
-        start_point = np.array(start_point)
-    if type(terminal_point) is not np.ndarray:
-        terminal_point = np.array(terminal_point)
-
-    dir_vector = terminal_point - start_point
-    if dir_vector[0] == 0:
-        # TODO: Is this correct? It seems logical that if the x-position
-        # does not change it is parallel to the y-axis
-        return 90
-    return np.arctan(dir_vector[1] / dir_vector[0]) * (180 / math.pi)
-
-
 def get_angle_from_data(data, labels, model, window_size=16):
-    prev_xy = 0
-    prev_xy_label = 0
-
     angles = []
     real_angles = []
     for idx in range(0, 1024, window_size * 8):
         input_data = data[idx:idx + window_size]
         input_data = np.reshape(input_data, (1, window_size, 128))
         y_pred = model.predict(input_data, verbose=0)
-        xy_label = labels[idx]
+        x_label = labels[idx][2]
 
-        if idx != 0:
-            angle = calculate_angle(prev_xy, y_pred[0])
-            real_angle = calculate_angle(prev_xy_label, xy_label)
-            # print(prev_xy_label, xy_label)
+        angles.append(y_pred[0][2])
+        real_angles.append( x_label)
 
-            angles.append(angle)
-            real_angles.append(real_angle)
-
-        prev_xy = y_pred[0]
-        prev_xy_label = xy_label
     return np.mean(angles), np.mean(real_angles)
 
 
@@ -77,18 +51,18 @@ def main():
         angles.append(angle_results[0])
         real_angles.append(angle_results[1])
 
-    plt.plot(angles, "bo", label="Predicted Speed")
-    plt.plot(real_angles, "r.", label="Real Speed")
+    plt.plot(angles, "bo", label="Predicted Angle")
+    plt.plot(real_angles, "r.", label="Real Angle")
 
     for idx in range(len(angles)):
         line_x_values = [idx, idx]
         line_y_values = [angles[idx], real_angles[idx]]
-        plt.plot(line_x_values, line_y_values, "k-", linestyle="-")
-    plt.ylim((-180, 180))
+        plt.plot(line_x_values, line_y_values, "k-")
+    plt.ylim((0, 70))
     plt.xlabel("run")
     plt.ylabel("Angle (degrees)")
     MSE = np.square(np.subtract(real_angles, angles)).mean()
-    plt.text(0, 60, f"MSE: {MSE:.2f} mm/s")
+    plt.text(0, 60, f"MSE: {MSE:.2f} degrees")
     plt.title(f"Estimated vs Real angle per run")
     plt.legend()
     plt.show()

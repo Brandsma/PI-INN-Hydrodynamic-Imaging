@@ -1,9 +1,12 @@
-# Use modules to keep code organized
 import os
 from pathlib import Path
 
 from lib import LSTM, params
 from lib.peregrine_util import get_scratch_dir
+
+from lib.logger import setup_logger
+
+log = setup_logger(__name__)
 
 
 # TODO: remove read_inputs and replace it with CLI arguments
@@ -38,7 +41,7 @@ if __name__ == "__main__":
     data = params.Data(settings, train_location)
 
     data.normalize()
-
+    
     # Initiate the LSTM network using data and settings
     network = LSTM.LSTM_network(data, settings)
     network.model.summary()
@@ -48,6 +51,7 @@ if __name__ == "__main__":
     # Save the network for later use
     trained_models_folder = "../data/trained_models/"
     Path(trained_models_folder).mkdir(parents=True, exist_ok=True)
+    log.info(f"Saving trained model to {trained_models_folder}{settings.name}...")
     network.save_model(f"{trained_models_folder}{settings.name}")
 
     # # Test the network

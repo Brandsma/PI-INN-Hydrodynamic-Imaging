@@ -148,7 +148,7 @@ def main():
     for w in args.speed:
         for a in args.size:
             log.info(
-                f"Running experiment {count}/{len(args.speed) * len(args.size)} with (a = {a}, w = {w})..."
+                f"Running simulation {count}/{len(args.speed) * len(args.size)} with (a = {a}, w = {w})..."
             )
             simulate(theta=args.theta,
                      a=a,

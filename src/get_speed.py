@@ -1,4 +1,5 @@
 import os
+import math
 import sys
 
 if __name__ == "__main__":
@@ -24,16 +25,17 @@ def get_speed_from_data(data, labels, timestamp, model, window_size=16):
         input_data = np.reshape(input_data, (1, window_size, 128))
         y_pred = model.predict(input_data, verbose=0)
         time = timestamp[idx][0]
-        x_label = labels[idx][0]
-
+        x_label = labels[idx][0:1]
+        
         if idx != 0:
-            speed = abs(y_pred[0][0] - prev_x) / abs(time - prev_time)
-            real_speed = abs(x_label - prev_x_label) / abs(time - prev_time)
+            # TODO: Adjust speed calculation for varying y
+            speed = math.dist(y_pred[0][0:1], prev_x) / abs(time - prev_time)
+            real_speed = math.dist(x_label, prev_x_label) / abs(time - prev_time)
 
             speeds.append(speed)
             real_speeds.append(real_speed)
 
-        prev_x = y_pred[0][0]
+        prev_x = y_pred[0][0:1]
         prev_x_label = x_label
         prev_time = time
     return np.mean(speeds), np.mean(real_speeds)

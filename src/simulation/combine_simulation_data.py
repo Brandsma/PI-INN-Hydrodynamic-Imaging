@@ -69,6 +69,8 @@ def main():
     all_labels = np.load(f"{current_filename[0]}_labels{current_filename[-1]}")
     all_timestamp = np.load(
         f"{current_filename[0]}_timestamp{current_filename[-1]}")
+    all_volumes = np.load(
+        f"{current_filename[0]}_volumes{current_filename[-1]}")
 
     # For each data found, add it to the total runs
     for name in base_names:
@@ -76,25 +78,30 @@ def main():
         labels = np.load(f"{base_name[0]}_labels{base_name[-1]}")
         data = np.load(name)
         timestamp = np.load(f"{base_name[0]}_timestamp{base_name[-1]}")
+        volume = np.load(f"{base_name[0]}_volumes{base_name[-1]}")
 
         all_labels = np.append(all_labels, labels, axis=0)
         all_data = np.append(all_data, data, axis=0)
         all_timestamp = np.append(all_timestamp, timestamp, axis=0)
+        all_volumes = np.append(all_volumes, volume, axis=0)
 
     log.debug(all_data.shape)
     log.debug(all_labels.shape)
     log.debug(all_timestamp.shape)
+    log.debug(all_volumes.shape)
 
     # Save it to disk
     result_filename = "combined"
     result_ext = "npy"
     log.info(
-        f"Saving to {result_filename}_(..., labels, timestamp).{result_ext}")
+        f"Saving to {result_filename}_(..., labels, timestamp, volumes).{result_ext}")
 
     np.save(f"{folder_path}/{result_filename}.{result_ext}", all_data)
     np.save(f"{folder_path}/{result_filename}_labels.{result_ext}", all_labels)
     np.save(f"{folder_path}/{result_filename}_timestamp.{result_ext}",
             all_timestamp)
+    np.save(f"{folder_path}/{result_filename}_volumes.{result_ext}",
+            all_volumes)
 
 
 if __name__ == '__main__':
