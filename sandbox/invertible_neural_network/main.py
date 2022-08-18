@@ -29,7 +29,7 @@ pad_dim = tot_dim - x_dim
 n_data = data.shape[0] * data.shape[1]
 n_couple_layer = 3
 n_hid_layer = 3
-n_hid_dim = 64
+n_hid_dim = 512
 
 n_batch = 200
 n_epoch = 100

@@ -25,10 +25,10 @@ pad_dim = tot_dim - x_dim
 n_data = data.shape[0] * data.shape[1]
 n_couple_layer = 3
 n_hid_layer = 3
-n_hid_dim = 64
+n_hid_dim = 512
 
 n_batch = 200
-n_epoch = 1000
+n_epoch = 100
 n_display = 100
 
 ###
@@ -83,6 +83,7 @@ x_pred = model.inverse(y).numpy()
 print(pad_dim)
 for idx in range(200):
     print(x_pred[idx][0:3], " - ", X[idx])
-    
-print(np.linalg.norm(x_pred[:][0:3] - X))
+
+# TODO: Test it better
+#print(np.linalg.norm(x_pred[:][0:3] - X))
 
