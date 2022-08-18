@@ -1,4 +1,5 @@
 import math
+from tqdm import tqdm
 from copy import deepcopy
 
 import matplotlib.pyplot as plt
@@ -21,7 +22,7 @@ def read_inputs(train_loc):
     stride = 2
     alpha = 0.05
     decay = 1e-9
-    shuffle_data = False
+    shuffle_data = True
     data_split = 0.8
     dropout = 0
     ac_fun = "relu"
@@ -101,21 +102,27 @@ def extract_volume(points, speed, theta, vx_data, vy_data, window_size):
     return np.mean(volumes)
 
 
-def start_volume_extraction(a, w, new_model, window_size=16):
-    global count_idx, MSE, error
-    train_location = f"../data/simulation_data/a{a}_normw{w}_data.npy"
+def start_volume_extraction(window_size=16):
+    train_location = f"../data/simulation_data/combined.npy"
     trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:4&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
 
     # Load settings
     settings = Settings.from_model_location(trained_model_location, data_location=train_location)
     # Load data
     data = Data(settings, train_location)
+    
+    # Load the model
+    new_model = tf.keras.models.load_model(trained_model_location)
 
     speed_data = deepcopy(data)
     speed_data.normalize()
 
-    volumes = []
-    for run_idx in range(3):
+    volume_error = {}
+    for run_idx in tqdm(range(data.test_data.shape[0])):
+    #for run_idx in tqdm(range(2)):
+        a = data.test_volumes[run_idx]
+        if a not in volume_error:
+            volume_error[a] = []
 
         path = []
         for idx in range(0, 1024-window_size):
@@ -123,67 +130,59 @@ def start_volume_extraction(a, w, new_model, window_size=16):
             input_data = np.reshape(input_data, (1, 16, 128))
             y_pred = new_model.predict(input_data, verbose=0)
             path.append(y_pred[0])
-        speeds = get_speed_from_data(speed_data.test_data[run_idx],
+        speed = get_speed_from_data(speed_data.test_data[run_idx],
                                      speed_data.test_labels[run_idx],
                                      speed_data.test_timestamp[run_idx],
-                                     new_model)
-        angles = get_angle_from_data(speed_data.test_data[run_idx],
+                                     new_model)[0]
+        angle = get_angle_from_data(speed_data.test_data[run_idx],
                                      speed_data.test_labels[run_idx],
-                                     new_model)
-        speed = speeds[0]
-        angle = angles[0]
+                                     new_model)[0]
 
         vx_data = data.test_data[run_idx][:, ::2]
         vy_data = data.test_data[run_idx][:, 1::2]
 
         volume = extract_volume(path, speed, angle, vx_data, vy_data, window_size)
-        volumes.append(volume)
-        # print(f"Real speed: {speeds[1]} mm/s")
-        # print(f"Speed: {speed} mm/s")
-        # print(f"Volume: {volume} mm")
-        # print(f"Error: {volume - a} mm")
+        
+        volume_error[a].append(abs(volume - a))
 
-    # print(volumes)
-    # print([a for _ in range(len(volumes))])
+        
+    volumes = []
+    real_volumes = []
+    for key in volume_error:
+        volumes.extend([x + key for x in volume_error[key]])
+        for _ in volume_error[key]:
+            real_volumes.append(key)
+        
+    print(volumes, real_volumes)
 
-    # plt.plot(volumes, label="Predicted Speed")
-    # plt.plot([a for _ in range(len(volumes))], label="Real Speed")
+    plt.plot(volumes, "bo", label="Predicted Volume")
+    plt.plot(real_volumes, "r.", label="Real Volume")
 
     for idx in range(len(volumes)):
-        line_x_values = [count_idx, count_idx]
-        count_idx += 1
-        line_y_values = [volumes[idx], a]
+        line_x_values = [idx, idx]
+        line_y_values = [volumes[idx], real_volumes[idx]]
         plt.plot(line_x_values, line_y_values, "k-")
     plt.ylim((0, 70))
     plt.xlabel("run")
-    plt.ylabel("Size (mm)")
-    error[a].append(
-        np.square(np.subtract([a for _ in range(len(volumes))],
-                              volumes)).mean())
-    plt.title(f"Estimated vs Real size per run")
+    plt.ylabel("Volume (mm)")
+    MSE = np.square(np.subtract(real_volumes, volumes)).mean()
+    plt.text(0, 60, f"MSE: {MSE:.2f} mm")
+    plt.title(f"Estimated vs Real volume per run")
+    plt.legend()
+    plt.show()
+
+    for key in volume_error:
+        volume_error[key] = np.mean(volume_error[key])
 
     print(" -- DONE -- ")
+    return volume_error
 
 
 def main():
-    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:4&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
-    a_set = [10, 20, 30, 40, 50]
-    w_set = [10, 20, 30, 40, 50]
-
-    # a_set = [10, 20]
-    # w_set = [10, 20]
-
-    new_model = tf.keras.models.load_model(trained_model_location)
-
-    cur_idx = 1
-    for a in a_set:
-        for w in w_set:
-            print(f"Running {cur_idx}/{len(a_set) * len(w_set)}...")
-            start_volume_extraction(a, w, new_model)
-            cur_idx += 1
+    error = start_volume_extraction()
 
     for key in error:
-        print(f"{key}: {np.mean(error[key])}")
+        print(f"{key}: {error[key]}")
 
     # plt.text(0, 65, f"MSE: {MSE/(len(a_set) * len(w_set)):.2f} mm")
     # plt.show()

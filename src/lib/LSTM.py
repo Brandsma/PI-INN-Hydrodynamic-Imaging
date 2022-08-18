@@ -174,7 +174,7 @@ class LSTM_network:
             if lab_idx % 10 == 0:
                 plt.plot(y_pred)
                 plt.plot(y_true)
-                plt.legend(['x_pred', 'y_pred', 'x_true', 'y_true', 'theta_pred', 'theta_true'],
+                plt.legend(['x_pred', 'y_pred', 'theta_pred', 'x_true', 'y_true', 'theta_true'],
                            loc='upper left')
                 # plt.ylim(-35, 35)
                 plt.savefig(dirname + '/lab_vs_out_' + str(lab_idx) + '.png')

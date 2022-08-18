@@ -14,8 +14,8 @@ from lib.params import Settings, Data
 
 # GLOBAL VARIABLES
 
-SENSOR = 10000
-SAMPLING_RATE = 100
+SENSOR = 32
+SAMPLING_RATE = 1024
 
 # Data
 
@@ -77,7 +77,7 @@ def positional_solution(x):
 
 # PDE
 
-W = dde.Variable(1.0)
+W = dde.Variable(19.0)
 
 def pde(x, y):
     dvx_x = dde.grad.jacobian(y, x, i=0, j=0)
@@ -94,7 +94,7 @@ def pde(x, y):
 def main():
     Debugger.enabled = True
 
-    settings = Settings(16, 1, 100, 0.05, 1e-09, 5, True, 0.8, 0.0, "../../data/simulation_data/a10_normw10_data.npy", "relu")
+    settings = Settings(16, 1, 100, 0.05, 1e-09, 5, True, 0.8, 0.0, "../../data/simulation_data/a20_normw20_data.npy", "relu")
     data = Data(settings, settings.train_location)
     x_input = np.array(list(np.linspace(-500, 500, num=1024))).reshape(1024,1)
     y_input = list(np.linspace(75, 75, num=1024))
@@ -126,7 +126,7 @@ def main():
                         anchors=coord_input)
 
     # Define the neural network
-    net = dde.nn.FNN([2] + [32] * 3 + [2], "tanh", "Glorot normal")
+    net = dde.nn.FNN([2] + [30] * 3 + [2], "tanh", "Glorot normal")
 
     # Create the PINN and train it
     model = dde.Model(data, net)
