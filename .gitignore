@@ -12,6 +12,7 @@ data/
 ..bfg-report/
 .#*
 *.mat
+*/models/*
 
 # May want this, but for now keep it out
 results/
