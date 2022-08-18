@@ -10,15 +10,18 @@ from flow import *
 from utils import *
 
 ## SETUP DATA ##
-data = np.load('../../../data/a1_normw1_theta0.npy')
-data = np.transpose(data, (1, 2, 3, 0))
-data = np.reshape(
-    data, (data.shape[0], data.shape[1], data.shape[2] * data.shape[3]))
+data = np.load('../../data/simulation_data/a20_normw20_data.npy')
+labels = np.load('../../data/simulation_data/a20_normw20_data_labels.npy')
 
-labels = []
+# data = np.transpose(data, (1, 2, 3, 0))
+# data = np.reshape(
+    # data, (data.shape[0], data.shape[1], data.shape[2] * data.shape[3]))
+
+
+# labels = []
 # labels = ['red','red','red','red','blue','blue','green','purple']
 
-x_dim = 2
+x_dim = labels.shape[2]
 y_dim = data.shape[2]
 z_dim = 100
 tot_dim = y_dim + z_dim
@@ -26,26 +29,28 @@ pad_dim = tot_dim - x_dim
 n_data = data.shape[0] * data.shape[1]
 n_couple_layer = 3
 n_hid_layer = 3
-n_hid_dim = 512
+n_hid_dim = 64
 
 n_batch = 200
-n_epoch = 1000
+n_epoch = 100
 n_display = 100
 
 ###
 # Make data
 
-X_raw = np.zeros((data.shape[0], data.shape[1], x_dim), dtype='float32')
-for y in range(data.shape[0]):
-    for x in range(data.shape[1]):
-        X_raw[y, x, :] = np.array([y + 1, x + 1])
+X_raw = labels
 
+# X_raw = np.zeros((data.shape[0], data.shape[1], x_dim), dtype='float32')
+# for y in range(data.shape[0]):
+#     for x in range(data.shape[1]):
+#         X_raw[y, x, :] = np.array([y + 1, x + 1])
+        
 # TODO: Duplicate the data to have some more training data for now?
 
 ###
 # Preprocess
 X = X_raw.reshape((-1, x_dim))
-X = StandardScaler().fit_transform(X)
+#X = StandardScaler().fit_transform(X)
 
 y = data.reshape((-1, data.shape[2]))
 
@@ -170,6 +175,7 @@ ax.plot(hist.history['forward_loss'], 'b.-', label='forward_loss')
 ax.plot(hist.history['latent_loss'], 'g.-', label='latent_loss')
 ax.plot(hist.history['rev_loss'], 'r.-', label='inverse_loss')
 plt.legend()
+plt.show()
 
 z = np.random.multivariate_normal([1.] * z_dim, np.eye(z_dim), y.shape[0])
 y = np.concatenate([z, y], axis=-1).astype('float32')

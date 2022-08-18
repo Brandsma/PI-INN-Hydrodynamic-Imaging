@@ -9,12 +9,10 @@ import pandas as pd
 from deepxde.backend import tf
 from matplotlib import pyplot as plt
 
-from util import Debugger
-
 # GLOBAL VARIABLES
 
-SENSOR = 10000
-SAMPLING_RATE = 100
+SENSOR = 32
+SAMPLING_RATE = 1024
 
 # Data
 
@@ -61,46 +59,30 @@ def v_y(s, x, y, theta=0, a=1, norm_w=1):
     return C * (wavelet_n(p) * math.sin(theta) -
                 wavelet_o(p) * math.cos(theta))
 
-
-@Debugger
 def solution(x):
     x1, y1 = x[:, 0:1], x[:, 1:2]
     # TODO: Update this solution such that the sensor is also included
     return np.hstack((v_x(SENSOR / SAMPLING_RATE, x1,
                           y1), v_y(SENSOR / SAMPLING_RATE, x1, y1)))
 
-
-def positional_solution(x):
-    vx, vy = x[:, 0:1], x[:, 1:2]
-
-
-# PDE
-
-
-def additional_term(x, y):
-    # TODO: Make this depend on the speed variable instead of hardcoding it
-    w_x = 1
-    w_y = 1
-    return ((3 * (w_x * x + w_y * y)) / ((x**2 + y**2)**(5 / 2)))
-
-
 def pde(x, y):
     dvx_x = dde.grad.jacobian(y, x, i=0, j=0)
     dvy_y = dde.grad.jacobian(y, x, i=1, j=1)
-
     x1, y1 = x[:, 0:1], x[:, 1:2]
-    vx1, vy1 = y[:, 0:1], y[:, 1:2]
-    return dvx_x + dvy_y + additional_term(x1, y1)
+
+    # NOTE: sqrt(10) ~= 3.2
+    w_x = 3.2
+    w_y = 3.2
+
+    return dvx_x + dvy_y + ((3 * (w_x * x1 + w_y * y1)) / ((x1**2 + y1**2)**(5 / 2)))
 
 
 # MAIN
 
 
 def main():
-    Debugger.enabled = True
-
     # Define the input data
-    geom = dde.geometry.Rectangle(xmin=[-500, 75], xmax=[500, 75])
+    geom = dde.geometry.Rectangle(xmin=[-500, 0], xmax=[500, 75])
     # TODO: Find the correct Boundary Conditions for V_xy to XY
     bc = dde.DirichletBC(
         geom,
@@ -115,14 +97,14 @@ def main():
                         num_domain=6000,
                         num_boundary=150,
                         solution=solution)
-    gen_data = load_gendata()
+    #gen_data = load_gendata()
 
     # Add the simulated data as training points
     # data.add_anchors(gen_data)
     # data.resample_train_points()
 
     # Define the neural network
-    net = dde.nn.FNN([2] + [32] * 3 + [2], "tanh", "Glorot normal")
+    net = dde.nn.FNN([2] + [32] * 3 + [128], "tanh", "Glorot normal")
 
     # Create the PINN and train it
     model = dde.Model(data, net)
