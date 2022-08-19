@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 
 # GLOBAL VARIABLES
 
-SENSOR = 32
+SENSOR = 512
 SAMPLING_RATE = 1024
 
 # Data
@@ -62,8 +62,8 @@ def v_y(s, x, y, theta=0, a=1, norm_w=1):
 def solution(x):
     x1, y1 = x[:, 0:1], x[:, 1:2]
     # TODO: Update this solution such that the sensor is also included
-    return np.hstack((v_x(SENSOR / SAMPLING_RATE, x1,
-                          y1), v_y(SENSOR / SAMPLING_RATE, x1, y1)))
+    return np.hstack((v_x(SENSOR / SAMPLING_RATE * 1000 - 500, x1,
+                          y1), v_y(SENSOR / SAMPLING_RATE * 1000 - 500, x1, y1)))
 
 def pde(x, y):
     dvx_x = dde.grad.jacobian(y, x, i=0, j=0)
@@ -104,7 +104,7 @@ def main():
     # data.resample_train_points()
 
     # Define the neural network
-    net = dde.nn.FNN([2] + [32] * 3 + [128], "tanh", "Glorot normal")
+    net = dde.nn.FNN([2] + [32] * 3 + [2], "tanh", "Glorot normal")
 
     # Create the PINN and train it
     model = dde.Model(data, net)

@@ -10,8 +10,8 @@ from flow import *
 from utils import *
 
 ## SETUP DATA ##
-data = np.load('../../data/simulation_data/a20_normw20_data.npy')
-labels = np.load('../../data/simulation_data/a20_normw20_data_labels.npy')
+data = np.load('../../data/simulation_data/combined.npy')
+labels = np.load('../../data/simulation_data/combined_labels.npy')
 
 # data = np.transpose(data, (1, 2, 3, 0))
 # data = np.reshape(
@@ -23,7 +23,7 @@ labels = np.load('../../data/simulation_data/a20_normw20_data_labels.npy')
 
 x_dim = labels.shape[2]
 y_dim = data.shape[2]
-z_dim = 100
+z_dim = 500
 tot_dim = y_dim + z_dim
 pad_dim = tot_dim - x_dim
 n_data = data.shape[0] * data.shape[1]
@@ -31,9 +31,9 @@ n_couple_layer = 3
 n_hid_layer = 3
 n_hid_dim = 512
 
-n_batch = 200
-n_epoch = 100
-n_display = 100
+n_batch = 128
+n_epoch = 10
+n_display = 1
 
 ###
 # Make data
@@ -165,7 +165,7 @@ hist = trainer.fit(dataset,
                    epochs=n_epoch,
                    steps_per_epoch=n_data // n_batch,
                    callbacks=[logger, LossFactor],
-                   verbose=0)
+                   verbose=1)
 
 ## CHECK RESULTS ##
 
