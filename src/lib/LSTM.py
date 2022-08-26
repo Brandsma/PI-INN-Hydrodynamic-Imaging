@@ -101,7 +101,7 @@ class LSTM_network:
         train_lab = self.data.train_labels
         val_dat = self.data.val_data
         val_labels = self.data.val_labels
-
+        
         train_steps = int(self.__num_batches(train_dat))
         val_steps = int(self.__num_batches(val_dat))
 

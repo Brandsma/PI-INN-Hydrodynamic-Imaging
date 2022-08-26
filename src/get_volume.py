@@ -5,6 +5,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+import seaborn as sns
 
 from get_angle import get_angle_from_data
 from get_speed import get_speed_from_data
@@ -71,7 +72,7 @@ def inverse_volume_vy_calculation(vy, sensor, speed, x, y, theta):
                    (wn * math.sin(theta) + wo * math.cos(theta))))**(1/3)
 
 
-def extract_volume(points, speed, theta, vx_data, vy_data, window_size):
+def extract_volume(points, speed, theta, vx_data, vy_data, window_size, real_volume=None):
 
     # Simulation Parameters
 
@@ -98,6 +99,33 @@ def extract_volume(points, speed, theta, vx_data, vy_data, window_size):
             volumes_vy.append(volume_vy)
             volume = (volume_vx + volume_vy) / 2
             volumes.append(volume)
+    
+    # sns.set_theme(style="whitegrid")
+    # ax = sns.violinplot(y=[sum(x)/len(x) for x in np.split(np.array(volumes_vx), len(volumes_vx)/vx_data.shape[1])])
+    # ax = sns.violinplot(y=[sum(x)/len(x) for x in np.split(np.array(volumes_vy), len(volumes_vy)/vx_data.shape[1])])
+    plt.figure()
+    
+    plt.boxplot(np.split(np.array([sum(x)/len(x) for x in np.split(np.array(volumes_vy), len(volumes_vy)//vx_data.shape[1])]), 8))
+    plt.axhline(real_volume, color='r', label="True Volume")
+    plt.xlabel("y-position (mm)")
+    plt.ylabel("Volume (mm^3)")
+    plt.title("Volume Estimation based on V_y")
+    ax = plt.gca()
+    ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(75, 300, 8)])
+    plt.legend()
+    plt.savefig(f"graphs/a{real_volume}_vy.png")
+    
+    plt.figure()
+
+    plt.boxplot(np.split(np.array([sum(x)/len(x) for x in np.split(np.array(volumes_vx), len(volumes_vx)//vx_data.shape[1])]), 8))
+    plt.axhline(real_volume, color='r', label="True Volume")
+    plt.xlabel("y-position (mm)")
+    plt.ylabel("Volume (mm^3)")
+    plt.title("Volume Estimation based on V_x")
+    ax = plt.gca()
+    ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(75, 300, 8)])
+    plt.legend()
+    plt.savefig(f"graphs/a{real_volume}_vx.png")
 
     return np.mean(volumes)
 
@@ -119,10 +147,13 @@ def start_volume_extraction(window_size=16):
 
     volume_error = {}
     for run_idx in tqdm(range(data.test_data.shape[0])):
-    #for run_idx in tqdm(range(2)):
+    # for run_idx in tqdm(range(1)):
         a = data.test_volumes[run_idx]
         if a not in volume_error:
             volume_error[a] = []
+        else:
+            continue
+        print(f"Running with volume {a}")
 
         path = []
         for idx in range(0, 1024-window_size):
@@ -141,7 +172,7 @@ def start_volume_extraction(window_size=16):
         vx_data = data.test_data[run_idx][:, ::2]
         vy_data = data.test_data[run_idx][:, 1::2]
 
-        volume = extract_volume(path, speed, angle, vx_data, vy_data, window_size)
+        volume = extract_volume(path, speed, angle, vx_data, vy_data, window_size, real_volume=a)
         
         volume_error[a].append(abs(volume - a))
 

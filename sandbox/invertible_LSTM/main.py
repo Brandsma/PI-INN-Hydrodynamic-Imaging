@@ -47,12 +47,16 @@ X_raw = labels
         
 # TODO: Duplicate the data to have some more training data for now?
 
+print(data.shape)
+
 ###
 # Preprocess
 X = X_raw.reshape((-1, x_dim))
 #X = StandardScaler().fit_transform(X)
 
 y = data.reshape((-1, data.shape[2]))
+print(y.shape)
+exit()
 
 ###
 # Pad data
