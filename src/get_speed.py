@@ -43,7 +43,7 @@ def get_speed_from_data(data, labels, timestamp, model, window_size=16):
 
 def main():
     train_location = "../data/simulation_data/combined.npy"
-    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:4&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
+    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:8&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
 
     settings = Settings.from_model_location(trained_model_location,
                                             data_location=train_location)

@@ -1,11 +1,11 @@
 import math
-from tqdm import tqdm
 from copy import deepcopy
 
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
 import seaborn as sns
+import tensorflow as tf
+from tqdm import tqdm
 
 from get_angle import get_angle_from_data
 from get_speed import get_speed_from_data
@@ -49,9 +49,9 @@ def inverse_volume_vx_calculation(vx, sensor, speed, x, y, theta):
     we = wavelet_e(p)
     wo = wavelet_o(p)
 
-    return abs((2 * y**3 *
-            vx) / (speed *
-                   (-we * math.cos(theta) + wo * math.sin(theta))))**(1/3)
+    return abs(
+        (2 * y**3 * vx) /
+        (speed * (-we * math.cos(theta) + wo * math.sin(theta))))**(1 / 3)
 
 
 def inverse_volume_vy_calculation(vy, sensor, speed, x, y, theta):
@@ -67,12 +67,18 @@ def inverse_volume_vy_calculation(vy, sensor, speed, x, y, theta):
     # print((wn * math.sin(theta)))
 
     # TODO: is taking the absolute absolutely fine?
-    return abs((2 * y**3 *
-            vy) / (speed *
-                   (wn * math.sin(theta) + wo * math.cos(theta))))**(1/3)
+    return abs(
+        (2 * y**3 * vy) /
+        (speed * (wn * math.sin(theta) + wo * math.cos(theta))))**(1 / 3)
 
 
-def extract_volume(points, speed, theta, vx_data, vy_data, window_size, real_volume=None):
+def extract_volume(points,
+                   speed,
+                   theta,
+                   vx_data,
+                   vy_data,
+                   window_size,
+                   real_volume=None):
 
     # Simulation Parameters
 
@@ -90,100 +96,110 @@ def extract_volume(points, speed, theta, vx_data, vy_data, window_size, real_vol
     for point_idx, pos in enumerate(points):
         for sensor_idx in range(vx_data.shape[1]):
             volume_vx = inverse_volume_vx_calculation(
-                vx_data[point_idx+window_size, sensor_idx], input_sensors[sensor_idx],
-                speed, pos[0], pos[1], theta)
+                vx_data[point_idx + window_size, sensor_idx],
+                input_sensors[sensor_idx], speed, pos[0], pos[1], theta)
             volume_vy = inverse_volume_vy_calculation(
-                vy_data[point_idx+window_size, sensor_idx], input_sensors[sensor_idx],
-                speed, pos[0], pos[1], theta)
+                vy_data[point_idx + window_size, sensor_idx],
+                input_sensors[sensor_idx], speed, pos[0], pos[1], theta)
             volumes_vx.append(volume_vx)
             volumes_vy.append(volume_vy)
             volume = (volume_vx + volume_vy) / 2
             volumes.append(volume)
-    
+
     # sns.set_theme(style="whitegrid")
     # ax = sns.violinplot(y=[sum(x)/len(x) for x in np.split(np.array(volumes_vx), len(volumes_vx)/vx_data.shape[1])])
     # ax = sns.violinplot(y=[sum(x)/len(x) for x in np.split(np.array(volumes_vy), len(volumes_vy)/vx_data.shape[1])])
-    plt.figure()
-    
-    plt.boxplot(np.split(np.array([sum(x)/len(x) for x in np.split(np.array(volumes_vy), len(volumes_vy)//vx_data.shape[1])]), 8))
-    plt.axhline(real_volume, color='r', label="True Volume")
-    plt.xlabel("y-position (mm)")
-    plt.ylabel("Volume (mm^3)")
-    plt.title("Volume Estimation based on V_y")
-    ax = plt.gca()
-    ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(75, 300, 8)])
-    plt.legend()
-    plt.savefig(f"graphs/a{real_volume}_vy.png")
-    
-    plt.figure()
+    # plt.figure()
 
-    plt.boxplot(np.split(np.array([sum(x)/len(x) for x in np.split(np.array(volumes_vx), len(volumes_vx)//vx_data.shape[1])]), 8))
-    plt.axhline(real_volume, color='r', label="True Volume")
-    plt.xlabel("y-position (mm)")
-    plt.ylabel("Volume (mm^3)")
-    plt.title("Volume Estimation based on V_x")
-    ax = plt.gca()
-    ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(75, 300, 8)])
-    plt.legend()
-    plt.savefig(f"graphs/a{real_volume}_vx.png")
+    # plt.boxplot(np.split(np.array([sum(x)/len(x) for x in np.split(np.array(volumes_vy), len(volumes_vy)//vx_data.shape[1])]), 8))
+    # plt.axhline(real_volume, color='r', label="True Volume")
+    # plt.xlabel("y-position (mm)")
+    # plt.ylabel("Volume (mm^3)")
+    # plt.title("Volume Estimation based on V_y")
+    # ax = plt.gca()
+    # ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(75, 300, 8)])
+    # plt.legend()
+    # plt.savefig(f"graphs/a{real_volume}_vy.png")
+
+    # plt.figure()
+
+    # plt.boxplot(np.split(np.array([sum(x)/len(x) for x in np.split(np.array(volumes_vx), len(volumes_vx)//vx_data.shape[1])]), 8))
+    # plt.axhline(real_volume, color='r', label="True Volume")
+    # plt.xlabel("y-position (mm)")
+    # plt.ylabel("Volume (mm^3)")
+    # plt.title("Volume Estimation based on V_x")
+    # ax = plt.gca()
+    # ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(75, 300, 8)])
+    # plt.legend()
+    # plt.savefig(f"graphs/a{real_volume}_vx.png")
 
     return np.mean(volumes)
 
 
 def start_volume_extraction(window_size=16):
     train_location = f"../data/simulation_data/combined.npy"
-    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:4&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
+    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:8&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
 
     # Load settings
-    settings = Settings.from_model_location(trained_model_location, data_location=train_location)
+    settings = Settings.from_model_location(trained_model_location,
+                                            data_location=train_location)
     # Load data
     data = Data(settings, train_location)
-    
+
     # Load the model
     new_model = tf.keras.models.load_model(trained_model_location)
 
     speed_data = deepcopy(data)
     speed_data.normalize()
 
+    print(data.train_data.shape)
+    print(data.test_data.shape)
+    print(data.val_data.shape)
+
     volume_error = {}
     for run_idx in tqdm(range(data.test_data.shape[0])):
-    # for run_idx in tqdm(range(1)):
+        # for run_idx in tqdm(range(1)):
         a = data.test_volumes[run_idx]
         if a not in volume_error:
             volume_error[a] = []
-        else:
-            continue
+        # else:
+        #     continue
         print(f"Running with volume {a}")
 
         path = []
-        for idx in range(0, 1024-window_size):
-            input_data = speed_data.test_data[run_idx][idx:idx+window_size]
+        for idx in range(0, 1024 - window_size):
+            input_data = speed_data.test_data[run_idx][idx:idx + window_size]
             input_data = np.reshape(input_data, (1, 16, 128))
             y_pred = new_model.predict(input_data, verbose=0)
             path.append(y_pred[0])
         speed = get_speed_from_data(speed_data.test_data[run_idx],
-                                     speed_data.test_labels[run_idx],
-                                     speed_data.test_timestamp[run_idx],
-                                     new_model)[0]
+                                    speed_data.test_labels[run_idx],
+                                    speed_data.test_timestamp[run_idx],
+                                    new_model)[0]
         angle = get_angle_from_data(speed_data.test_data[run_idx],
-                                     speed_data.test_labels[run_idx],
-                                     new_model)[0]
+                                    speed_data.test_labels[run_idx],
+                                    new_model)[0]
 
         vx_data = data.test_data[run_idx][:, ::2]
         vy_data = data.test_data[run_idx][:, 1::2]
 
-        volume = extract_volume(path, speed, angle, vx_data, vy_data, window_size, real_volume=a)
-        
+        volume = extract_volume(path,
+                                speed,
+                                angle,
+                                vx_data,
+                                vy_data,
+                                window_size,
+                                real_volume=a)
+
         volume_error[a].append(abs(volume - a))
 
-        
     volumes = []
     real_volumes = []
     for key in volume_error:
         volumes.extend([x + key for x in volume_error[key]])
         for _ in volume_error[key]:
             real_volumes.append(key)
-        
+
     print(volumes, real_volumes)
 
     plt.plot(volumes, "bo", label="Predicted Volume")
@@ -203,7 +219,8 @@ def start_volume_extraction(window_size=16):
     plt.show()
 
     for key in volume_error:
-        volume_error[key] = np.mean(volume_error[key])
+        volume_error[key] = (np.mean(volume_error[key]),
+                             np.std(volume_error[key]))
 
     print(" -- DONE -- ")
     return volume_error
@@ -213,7 +230,7 @@ def main():
     error = start_volume_extraction()
 
     for key in error:
-        print(f"{key}: {error[key]}")
+        print(f"{key}: {error[key][0]} ({error[key][1]})")
 
     # plt.text(0, 65, f"MSE: {MSE/(len(a_set) * len(w_set)):.2f} mm")
     # plt.show()

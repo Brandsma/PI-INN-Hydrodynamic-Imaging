@@ -166,7 +166,6 @@ class LSTM_network:
                     y_pred = np.vstack((y_pred, test_result))
                     y_true = np.vstack((y_true, true_label))
 
-                    print(test_result.shape, true_label.shape)
                     error = euclidean(test_result, true_label)
                     self.errors = np.vstack((self.errors, error))
                     self.labels = np.vstack((self.labels, true_label))
