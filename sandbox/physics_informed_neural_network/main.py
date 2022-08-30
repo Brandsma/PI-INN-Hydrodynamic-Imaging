@@ -3,6 +3,7 @@
 import math
 
 import deepxde as dde
+import seaborn as sns
 import numpy as np
 import pandas as pd
 # Import tf if using backend tensorflow.compat.v1 or tensorflow
@@ -79,6 +80,7 @@ def positional_solution(x):
 
 W = dde.Variable(19.0)
 
+
 def pde(x, y):
     dvx_x = dde.grad.jacobian(y, x, i=0, j=0)
     dvy_y = dde.grad.jacobian(y, x, i=1, j=1)
@@ -91,39 +93,96 @@ def pde(x, y):
 # MAIN
 
 
+def print_x(x):
+    if x[0] == -500:
+        print(x)
+    print("------------")
+    return True
+
+
 def main():
     Debugger.enabled = True
 
-    settings = Settings(16, 1, 100, 0.05, 1e-09, 5, True, 0.8, 0.0, "../../data/simulation_data/a20_normw20_data.npy", "relu")
+    settings = Settings(16, 1, 100, 0.05, 1e-09, 8, True, 0.8, 0.0,
+                        "../../data/simulation_data/a20_normw20_data.npy", "relu")
     data = Data(settings, settings.train_location)
-    x_input = np.array(list(np.linspace(-500, 500, num=1024))).reshape(1024,1)
-    y_input = list(np.linspace(75, 75, num=1024))
+    x_input = np.array(list(np.linspace(-500, 500, num=1024))).reshape(1024, 1)
+    y_input = list(np.linspace(75, 150, num=1024))
     coord_input = np.array(list(zip(x_input, y_input)))
 
     # print(data.train_data.shape)
+    xmin = [-500, 75]
+    xmax = [500, 150]
 
     # Define the input data
-    geom = dde.geometry.Rectangle(xmin=[-500,74.9], xmax=[500, 75.1])
-    # TODO: Find the correct Boundary Conditions for V_xy to XY
-    bc = dde.DirichletBC(
+    geom = dde.geometry.Rectangle(xmin=xmin, xmax=xmax)
+    bc_vx_1 = dde.DirichletBC(
         geom,
         lambda x: 0,
-        lambda _, on_boundary: on_boundary,
+        lambda x, on_boundary: x[0] == xmax[0],
+        component=0,
     )
+    bc_vx_2 = dde.DirichletBC(
+        geom,
+        lambda x: 0,
+        lambda x, on_boundary: x[0] == xmin[0],
+        component=0,
+    )
+    bc_vx_3 = dde.DirichletBC(
+        geom,
+        lambda x: 0,
+        lambda x, on_boundary: x[1] == xmax[1],
+        component=0,
+    )
+    bc_vx_4 = dde.DirichletBC(
+        geom,
+        lambda x: v_x(SENSOR, x[0], x[1], 4.28, 20, 20),
+        lambda x, on_boundary: x[1] == xmin[1],
+        component=0,
+    )
+    # -------------
+    bc_vy_1 = dde.DirichletBC(
+        geom,
+        lambda x: 0,
+        lambda x, on_boundary: x[0] == xmax[0],
+        component=1,
+    )
+    bc_vy_2 = dde.DirichletBC(
+        geom,
+        lambda x: 0,
+        lambda x, on_boundary: x[0] == xmin[0],
+        component=1,
+    )
+    bc_vy_3 = dde.DirichletBC(
+        geom,
+        lambda x: 0,
+        lambda x, on_boundary: x[1] == xmax[1],
+        component=1,
+    )
+    bc_vy_4 = dde.DirichletBC(
+        geom,
+        lambda x: v_y(SENSOR, x[0], x[1], 4.28, 20, 20),
+        lambda x, on_boundary: x[1] == xmin[1],
+        component=1,
+    )
+    
 
-    observed_data_vx = data.train_data[0, :, 0].reshape(data.train_data[0, :, 0].shape[0], 1)
-    observed_data_vy = data.train_data[0, :, 1].reshape(data.train_data[0, :, 1].shape[0], 1)
-    # print(x_input.shape, observed_data.shape)
-    observe_w_vx = dde.icbc.PointSetBC(coord_input, observed_data_vx, component=0)
-    observe_w_vy = dde.icbc.PointSetBC(coord_input, observed_data_vy, component=1)
+    # TODO: ADD THE SPEED OR VOLUME OR WHATEVER DIRECTLY TO THE OUTPUT OF THE MODEL INSTEAD OF USING THE INVERSE CALCULATION METHOD
+
+    # observed_data_vx = data.train_data[0, :, 0].reshape(data.train_data[0, :, 0].shape[0], 1)
+    # observed_data_vy = data.train_data[0, :, 1].reshape(data.train_data[0, :, 1].shape[0], 1)
+    # # print(x_input.shape, observed_data.shape)
+    # observe_w_vx = dde.icbc.PointSetBC(coord_input, observed_data_vx, component=0)
+    # observe_w_vy = dde.icbc.PointSetBC(coord_input, observed_data_vy, component=1)
 
     # Define the data together with the PDE
     data = dde.data.PDE(geom,
                         pde,
-                        [bc, observe_w_vx, observe_w_vy],
-                        num_domain=1024,
-                        num_boundary=30,
-                        anchors=coord_input)
+                        [bc_vx_1, bc_vx_2, bc_vx_3, bc_vx_4,
+                            bc_vy_1, bc_vy_2, bc_vy_3, bc_vy_4],
+                        num_domain=5000,
+                        num_boundary=2000,
+                        )
 
     # Define the neural network
     net = dde.nn.FNN([2] + [30] * 3 + [2], "tanh", "Glorot normal")
@@ -131,12 +190,27 @@ def main():
     # Create the PINN and train it
     model = dde.Model(data, net)
     model.compile("adam", lr=1e-3, external_trainable_variables=[W])
-    variable = dde.callbacks.VariableValue([W], period = 600, filename="variables.dat")
-    losshistory, train_state = model.train(iterations=60000, callbacks=[variable])
+    variable = dde.callbacks.VariableValue(
+        [W], period=200, filename="variables.dat")
+    losshistory, train_state = model.train(
+        iterations=20000, callbacks=[variable])
 
     # Show the results of training
+    y_train, y_test, best_y, best_ystd = dde.utils.external._pack_data(
+        train_state)
+    print(best_y.shape)
+    # vx_output = best_y[:, 0].reshape((np.sqrt(best_y.shape[0]).astype(int), np.sqrt(best_y.shape[0]).astype(int)))
+    # print(vx_output.shape)
+    # print(train_state.X_test.shape)
+    # ax = sns.heatmap(vx_output, linewidth=0.5)
+    # ax = plt.axes(projection="3d")
+    # ax.plot_surface(train_state.X_test[:, 0], train_state.X_test[:, 1], best_y[:, 0], cmap='viridis', edgecolor='none')
+    # plt.show()
+
     dde.utils.external.saveplot(losshistory, train_state)
-    
+    # dde.utils.external.save_best_state(
+    #     train_state, "./train_data.txt", "./test_data.txt")
+
 
 if __name__ == "__main__":
     main()
