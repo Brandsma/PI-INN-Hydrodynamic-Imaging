@@ -71,13 +71,46 @@ def inverse_volume_vy_calculation(vy, sensor, speed, x, y, theta):
         (2 * y**3 * vy) /
         (speed * (wn * math.sin(theta) + wo * math.cos(theta))))**(1 / 3)
 
+def v_x(s, x, y, theta, a, norm_w):
+    p = (s - x) / y
+    C = (norm_w * a**3) / (2 * y**3)
+    return C * (wavelet_o(p) * math.sin(theta) -
+                wavelet_e(p) * math.cos(theta))
 
+
+def v_y(s, x, y, theta, a, norm_w):
+    p = (s - x) / y
+    C = (norm_w * a**3) / (2 * y**3)
+    return C * (wavelet_n(p) * math.sin(theta) -
+                wavelet_o(p) * math.cos(theta))
+
+def compare_datas(vx_data, vy_data, speed=20, theta=4.28, volume=20, sensors=64):
+    # NOTE: only works when middle of vx_data is at 0,0 point
+    position = [7.2380757,114.14125]
+    volumes_vx = np.array([v_x(s, position[0], position[1], theta, volume, speed) for s in range(sensors*1024)])
+    volumes_vy = np.array([v_y(s, position[0], position[1], theta, volume, speed) for s in range(sensors*1024)])
+    
+    es_volumes_vx = vx_data[vx_data.shape[0] //2, :]
+    es_volumes_vy = vy_data[vy_data.shape[0] //2, :]
+    
+    plt.figure()
+    plt.plot(volumes_vx, label="True $V_x$ data")
+    plt.plot(es_volumes_vx, label="Estimated $V_x$ data")
+    plt.legend()
+    plt.figure()
+    plt.plot(volumes_vy, label="True $V_y$ data")
+    plt.plot(es_volumes_vy, label="Estimated $V_y$ data")
+    plt.legend()
+    plt.show()
+    
+    
 def extract_volume(points,
                    speed,
                    theta,
                    vx_data,
                    vy_data,
-                   window_size,
+                   labels=None,
+                   window_size=16,
                    real_volume=None):
 
     # Simulation Parameters
@@ -93,31 +126,28 @@ def extract_volume(points,
     volumes = []
     volumes_vx = []
     volumes_vy = []
+    print(len(points))
     for point_idx, pos in enumerate(points):
         for sensor_idx in range(vx_data.shape[1]):
+            print(labels[point_idx], " - ", pos, " ", theta)
             volume_vx = inverse_volume_vx_calculation(
-                vx_data[point_idx + window_size, sensor_idx],
+                vx_data[point_idx, sensor_idx],
                 input_sensors[sensor_idx], speed, pos[0], pos[1], theta)
             volume_vy = inverse_volume_vy_calculation(
-                vy_data[point_idx + window_size, sensor_idx],
+                vy_data[point_idx, sensor_idx],
                 input_sensors[sensor_idx], speed, pos[0], pos[1], theta)
             volumes_vx.append(volume_vx)
             volumes_vy.append(volume_vy)
             volume = (volume_vx + volume_vy) / 2
             volumes.append(volume)
 
-    # sns.set_theme(style="whitegrid")
-    # ax = sns.violinplot(y=[sum(x)/len(x) for x in np.split(np.array(volumes_vx), len(volumes_vx)/vx_data.shape[1])])
-    # ax = sns.violinplot(y=[sum(x)/len(x) for x in np.split(np.array(volumes_vy), len(volumes_vy)/vx_data.shape[1])])
-    # plt.figure()
-
     # plt.boxplot(np.split(np.array([sum(x)/len(x) for x in np.split(np.array(volumes_vy), len(volumes_vy)//vx_data.shape[1])]), 8))
     # plt.axhline(real_volume, color='r', label="True Volume")
-    # plt.xlabel("y-position (mm)")
+    # plt.xlabel("x-position (mm)")
     # plt.ylabel("Volume (mm^3)")
     # plt.title("Volume Estimation based on V_y")
     # ax = plt.gca()
-    # ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(75, 300, 8)])
+    # ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(-500, 500, 8)])
     # plt.legend()
     # plt.savefig(f"graphs/a{real_volume}_vy.png")
 
@@ -125,15 +155,17 @@ def extract_volume(points,
 
     # plt.boxplot(np.split(np.array([sum(x)/len(x) for x in np.split(np.array(volumes_vx), len(volumes_vx)//vx_data.shape[1])]), 8))
     # plt.axhline(real_volume, color='r', label="True Volume")
-    # plt.xlabel("y-position (mm)")
+    # plt.xlabel("x-position (mm)")
     # plt.ylabel("Volume (mm^3)")
     # plt.title("Volume Estimation based on V_x")
     # ax = plt.gca()
-    # ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(75, 300, 8)])
+    # ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(-500, 500, 8)])
     # plt.legend()
     # plt.savefig(f"graphs/a{real_volume}_vx.png")
+    
+    # plt.figure()
 
-    return np.mean(volumes)
+    return np.mean(volumes_vy)
 
 
 def start_volume_extraction(window_size=16):
@@ -145,7 +177,7 @@ def start_volume_extraction(window_size=16):
                                             data_location=train_location)
     # Load data
     data = Data(settings, train_location)
-
+    
     # Load the model
     new_model = tf.keras.models.load_model(trained_model_location)
 
@@ -169,7 +201,7 @@ def start_volume_extraction(window_size=16):
         path = []
         for idx in range(0, 1024 - window_size):
             input_data = speed_data.test_data[run_idx][idx:idx + window_size]
-            input_data = np.reshape(input_data, (1, 16, 128))
+            input_data = np.reshape(input_data, (1, window_size, 128))
             y_pred = new_model.predict(input_data, verbose=0)
             path.append(y_pred[0])
         speed = get_speed_from_data(speed_data.test_data[run_idx],
@@ -183,11 +215,13 @@ def start_volume_extraction(window_size=16):
         vx_data = data.test_data[run_idx][:, ::2]
         vy_data = data.test_data[run_idx][:, 1::2]
 
+        labels = data.test_labels[run_idx]
         volume = extract_volume(path,
                                 speed,
                                 angle,
                                 vx_data,
                                 vy_data,
+                                labels,
                                 window_size,
                                 real_volume=a)
 

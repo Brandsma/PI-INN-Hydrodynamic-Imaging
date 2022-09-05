@@ -3,15 +3,16 @@
 import math
 
 import deepxde as dde
-import seaborn as sns
 import numpy as np
 import pandas as pd
+import seaborn as sns
 # Import tf if using backend tensorflow.compat.v1 or tensorflow
 from deepxde.backend import tf
 from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
+from lib.params import Data, Settings
 from util import Debugger
-from lib.params import Settings, Data
 
 # GLOBAL VARIABLES
 
@@ -106,9 +107,6 @@ def main():
     settings = Settings(16, 1, 100, 0.05, 1e-09, 8, True, 0.8, 0.0,
                         "../../data/simulation_data/a20_normw20_data.npy", "relu")
     data = Data(settings, settings.train_location)
-    x_input = np.array(list(np.linspace(-500, 500, num=1024))).reshape(1024, 1)
-    y_input = list(np.linspace(75, 150, num=1024))
-    coord_input = np.array(list(zip(x_input, y_input)))
 
     # print(data.train_data.shape)
     xmin = [-500, 75]
@@ -193,7 +191,7 @@ def main():
     variable = dde.callbacks.VariableValue(
         [W], period=200, filename="variables.dat")
     losshistory, train_state = model.train(
-        iterations=20000, callbacks=[variable])
+        iterations=10000, callbacks=[variable])
 
     # Show the results of training
     y_train, y_test, best_y, best_ystd = dde.utils.external._pack_data(
@@ -206,6 +204,24 @@ def main():
     # ax = plt.axes(projection="3d")
     # ax.plot_surface(train_state.X_test[:, 0], train_state.X_test[:, 1], best_y[:, 0], cmap='viridis', edgecolor='none')
     # plt.show()
+    plt.figure()
+    x_input = np.array(list(np.linspace(-500, 500, num=64))).reshape(-1, 1)
+    y_input = np.array(list(np.linspace(75, 150, num=64))).reshape(-1, 1)
+    coordv = np.array(np.meshgrid(x_input, y_input))
+    coordv = np.transpose(coordv.reshape(2, -1))
+    true_vy_data = np.array([v_y(SENSOR, x, y, 4.28, 20, 20) for (x,y) in coordv]).reshape(-1, 1)
+
+    ax = plt.axes(projection=Axes3D.name)
+    ax.plot3D(
+        coordv[:, 0],
+        coordv[:, 1],
+        true_vy_data[:, 0],
+        ".",
+    )
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$y$")
+    ax.set_zlabel("$V_y$")
+
 
     dde.utils.external.saveplot(losshistory, train_state)
     # dde.utils.external.save_best_state(
