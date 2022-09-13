@@ -31,7 +31,7 @@ def v_x(s, x, y, theta, a, norm_w):
 def v_y(s, x, y, theta, a, norm_w):
     p = (s - x) / y
     C = (norm_w * a**3) / (2 * y**3)
-    return C * (wavelet_n(p) * math.sin(theta) -
+    return C * (wavelet_n(p) * math.sin(theta) +
                 wavelet_o(p) * math.cos(theta))
 
 
@@ -51,7 +51,6 @@ def calculate_path(points, num_steps, simulation_area_offset=75):
         path.extend(subpath)
 
     return path
-
 
 def calculate_angle(start_point, terminal_point):
     if type(start_point) is not np.ndarray:
