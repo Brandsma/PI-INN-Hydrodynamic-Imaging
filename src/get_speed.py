@@ -12,11 +12,43 @@ from tqdm import tqdm
 
 from lib.params import Data, Settings
 
+def get_speed_from_model_predicts(model_predicts, labels, timestamp, window_size=16):
+    prev_x = [0,0]
+    prev_time = 0
+
+    real_speeds = []
+    for idx in range(0,1024,window_size):
+        time = timestamp[idx][0]
+
+        if idx != 0:
+            # TODO: Adjust speed calculation for varying y
+            speed = math.dist(labels[idx][0:1], prev_x) / abs(time - prev_time)
+
+            real_speeds.append(speed)
+
+        prev_x = labels[idx][0:1]
+        prev_time = time
+    prev_x = [0,0]
+    prev_time = 0
+
+    speeds = []
+    for idx, y_pred in enumerate(model_predicts):
+        time = timestamp[idx + window_size][0]
+
+        if idx != 0:
+            # TODO: Adjust speed calculation for varying y
+            speed = math.dist(y_pred[0:1], prev_x) / abs(time - prev_time)
+
+            speeds.append(speed)
+
+        prev_x = y_pred[0:1]
+        prev_time = time
+    return np.mean(speeds), np.mean(real_speeds)
 
 def get_speed_from_data(data, labels, timestamp, model, window_size=16):
-    prev_x = 0
+    prev_x = [0, 0]
     prev_time = 0
-    prev_x_label = 0
+    prev_x_label = [0, 0]
 
     speeds = []
     real_speeds = []
@@ -26,7 +58,7 @@ def get_speed_from_data(data, labels, timestamp, model, window_size=16):
         y_pred = model.predict(input_data, verbose=0)
         time = timestamp[idx][0]
         x_label = labels[idx][0:1]
-        
+
         if idx != 0:
             # TODO: Adjust speed calculation for varying y
             speed = math.dist(y_pred[0][0:1], prev_x) / abs(time - prev_time)

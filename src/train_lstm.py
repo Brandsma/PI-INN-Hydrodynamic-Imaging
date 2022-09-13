@@ -41,7 +41,7 @@ if __name__ == "__main__":
     data = params.Data(settings, train_location)
 
     data.normalize()
-    
+
     # Initiate the LSTM network using data and settings
     network = LSTM.LSTM_network(data, settings)
     network.model.summary()
