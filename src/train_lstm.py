@@ -12,7 +12,7 @@ log = setup_logger(__name__)
 # TODO: remove read_inputs and replace it with CLI arguments
 def read_inputs():
     n_nodes = 128
-    n_epochs = 8
+    n_epochs = 4
     window_size = 16
     stride = 2
     alpha = 0.05

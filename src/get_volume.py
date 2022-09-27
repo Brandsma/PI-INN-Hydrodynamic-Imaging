@@ -15,21 +15,6 @@ MSE = 0
 error = {10: [], 20: [], 30: [], 40: [], 50: []}
 
 
-def read_inputs(train_loc):
-    n_nodes = 100
-    n_epochs = 30
-    window_size = 16
-    stride = 2
-    alpha = 0.05
-    decay = 1e-9
-    shuffle_data = True
-    data_split = 0.8
-    dropout = 0
-    ac_fun = "relu"
-    return n_nodes, n_epochs, window_size, stride, \
-        alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
-
-
 def wavelet_e(p):
     return (1 - 2 * p**2) / ((1 + p**2)**(5 / 2))
 
@@ -45,13 +30,19 @@ def wavelet_n(p):
 # TODO: Update both inverse volume calculation for a theta that is not zero
 def inverse_volume_vx_calculation(vx, sensor, speed, x, y, theta):
     p = (sensor - x) / y
-    # print(p, sensor, x, f"({sensor - x})", y)
     we = wavelet_e(p)
     wo = wavelet_o(p)
 
-    return abs(
-        (2 * y**3 * vx) /
-        (speed * (-we * math.cos(theta) + wo * math.sin(theta))))**(1 / 3)
+    answer = ((2 * y**3 * vx) /
+              (speed * (-we * math.cos(theta) + wo * math.sin(theta))))**(1 /
+                                                                          3)
+
+    if math.isnan(answer):
+        answer = abs(
+            (2 * y**3 * vx) /
+            (speed * (-we * math.cos(theta) + wo * math.sin(theta))))**(1 / 3)
+
+    return answer
 
 
 def inverse_volume_vy_calculation(vy, sensor, speed, x, y, theta):
@@ -59,30 +50,15 @@ def inverse_volume_vy_calculation(vy, sensor, speed, x, y, theta):
     wo = wavelet_o(p)
     wn = wavelet_n(p)
 
-    # print((2 * y**3 * vy) / (speed * (wn * math.sin(theta) + wo * math.cos(theta)))**(1 / 3))
-    # print((2 * y**3 * vy))
-    # print((speed * (wn * math.sin(theta) + wo * math.cos(theta))))
-    # print((wn * math.sin(theta) + wo * math.cos(theta)))
-    # print((wo * math.cos(theta)))
-    # print((wn * math.sin(theta)))
+    answer = ((2 * y**3 * vy) /
+              (speed * (wn * math.sin(theta) + wo * math.cos(theta))))**(1 / 3)
+    if math.isnan(answer):
+        answer = abs(
+            (2 * y**3 * vy) /
+            (speed * (wn * math.sin(theta) + wo * math.cos(theta))))**(1 / 3)
 
-    # TODO: is taking the absolute absolutely fine?
-    return abs(
-        (2 * y**3 * vy) /
-        (speed * (wn * math.sin(theta) + wo * math.cos(theta))))**(1 / 3)
+    return answer
 
-def v_x(s, x, y, theta, a, norm_w):
-    p = (s - x) / y
-    C = (norm_w * a**3) / (2 * y**3)
-    return C * (wavelet_o(p) * math.sin(theta) -
-                wavelet_e(p) * math.cos(theta))
-
-
-def v_y(s, x, y, theta, a, norm_w):
-    p = (s - x) / y
-    C = (norm_w * a**3) / (2 * y**3)
-    return C * (wavelet_n(p) * math.sin(theta) -
-                wavelet_o(p) * math.cos(theta))
 
 def extract_volume(points,
                    speed,
@@ -119,11 +95,17 @@ def extract_volume(points,
                 input_sensors[sensor_idx], speed, pos[0], pos[1], pos[2])
 
             real_volume_vx = inverse_volume_vx_calculation(
-                vx_data[point_idx + window_size, sensor_idx],
-                input_sensors[sensor_idx], speed, labels[point_idx + window_size][0], labels[point_idx + window_size][1], labels[point_idx + window_size][2])
+                vx_data[point_idx + window_size,
+                        sensor_idx], input_sensors[sensor_idx], speed,
+                labels[point_idx + window_size][0],
+                labels[point_idx + window_size][1],
+                labels[point_idx + window_size][2])
             real_volume_vy = inverse_volume_vy_calculation(
-                vy_data[point_idx + window_size, sensor_idx],
-                input_sensors[sensor_idx], speed, labels[point_idx + window_size][0], labels[point_idx + window_size][1], labels[point_idx + window_size][2])
+                vy_data[point_idx + window_size,
+                        sensor_idx], input_sensors[sensor_idx], speed,
+                labels[point_idx + window_size][0],
+                labels[point_idx + window_size][1],
+                labels[point_idx + window_size][2])
             volumes_vx.append(volume_vx)
             volumes_vy.append(volume_vy)
             real_volumes_vx.append(real_volume_vx)
@@ -135,61 +117,12 @@ def extract_volume(points,
             volumes.append(volume)
             real_volumes.append(current_real_volume)
 
-    # plt.boxplot(np.split(np.array([sum(x)/len(x) for x in np.split(np.array(volumes_vy), len(volumes_vy)//vx_data.shape[1])]), 8))
-    # plt.axhline(real_volume, color='r', label="True Volume")
-    # plt.xlabel("x-position (mm)")
-    # plt.ylabel("radius (mm)")
-    # plt.title("Volume Estimation based on V_y")
-    # ax = plt.gca()
-    # ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(points[0][0], points[-1][0], 8)])
-    # plt.legend()
-    # plt.savefig(f"graphs/a{real_volume}_vy.png")
-
-    # plt.figure()
-
-    # plt.boxplot(np.split(np.array([sum(x)/len(x) for x in np.split(np.array(volumes_vx), len(volumes_vx)//vx_data.shape[1])]), 8))
-    # plt.axhline(real_volume, color='r', label="True Volume")
-    # plt.xlabel("x-position (mm)")
-    # plt.ylabel("radius (mm)")
-    # plt.title("Volume Estimation based on V_x")
-    # ax = plt.gca()
-    # ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(points[0][0], points[-1][0], 8)])
-    # plt.legend()
-    # plt.savefig(f"graphs/a{real_volume}_vx.png")
-
-    # plt.figure()
-
-    # plt.boxplot(np.split(np.array([sum(x)/len(x) for x in np.split(np.array(real_volumes_vy), len(real_volumes_vy)//vy_data.shape[1])]), 8))
-    # plt.axhline(real_volume, color='r', label="True Volume")
-    # plt.xlabel("x-position (mm)")
-    # plt.ylabel("radius (mm)")
-    # plt.title("Volume Estimation based on real V_y")
-    # ax = plt.gca()
-    # ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(labels[0][0], labels[-1][0], 8)])
-    # plt.legend()
-    # plt.savefig(f"graphs/a{real_volume}_vx.png")
-
-    # plt.figure()
-
-    # plt.boxplot(np.split(np.array([sum(x)/len(x) for x in np.split(np.array(real_volumes_vx), len(real_volumes_vx)//vx_data.shape[1])]), 8))
-    # plt.axhline(real_volume, color='r', label="True Volume")
-    # plt.xlabel("x-position (mm)")
-    # plt.ylabel("radius (mm)")
-    # plt.title("Volume Estimation based on real V_x")
-    # ax = plt.gca()
-    # ax.set_xticklabels([f"{x:.0f}" for x in np.linspace(labels[0][0], labels[-1][0], 8)])
-    # plt.legend()
-    # plt.savefig(f"graphs/a{real_volume}_vx.png")
-
-    # plt.figure()
-
-
-    return np.mean(real_volumes)
+    return np.mean(volumes)
 
 
 def start_volume_extraction(window_size=16):
     train_location = f"../data/simulation_data/combined.npy"
-    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:8&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
+    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:4&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
 
     # Load settings
     settings = Settings.from_model_location(trained_model_location,
@@ -219,20 +152,23 @@ def start_volume_extraction(window_size=16):
         a = data.test_volumes[run_idx]
         if a not in volume_error:
             volume_error[a] = []
-        # else:
-        #     continue
+        else:
+            continue
         print(f"Running with volume {a}")
 
         path = []
-        for idx in range(0, 1024-window_size):
+        for idx in range(0, 1024 - window_size):
             input_data = speed_data.test_data[run_idx][idx:idx + window_size]
             input_data = np.reshape(input_data, (1, window_size, 128))
             y_pred = new_model.predict(input_data, verbose=0)
             path.append(y_pred[0])
         print(f"{path[0]=}, {path[-1]=}")
 
-        speed, real_speed = get_speed_from_model_predicts(path, data.test_labels[run_idx], speed_data.test_timestamp[run_idx], window_size=window_size)
-
+        speed, real_speed = get_speed_from_model_predicts(
+            path,
+            data.test_labels[run_idx],
+            speed_data.test_timestamp[run_idx],
+            window_size=window_size)
 
         vx_data = data.test_data[run_idx][:, ::2]
         vy_data = data.test_data[run_idx][:, 1::2]
