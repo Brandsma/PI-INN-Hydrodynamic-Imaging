@@ -4,12 +4,7 @@ Utilities
 2020-11-17 first created
 '''
 
-import matplotlib.pyplot as plt
-import matplotlib
-import seaborn as sns
 import os
-import numpy as np
-from sklearn.preprocessing import StandardScaler
 from time import time, strftime, gmtime
 import tensorflow as tf
 tfk = tf.keras
