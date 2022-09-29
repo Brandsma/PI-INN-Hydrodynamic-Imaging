@@ -1,5 +1,3 @@
-import itertools
-
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -7,24 +5,30 @@ import tensorflow as tf
 from flow import *
 from utils import *
 
-def sol(x):
+from trainer import Trainer
+
+def solution(x):
     return np.sin(np.pi * x)
 
 def main():
     ## SETUP DATA ##
-    data = np.linspace(-1, 1, num=8192).reshape((-1, 1))
-    labels = sol(data).reshape((-1,1))
+    data = np.linspace(-1, 1, num=1024).reshape((-1, 1))
+    labels = solution(data).reshape((-1,1))
+
+    data_noise = np.random.normal(0, .005, data.shape)
+    labels_noise = np.random.normal(0, .005, labels.shape)
+
+    data = data + data_noise
+    labels = labels + labels_noise
+
+    # plt.plot(data, label="data")
+    # plt.plot(labels, label="labels")
+    # plt.legend()
+    # plt.show()
+    # exit()
 
     print(data.shape)
     print(labels.shape)
-
-    # data = np.transpose(data, (1, 2, 3, 0))
-    # data = np.reshape(
-        # data, (data.shape[0], data.shape[1], data.shape[2] * data.shape[3]))
-
-
-    # labels = []
-    # labels = ['red','red','red','red','blue','blue','green','purple']
 
     x_dim = data.shape[1]
     y_dim = labels.shape[1]
@@ -32,37 +36,32 @@ def main():
     tot_dim = y_dim + z_dim
     pad_dim = tot_dim - x_dim
     n_data = data.shape[0]
-    n_couple_layer = 8
-    n_hid_layer = 6
+    n_couple_layer = 6
+    n_hid_layer = 4
     n_hid_dim = 64
 
-    n_batch = 64
-    n_epoch = 4
+    n_batch = 8
+    n_epoch = 32
     n_display = 1
 
     ###
     # Make data
 
-    X_raw = labels
-
-    # X_raw = np.zeros((data.shape[0], data.shape[1], x_dim), dtype='float32')
-    # for y in range(data.shape[0]):
-    #     for x in range(data.shape[1]):
-    #         X_raw[y, x, :] = np.array([y + 1, x + 1])
-
-    # TODO: Duplicate the data to have some more training data for now?
+    X = data
+    y = labels
 
     ###
     # Preprocess
-    X = X_raw.reshape((-1, x_dim))
-    #X = StandardScaler().fit_transform(X)
-
-    # y = data.reshape((-1, data.shape[2]))
-    y = data
+    # print(X_raw.shape)
+    # X = X_raw.reshape((-1, x_dim))
+    # print(X.shape)
+    # exit()
+    # X = StandardScaler().fit_transform(X)
 
     ###
     # Pad data
     pad_x = np.zeros((X.shape[0], pad_dim))
+    pad_x = np.random.multivariate_normal([0.] * pad_dim, np.eye(pad_dim), X.shape[0])
     x_data = np.concatenate([X, pad_x], axis=-1).astype('float32')
     # TODO: This z should be a gaussian (I think based on the paper), which it is right now.
     # But do check if this is correct in the future
@@ -82,84 +81,6 @@ def main():
     model(x)
     model.summary()
 
-    class Trainer(tfk.Model):
-        def __init__(self,
-                    model,
-                    x_dim,
-                    y_dim,
-                    z_dim,
-                    tot_dim,
-                    n_couple_layer,
-                    n_hid_layer,
-                    n_hid_dim,
-                    shuffle_type='reverse'):
-            super(Trainer, self).__init__()
-            self.model = model
-            self.x_dim = x_dim
-            self.y_dim = y_dim
-            self.z_dim = z_dim
-            self.tot_dim = tot_dim
-            self.x_pad_dim = tot_dim - x_dim
-            self.y_pad_dim = tot_dim - (y_dim + z_dim)
-            self.n_couple_layer = n_couple_layer
-            self.n_hid_layer = n_hid_layer
-            self.n_hid_dim = n_hid_dim
-            self.shuffle_type = shuffle_type
-
-            self.w1 = 5.
-            self.w2 = 1.
-            self.w3 = 10.
-            self.loss_factor = 1.
-            self.loss_fit = MSE
-            self.loss_latent = MMD_multiscale
-
-        def train_step(self, data):
-            x_data, y_data = data
-            x = x_data[:, :self.x_dim]
-            y = y_data[:, -self.y_dim:]
-            z = y_data[:, :self.z_dim]
-            y_short = tf.concat([z, y], axis=-1)
-
-            # Forward loss
-            with tf.GradientTape() as tape:
-                y_out = self.model(x_data)
-                pred_loss = self.w1 * self.loss_fit(
-                    y_data[:, self.z_dim:],
-                    y_out[:, self.z_dim:])  # [zeros, y] <=> [zeros, yhat]
-                output_block_grad = tf.concat(
-                    [y_out[:, :self.z_dim], y_out[:, -self.y_dim:]],
-                    axis=-1)  # take out [z, y] only (not zeros)
-                latent_loss = self.w2 * self.loss_latent(
-                    y_short, output_block_grad)  # [z, y] <=> [zhat, yhat]
-                forward_loss = pred_loss + latent_loss
-            grads_forward = tape.gradient(forward_loss,
-                                        self.model.trainable_weights)
-            self.optimizer.apply_gradients(
-                zip(grads_forward, self.model.trainable_weights))
-
-            # Backward loss
-            with tf.GradientTape() as tape:
-                x_rev = self.model.inverse(y_data)
-                rev_loss = self.w3 * self.loss_factor * self.loss_fit(
-                    x_rev, x_data)
-            grads_backward = tape.gradient(rev_loss, self.model.trainable_weights)
-            self.optimizer.apply_gradients(
-                zip(grads_backward, self.model.trainable_weights))
-
-            # Physics informed loss
-            # with tf.GradientTape()
-
-            total_loss = forward_loss + latent_loss + rev_loss
-            return {
-                'total_loss': total_loss,
-                'forward_loss': forward_loss,
-                'latent_loss': latent_loss,
-                'rev_loss': rev_loss
-            }
-
-        def test_step(self, data):
-            x_data, y_data = data
-            return NotImplementedError
 
 
     trainer = Trainer(model, x_dim, y_dim, z_dim, tot_dim, n_couple_layer,
@@ -177,17 +98,18 @@ def main():
 
     ## CHECK RESULTS ##
 
-    fig, ax = plt.subplots(1, facecolor='white', figsize=(8, 5))
-    ax.plot(hist.history['total_loss'], 'k.-', label='total_loss')
-    ax.plot(hist.history['forward_loss'], 'b.-', label='forward_loss')
-    ax.plot(hist.history['latent_loss'], 'g.-', label='latent_loss')
-    ax.plot(hist.history['rev_loss'], 'r.-', label='inverse_loss')
-    plt.legend()
-    plt.show()
+    # fig, ax = plt.subplots(1, facecolor='white', figsize=(8, 5))
+    # ax.plot(hist.history['total_loss'], 'k.-', label='total_loss')
+    # ax.plot(hist.history['forward_loss'], 'b.-', label='forward_loss')
+    # ax.plot(hist.history['latent_loss'], 'g.-', label='latent_loss')
+    # ax.plot(hist.history['rev_loss'], 'r.-', label='inverse_loss')
+    # plt.legend()
 
     z = np.random.multivariate_normal([1.] * z_dim, np.eye(z_dim), y.shape[0])
-    y = np.concatenate([z, y], axis=-1).astype('float32')
-    x_pred = model.inverse(y).numpy()
+    y_data = np.concatenate([z, y], axis=-1).astype('float32')
+    x_pred = model.inverse(y_data).numpy()
+    x_data = np.concatenate([X, pad_x], axis=-1).astype('float32')
+    y_pred = model(x_data).numpy()
 
     # print(" -- Saving model")
     # model.save("./models/")
@@ -195,13 +117,29 @@ def main():
 
     # print(x_pred)
     # print(x_pred.shape)
+    # print(x_data.shape)
+
+    # print(y_pred.shape)
+    # print(y_data.shape)
     # print(labels.shape)
 
+    print("Showing figures...")
+
     plt.figure()
+    plt.title("Backward Process")
     plt.plot(x_pred[:, 0], label="predicted")
-    plt.plot(labels[:, 0], label="label")
-    plt.plot(x_pred[:, 1], label="predicted - distribution")
+    plt.plot(x_data[:, 0], label="label")
     plt.legend()
+
+    plt.figure()
+    plt.title("Forward Process")
+    plt.plot(y_pred[:, -1], label="predicted")
+    plt.plot(y_data[:, -1], label="label")
+    plt.legend()
+
+    plt.figure()
+    plt.title("Backward Process Distribution")
+    plt.plot(x_pred[:, 1:-1])
     plt.show()
 
     print(" -- DONE -- ")
