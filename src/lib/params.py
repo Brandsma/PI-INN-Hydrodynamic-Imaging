@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 
 import numpy as np
 import scipy.io as sio
@@ -14,9 +15,9 @@ Settings class.
 
 
 class Settings:
-    def __init__(self, window_size, stride, n_nodes, alpha, decay, n_epochs,
-                 shuffle_data, data_split, dropout_ratio, train_location,
-                 ac_fun):
+    def __init__(self, window_size=16, stride=2, n_nodes=128, alpha=0.05, decay=1e-9, n_epochs=4,
+                 shuffle_data=True, data_split=0.8, dropout_ratio=0, train_location="../data/simulation_data/combined.npy",
+                 ac_fun="relu"):
         # Window size
         self.window_size = window_size
         # Stride
@@ -117,19 +118,23 @@ class Data:
     - extracts number of sensors and number of samples from data.
     - splits data in train and test split. ratio depends on the settings.
     """
-    def __init__(self, settings, location):
+    def __init__(self, settings, location, supplied_data: Tuple = None):
         print("Loading dataset from " + location + "...")
 
         self.settings = settings
         # load data
-        if os.path.splitext(location)[-1] == ".npy":
-            d_1, l_1, d_2, l_2, d_3, l_3, t_1, t_2, t_3, v_1, v_2, v_3 = self.__load_data_numpy(
-                location, settings.data_split)
+
+        if supplied_data == None:
+            if os.path.splitext(location)[-1] == ".npy":
+                d_1, l_1, d_2, l_2, d_3, l_3, t_1, t_2, t_3, v_1, v_2, v_3 = self._load_data_numpy(
+                    location, settings.data_split)
+            else:
+                print(
+                    f"Error, file extension {os.path.splitext(location[-1])} is unknown and cannot be loaded for data"
+                )
+                exit(1)
         else:
-            print(
-                f"Error, file extension {os.path.splitext(location[-1])} is unknown and cannot be loaded for data"
-            )
-            exit(1)
+            d_1, l_1, d_2, l_2, d_3, l_3, t_1, t_2, t_3, v_1, v_2, v_3 = self._split_data(supplied_data[0], supplied_data[1], supplied_data[2], supplied_data[3], settings.data_split)
 
         # assign to data members.
         self.train_data = d_1
@@ -139,11 +144,11 @@ class Data:
         self.val_data = d_3
         self.val_labels = l_3
 
-        self.test_timestamp = t_1
+        self.train_timestamp = t_1
         self.val_timestamp = t_2
         self.test_timestamp = t_3
 
-        self.test_volumes = v_1
+        self.train_volumes = v_1
         self.val_volumes = v_2
         self.test_volumes = v_3
 
@@ -155,6 +160,10 @@ class Data:
 
         print("Dataset loaded.")
 
+
+    @classmethod
+    def from_data(cls, settings, data, labels, timestamp, volumes):
+        return cls(settings, "custom", supplied_data=(data, labels, timestamp, volumes))
     """
     Data::__load_data_numpy(location):
     - private function
@@ -162,7 +171,7 @@ class Data:
       train, test and validation data and label sets.
     """
 
-    def __load_data_numpy(self, file_location, split_ratio):
+    def _load_data_numpy(self, file_location, split_ratio):
         print("Loading numpy data")
         # Extract name of numpy struct from file and load it
         base_name = os.path.splitext(file_location)
@@ -173,7 +182,7 @@ class Data:
 
         # Split data into train, test and validation sets.
         train_d, train_l, test_d, test_l, val_d, val_l, train_t, val_t, test_t, train_v, val_v, test_v = \
-            self.__split_data(data, labels, timestamp, volumes, split_ratio)
+            self._split_data(data, labels, timestamp, volumes, split_ratio)
 
         return train_d, train_l, test_d, test_l, val_d, val_l, train_t, val_t, test_t, train_v, val_v, test_v
 
@@ -184,7 +193,7 @@ class Data:
       train_test_ratio.
     """
 
-    def __split_data(self, data, labels, timestamp, volumes, train_test_ratio):
+    def _split_data(self, data, labels, timestamp, volumes, train_test_ratio):
         # Take the number of data points
         n_entries = len(data)
 

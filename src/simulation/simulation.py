@@ -81,6 +81,7 @@ def simulate(theta=0,
              add_noise=True,
              noise_power=1.5e-5,
              forward_and_backward_runs=False,
+             save_to_disk=True,
              folder_path="../../data/simulation/"):
 
     input_sensors = list(
@@ -132,10 +133,10 @@ def simulate(theta=0,
         all_labels.append(labels)
         all_timestamp.append(timestamp)
 
-    data_path = folder_path / f"a{a}_normw{norm_w}_data.npy"
-    labels_path = folder_path / f"a{a}_normw{norm_w}_data_labels.npy"
-    timestamp_path = folder_path / f"a{a}_normw{norm_w}_data_timestamp.npy"
-    volumes_path = folder_path / f"a{a}_normw{norm_w}_data_volumes.npy"
+    data_path = folder_path + f"a{a}_normw{norm_w}_data.npy"
+    labels_path = folder_path + f"a{a}_normw{norm_w}_data_labels.npy"
+    timestamp_path = folder_path + f"a{a}_normw{norm_w}_data_timestamp.npy"
+    volumes_path = folder_path + f"a{a}_normw{norm_w}_data_volumes.npy"
 
     all_data = np.array(all_data)
     all_labels = np.array(all_labels)
@@ -146,7 +147,10 @@ def simulate(theta=0,
     log.debug(all_labels.shape)
     log.debug(all_timestamp.shape)
     log.debug(all_volumes.shape)
-    np.save(data_path, all_data)
-    np.save(labels_path, all_labels)
-    np.save(timestamp_path, all_timestamp)
-    np.save(volumes_path, all_volumes)
+
+    if save_to_disk:
+        np.save(data_path, all_data)
+        np.save(labels_path, all_labels)
+        np.save(timestamp_path, all_timestamp)
+        np.save(volumes_path, all_volumes)
+    return (all_data, all_labels, all_timestamp, all_volumes)
