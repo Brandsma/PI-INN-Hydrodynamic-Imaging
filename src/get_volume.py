@@ -33,14 +33,20 @@ def inverse_volume_vx_calculation(vx, sensor, speed, x, y, theta):
     we = wavelet_e(p)
     wo = wavelet_o(p)
 
+    below_line = (speed * (-we * math.cos(theta) + wo * math.sin(theta)))
+    if below_line == 0:
+        return None
+
     answer = ((2 * y**3 * vx) /
-              (speed * (-we * math.cos(theta) + wo * math.sin(theta))))**(1 /
-                                                                          3)
+              below_line)**(1 / 3)
 
     if math.isnan(answer):
         answer = abs(
             (2 * y**3 * vx) /
-            (speed * (-we * math.cos(theta) + wo * math.sin(theta))))**(1 / 3)
+            below_line)**(1 / 3)
+
+    if math.isnan(answer):
+        return None
 
     return answer
 
@@ -50,12 +56,19 @@ def inverse_volume_vy_calculation(vy, sensor, speed, x, y, theta):
     wo = wavelet_o(p)
     wn = wavelet_n(p)
 
+    below_line = (speed * (wn * math.sin(theta) + wo * math.cos(theta)))
+    if below_line == 0:
+        return None
+
     answer = ((2 * y**3 * vy) /
-              (speed * (wn * math.sin(theta) + wo * math.cos(theta))))**(1 / 3)
+              below_line)**(1 / 3)
     if math.isnan(answer):
         answer = abs(
             (2 * y**3 * vy) /
-            (speed * (wn * math.sin(theta) + wo * math.cos(theta))))**(1 / 3)
+            below_line)**(1 / 3)
+
+    if math.isnan(answer):
+        return None
 
     return answer
 
@@ -93,6 +106,10 @@ def extract_volume(points,
             volume_vy = inverse_volume_vy_calculation(
                 vy_data[point_idx + window_size, sensor_idx],
                 input_sensors[sensor_idx], speed, pos[0], pos[1], pos[2])
+
+            if volume_vx is None or volume_vy is None:
+                print("Divide by zero encountered or other error, skipping...")
+                continue
 
             real_volume_vx = inverse_volume_vx_calculation(
                 vx_data[point_idx + window_size,
@@ -152,8 +169,8 @@ def start_volume_extraction(window_size=16):
         a = data.test_volumes[run_idx]
         if a not in volume_error:
             volume_error[a] = []
-        else:
-            continue
+        # else:
+        #     continue
         print(f"Running with volume {a}")
 
         path = []
@@ -175,7 +192,7 @@ def start_volume_extraction(window_size=16):
 
         labels = data.test_labels[run_idx]
         volume = extract_volume(path,
-                                real_speed,
+                                speed,
                                 vx_data,
                                 vy_data,
                                 labels,

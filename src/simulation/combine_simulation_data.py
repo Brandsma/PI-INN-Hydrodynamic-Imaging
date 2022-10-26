@@ -30,6 +30,8 @@ def parse_args():
         "Simulation program that 'moves' a sphere through water and measures the movement of the water at discrete locations (i.e. at the sensor locations). The water movement is described using the velocity profiles, which are derivatives of the Velocity Potential function."
     )
 
+    parser.add_argument("--combined", action="store_true")
+
     parser.add_argument(
         "--input-dir",
         type=Path,
@@ -64,26 +66,47 @@ def main():
     base_names = find_files(folder_path)
 
     # Start making the combined data from the first found data
-    current_filename = os.path.splitext(base_names.pop(0))
-    all_data = np.load(current_filename[0] + current_filename[1])
-    all_labels = np.load(f"{current_filename[0]}_labels{current_filename[-1]}")
-    all_timestamp = np.load(
-        f"{current_filename[0]}_timestamp{current_filename[-1]}")
-    all_volumes = np.load(
-        f"{current_filename[0]}_volumes{current_filename[-1]}")
+    if args.combined:
+        current_filename = os.path.splitext(base_names.pop(0))
+        all_data = np.load(current_filename[0] + current_filename[1])
+        all_labels = np.load(f"{current_filename[0][0:-5]}_labels{current_filename[-1]}")
+        print(all_labels.shape)
+        all_timestamp = np.load(
+            f"{current_filename[0][0:-5]}_timestamp{current_filename[-1]}")
+        all_volumes = np.load(
+            f"{current_filename[0][0:-5]}_volumes{current_filename[-1]}")
+    else:
+        current_filename = os.path.splitext(base_names.pop(0))
+        all_data = np.load(current_filename[0] + current_filename[1])
+        all_labels = np.load(f"{current_filename[0]}_labels{current_filename[-1]}")
+        all_timestamp = np.load(
+            f"{current_filename[0]}_timestamp{current_filename[-1]}")
+        all_volumes = np.load(
+            f"{current_filename[0]}_volumes{current_filename[-1]}")
 
     # For each data found, add it to the total runs
     for name in base_names:
         base_name = os.path.splitext(name)
-        labels = np.load(f"{base_name[0]}_labels{base_name[-1]}")
-        data = np.load(name)
-        timestamp = np.load(f"{base_name[0]}_timestamp{base_name[-1]}")
-        volume = np.load(f"{base_name[0]}_volumes{base_name[-1]}")
+        if args.combined:
+            data = np.load(name)
+            labels = np.load(f"{base_name[0][0:-5]}_labels{base_name[-1]}")
+            print(f"{labels.shape=}")
+            timestamp = np.load(f"{base_name[0][0:-5]}_timestamp{base_name[-1]}")
+            volume = np.load(f"{base_name[0][0:-5]}_volumes{base_name[-1]}")
+        else:
+            data = np.load(name)
+            labels = np.load(f"{base_name[0]}_labels{base_name[-1]}")
+            timestamp = np.load(f"{base_name[0]}_timestamp{base_name[-1]}")
+            volume = np.load(f"{base_name[0]}_volumes{base_name[-1]}")
 
-        all_labels = np.append(all_labels, labels, axis=0)
-        all_data = np.append(all_data, data, axis=0)
-        all_timestamp = np.append(all_timestamp, timestamp, axis=0)
-        all_volumes = np.append(all_volumes, volume, axis=0)
+        try:
+            all_labels = np.append(all_labels, labels, axis=0)
+            print(all_labels.shape)
+            all_data = np.append(all_data, data, axis=0)
+            all_timestamp = np.append(all_timestamp, timestamp, axis=0)
+            all_volumes = np.append(all_volumes, volume, axis=0)
+        except:
+            continue
 
     log.debug(all_data.shape)
     log.debug(all_labels.shape)

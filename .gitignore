@@ -8,6 +8,7 @@ created_models/
 trained_models/
 *.~undo-tree~
 data/
+*.dat
 */data/*
 ..bfg-report/
 .#*
