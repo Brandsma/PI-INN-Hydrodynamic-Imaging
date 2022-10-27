@@ -1,3 +1,4 @@
+from sys import set_coroutine_origin_tracking_depth
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -10,7 +11,10 @@ from trainer import Trainer
 def solution(x):
     return np.sin(np.pi * x)
 
-def run_inn(given_data, given_labels, n_couple_layer = 2, n_hid_layer = 12, n_hid_dim = 128, n_batch = 8, z_dim = 65):
+def solution_derivative(x):
+    return np.cos(np.pi * x)
+
+def run_inn(given_data, given_labels, n_couple_layer = 2, n_hid_layer = 12, n_hid_dim = 128, n_batch = 8, z_dim = 33):
 
     # plt.plot(given_data, label="given_data")
     # plt.plot(given_labels, label="given_labels")
@@ -76,13 +80,13 @@ def run_inn(given_data, given_labels, n_couple_layer = 2, n_hid_layer = 12, n_hi
     model = NVP(tot_dim, n_couple_layer, n_hid_layer, n_hid_dim, name='NVP')
     x = tfk.Input((tot_dim, ))
     model(x)
-    # model.summary()
+    model.summary()
 
 
 
     trainer = Trainer(model, x_dim, y_dim, z_dim, tot_dim, n_couple_layer,
                     n_hid_layer, n_hid_dim)
-    trainer.compile(optimizer='Adam')
+    trainer.compile(optimizer=tf.keras.optimizers.Adam(clipvalue=0.5))
 
     LossFactor = UpdateLossFactor(n_epoch)
     # logger = NBatchLogger(n_display, n_epoch)
@@ -122,19 +126,23 @@ def run_inn(given_data, given_labels, n_couple_layer = 2, n_hid_layer = 12, n_hi
     plt.xlabel("x")
     plt.ylabel("y")
     plt.legend()
-    # plt.savefig(f"./results/zdim/backward/backward-couple{n_couple_layer}-layer{n_hid_layer}-dim{n_hid_dim}")
+    # plt.savefig(f"./results/gridsearch/backward/backward-couple{n_couple_layer}-layer{n_hid_layer}-dim{n_hid_dim}")
     # plt.savefig(f"./results/zdim2/backward/backward-z{z_dim}")
     # plt.close()
 
     plt.figure()
     plt.title(f"Forward Process - y = sin($\\pi$ x) - (z={z_dim})")
-    plt.plot(y_pred[:, -1], label="predicted")
-    plt.plot(y_data[:, -1], label="label")
+    plt.plot(y_pred[:, -1], label="predicted derivative")
+    plt.plot(y_data[:, -1], label="label derivative")
+    plt.plot(y_pred[:, -2], label="predicted polarity")
+    plt.plot(y_data[:, -2], label="label polarity")
+    plt.plot(y_pred[:, -3], label="predicted value")
+    plt.plot(y_data[:, -3], label="label value")
     plt.xticks(np.linspace(0,2048, num=8), map(round, np.linspace(-1,1,num=8), [2] * 8))
     plt.xlabel("x")
     plt.ylabel("y")
     plt.legend()
-    # plt.savefig(f"./results/zdim/forward/forward-couple{n_couple_layer}-layer{n_hid_layer}-dim{n_hid_dim}-z{z_dim}")
+    # plt.savefig(f"./results/gridsearch/forward/forward-couple{n_couple_layer}-layer{n_hid_layer}-dim{n_hid_dim}")
     # plt.savefig(f"./results/zdim2/forward/forward-z{z_dim}")
     # plt.close()
 
@@ -147,20 +155,7 @@ def run_inn(given_data, given_labels, n_couple_layer = 2, n_hid_layer = 12, n_hi
 
 
 def gridsearch_nn_architecture():
-    # layer_list = [2,4]
-    # coupling_list = [2]
-    # hidden_dim_list = [16]
-
-    ## SETUP DATA ##
-    data = np.linspace(-1, 1, num=2048).reshape((-1, 1))
-    # labels = np.linspace(1, -1, num=2048).reshape((-1, 1))
-    labels = solution(data).reshape((-1,1))
-
-    data_noise = np.random.normal(0, .005, data.shape)
-    labels_noise = np.random.normal(0, .005, labels.shape)
-
-    data = data + data_noise
-    labels = labels + labels_noise
+    data,labels=setup_data()
 
     ## Gridsearch
     layer_list = [2,4,6]
@@ -172,20 +167,11 @@ def gridsearch_nn_architecture():
         for coupling_num in coupling_list:
             for hidden_dim_num in hidden_dim_list:
                 print(f"\n\n------------------\n ---  Running # {counter+1}/{total_iters}... (coupling {coupling_num} layer {layer_num} dim {hidden_dim_num}) \n------------------\n\n")
-                run_inn(data, labels, coupling_num, layer_num, hidden_dim_num)
+                run_inn(data, labels, coupling_num, layer_num, hidden_dim_num, z_dim=33)
                 counter += 1
 
 def gridsearch_z_dim():
-    ## SETUP DATA ##
-    data = np.linspace(-1, 1, num=2048).reshape((-1, 1))
-    # labels = np.linspace(1, -1, num=2048).reshape((-1, 1))
-    labels = solution(data).reshape((-1,1))
-
-    data_noise = np.random.normal(0, .005, data.shape)
-    labels_noise = np.random.normal(0, .005, labels.shape)
-
-    data = data + data_noise
-    labels = labels + labels_noise
+    data,labels=setup_data()
 
     ## Gridsearch
     z_list = list(range(1,256,8))
@@ -196,11 +182,15 @@ def gridsearch_z_dim():
         run_inn(data, labels, 4, 4, 128, z_dim=z)
         counter += 1
 
-def simple_run():
+def setup_data():
     ## SETUP DATA ##
     data = np.linspace(-1, 1, num=2048).reshape((-1, 1))
     # labels = np.linspace(1, -1, num=2048).reshape((-1, 1))
     labels = solution(data).reshape((-1,1))
+    polarity = np.array([1] * 1024 + [-1] * 1024).reshape((-1,1))
+    delta_labels = solution_derivative(data).reshape((-1,1))
+    labels = np.hstack((labels,polarity,delta_labels))
+    # labels = np.hstack((labels,delta_labels))
 
     data_noise = np.random.normal(0, .005, data.shape)
     labels_noise = np.random.normal(0, .005, labels.shape)
@@ -208,7 +198,15 @@ def simple_run():
     data = data + data_noise
     labels = labels + labels_noise
 
+    return data,labels
+
+
+def simple_run():
+    data,labels=setup_data()
+
     run_inn(data, labels, 4, 4, 128, z_dim=33)
 
 if __name__ == '__main__':
+    # gridsearch_z_dim()
+    # gridsearch_nn_architecture()
     simple_run()
