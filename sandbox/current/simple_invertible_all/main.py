@@ -41,7 +41,7 @@ def run_inn(given_data,
     # n_hid_dim = 128
 
     # n_batch = 8
-    n_epoch = 16
+    n_epoch = 64
     # n_display = 1
 
     ###
@@ -99,13 +99,13 @@ def run_inn(given_data,
 
     ## CHECK RESULTS ##
 
-    # fig, ax = plt.subplots(1, facecolor='white', figsize=(8, 5))
-    # ax.plot(hist.history['total_loss'], 'k.-', label='total_loss')
-    # ax.plot(hist.history['forward_loss'], 'b.-', label='forward_loss')
-    # ax.plot(hist.history['latent_loss'], 'g.-', label='latent_loss')
-    # ax.plot(hist.history['rev_loss'], 'r.-', label='inverse_loss')
-    # plt.legend()
-    # plt.show()
+    fig, ax = plt.subplots(1, facecolor='white', figsize=(8, 5))
+    ax.plot(hist.history['total_loss'], 'k.-', label='total_loss')
+    ax.plot(hist.history['forward_loss'], 'b.-', label='forward_loss')
+    ax.plot(hist.history['latent_loss'], 'g.-', label='latent_loss')
+    ax.plot(hist.history['rev_loss'], 'r.-', label='inverse_loss')
+    plt.legend()
+    plt.show()
 
     z = np.random.multivariate_normal([1.] * z_dim, np.eye(z_dim), y.shape[0])
     y_data = np.concatenate([z, y], axis=-1).astype('float32')
@@ -224,17 +224,24 @@ def setup_data():
     data = data + data_noise
     labels = labels + labels_noise
 
+    # print(data.shape)
+    # exit()
+
     return data, labels
 
 
 def simple_run():
     data, labels = setup_data()
 
-    run_inn(data, labels, 4, 4, 128, z_dim=32)
+    print(f"{data.shape=}")
+    print(f"{labels.shape=}")
+    print(data)
+
+    run_inn(data, labels, 4, 4, 128, n_batch=256, z_dim=32)
 
 
 if __name__ == '__main__':
     # gridsearch_z_dim()
     # gridsearch_nn_architecture()
-    # simple_run()
-    simple_run_repeated()
+    simple_run()
+    # simple_run_repeated()
