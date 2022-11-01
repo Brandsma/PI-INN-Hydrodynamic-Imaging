@@ -14,6 +14,7 @@ data/
 .#*
 *.mat
 */models/*
+models/
 
 # May want this, but for now keep it out
 results/

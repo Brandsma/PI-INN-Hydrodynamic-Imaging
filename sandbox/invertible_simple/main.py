@@ -13,7 +13,8 @@ def solution(x):
 def main():
     ## SETUP DATA ##
     data = np.linspace(-1, 1, num=1024).reshape((-1, 1))
-    labels = solution(data).reshape((-1,1))
+    labels = np.linspace(1, -1, num=1024).reshape((-1, 1))
+    # labels = solution(data).reshape((-1,1))
 
     data_noise = np.random.normal(0, .005, data.shape)
     labels_noise = np.random.normal(0, .005, labels.shape)
