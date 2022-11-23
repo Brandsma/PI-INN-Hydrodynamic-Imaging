@@ -12,17 +12,17 @@ log = setup_logger(__name__)
 # TODO: remove read_inputs and replace it with CLI arguments
 def read_inputs():
     n_nodes = 128
-    n_epochs = 4
+    n_epochs = 16
     window_size = 16
     stride = 2
     alpha = 0.05
     decay = 1e-9
     shuffle_data = True
     data_split = 0.8
-    dropout = 0
+    dropout = 0.2
     # train_loc = get_scratch_dir() + "/data/combined.npy"
     train_loc = "../data/simulation_data/combined.npy"
-    ac_fun = "relu"
+    ac_fun = "tanh"
     return n_nodes, n_epochs, window_size, stride, \
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
 
