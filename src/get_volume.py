@@ -179,7 +179,7 @@ def start_volume_extraction(window_size=16):
             input_data = np.reshape(input_data, (1, window_size, 128))
             y_pred = new_model.predict(input_data, verbose=0)
             path.append(y_pred[0])
-        print(f"{path[0]=}, {path[-1]=}")
+        # print(f"{path[0]=}, {path[-1]=}")
 
         speed, real_speed = get_speed_from_model_predicts(
             path,

@@ -133,10 +133,10 @@ def simulate(theta=0,
         all_labels.append(labels)
         all_timestamp.append(timestamp)
 
-    data_path = folder_path + f"a{a}_normw{norm_w}_data.npy"
-    labels_path = folder_path + f"a{a}_normw{norm_w}_data_labels.npy"
-    timestamp_path = folder_path + f"a{a}_normw{norm_w}_data_timestamp.npy"
-    volumes_path = folder_path + f"a{a}_normw{norm_w}_data_volumes.npy"
+    data_path = folder_path / f"a{a}_normw{norm_w}_data.npy"
+    labels_path = folder_path / f"a{a}_normw{norm_w}_data_labels.npy"
+    timestamp_path = folder_path / f"a{a}_normw{norm_w}_data_timestamp.npy"
+    volumes_path = folder_path / f"a{a}_normw{norm_w}_data_volumes.npy"
 
     all_data = np.array(all_data)
     all_labels = np.array(all_labels)

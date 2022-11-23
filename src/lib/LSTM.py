@@ -11,6 +11,7 @@ from tensorflow.keras import losses, optimizers
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import plot_model
+from tensorflow.keras.callbacks import EarlyStopping
 from tqdm import tqdm
 
 if os.environ.get('DISPLAY', '') == '':
@@ -42,7 +43,7 @@ class LSTM_network:
         self.raw_time = dt.datetime.now()
         self.init_time = self.raw_time.strftime("%Y_%m_%d_%X")
         self.model = self.__init_network()
-        self.batch_size = 15
+        self.batch_size = 32
 
     """
     LSTM_network::init_network()
@@ -69,17 +70,17 @@ class LSTM_network:
         model.add(
             LSTM(n_nodes,
                  input_shape=(win_size, n_inputs),
-                 activation=self.activation))
+                 activation=self.activation,
+            dropout=dropout))
         # and a dropout layer (which only does something if dropout > 0).
-        model.add(Dropout(dropout))
-        # Finally we have a fully connected layer with 2 to 3 nodes - the x and y positions,
-        # and optionally the stimulus diameter (automatically extracted from the dataset).
+        # model.add(Dropout(dropout))
+        # Finally we have a fully connected layer with 2 to 3 nodes - the x and y positions and an angle
         model.add(Dense(n_outputs, activation='linear'))
-        # Compile the model with euclidean error and adagrad
-        optimizer = optimizers.Adagrad(lr=alpha,
-                                       epsilon=None,
+        # Compile the model with euclidean error and adam
+        optimizer = optimizers.Adam(learning_rate=alpha,
+                                       # epsilon=None,
                                        decay=decay,
-                                       clipnorm=1.)
+                                       clipnorm=.5)
         model.compile(loss=losses.MeanSquaredError(), optimizer=optimizer)
         # Return the resulting model
         return model
@@ -105,14 +106,17 @@ class LSTM_network:
         train_steps = int(self.__num_batches(train_dat))
         val_steps = int(self.__num_batches(val_dat))
 
+        early_stopping_callback = EarlyStopping(patience=3, restore_best_weights=True)
+
         # Train the model
         self.hist = self.model.fit( \
-                    self.__generator(train_dat, train_lab, window_size, stride), \
-                    steps_per_epoch = train_steps, \
-                    epochs = epochs, \
-                    verbose = 1, \
-                    validation_data = self.__generator(val_dat, val_labels, window_size, stride), \
-                    validation_steps = val_steps)
+                                    self.__generator(train_dat, train_lab, window_size, stride), \
+                                    steps_per_epoch = train_steps, \
+                                    epochs = epochs, \
+                                    verbose = 1, \
+                                    callbacks=[early_stopping_callback], \
+                                    validation_data = self.__generator(val_dat, val_labels, window_size, stride), \
+                                    validation_steps = val_steps)
 
         print("Completed training network.")
 
@@ -125,7 +129,6 @@ class LSTM_network:
     - automatically plots network prediction vs actual source locations.
     - test() always tests with a stride of 1.
     """
-
     def test(self, data, labels, dirname=None):
         # TODO: Check that network is trained
         print("Testing network...")
