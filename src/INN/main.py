@@ -184,9 +184,6 @@ def run_inn(given_data,
 def simple_run(dt, use_pde=False):
     data, labels, test_d, test_l = get_data(dt, subset="offset", shuffle_data=False)
 
-    print(data.shape)
-    print(labels.shape)
-
     data = np.concatenate([data, test_d], axis=0).astype('float32')
     labels = np.concatenate([labels, test_l], axis=0).astype('float32')
 
