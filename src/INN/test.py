@@ -10,7 +10,7 @@ from sklearn.metrics import mean_squared_error
 
 def main():
     # Config
-    config: INNConfig = INNConfig.from_file()
+    config: INNConfig = INNConfig.from_file("../../../data/trained_models/INN/latest/INNConfig.pkl")
     dt = DataType.Hydro
 
     x_dim = config.x_dim

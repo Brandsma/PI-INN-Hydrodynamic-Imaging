@@ -82,7 +82,7 @@ def simulate(theta=0,
              noise_power=1.5e-5,
              forward_and_backward_runs=False,
              save_to_disk=True,
-             folder_path="../../data/simulation/"):
+             folder_path="../../../data/simulation/"):
 
     input_sensors = list(
         np.linspace(sensor_range[0], sensor_range[1], num=number_of_sensors))

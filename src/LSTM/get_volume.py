@@ -1,3 +1,7 @@
+if __name__=="__main__":
+    import sys
+    sys.path.append("..")
+
 import math
 from copy import deepcopy
 
@@ -6,7 +10,7 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
-from get_speed import get_speed_from_model_predicts
+from .get_speed import get_speed_from_model_predicts
 from lib.params import Data, Settings
 from lib import LSTM
 

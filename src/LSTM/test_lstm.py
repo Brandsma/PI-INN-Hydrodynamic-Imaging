@@ -1,3 +1,7 @@
+if __name__=="__main__":
+    import sys
+    sys.path.append("..")
+
 # Use modules to keep code organized
 import os
 from pathlib import Path

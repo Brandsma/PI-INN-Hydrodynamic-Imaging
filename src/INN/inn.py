@@ -1,4 +1,4 @@
-from flow import NVP
+from INN.flow import NVP
 from typing import Callable
 
 import tensorflow.keras as tfk

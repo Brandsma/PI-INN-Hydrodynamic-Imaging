@@ -1,16 +1,16 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-from data import get_data, DataType
+from .data import get_data, DataType
 
-from inn import create_model, INNConfig
+from .inn import create_model, INNConfig
 
-import sine
-import hydro
+from . import sine
+from . import hydro
 
-from flow import *
-from utils import *
-from trainer import Trainer
+from .flow import *
+from .utils import *
+from .trainer import Trainer
 
 def run_inn(given_data,
             given_labels,
@@ -108,7 +108,7 @@ def run_inn(given_data,
     if pde_loss_func != None:
         ax.plot(hist.history['pde_loss'], 'y.-', label='pde loss')
     plt.legend()
-    plt.savefig("./models/trained_model_train_hist")
+    plt.savefig("../../data/trained_models/INN/latest/trained_model_train_hist")
 
     # z = np.random.multivariate_normal([1.] * z_dim, np.eye(z_dim), y.shape[0])
     # y_data = np.concatenate([y, z], axis=-1).astype('float32')
@@ -118,8 +118,8 @@ def run_inn(given_data,
 
     print(" -- Saving model")
     # model.save("./models/")
-    config.to_file()
-    model.save_weights("./models/trained_model_weights.tf")
+    config.to_file("../../data/trained_models/INN/latest/INNConfig.pkl")
+    model.save_weights("../../data/trained_models/INN/latest/trained_model_weights.tf")
 
     # if datatype == DataType.Sine:
     #     sine.plot_results(x_data, x_pred, y_data, y_pred, title="Sine")
@@ -183,6 +183,9 @@ def run_inn(given_data,
 
 def simple_run(dt, use_pde=False):
     data, labels, test_d, test_l = get_data(dt, subset="offset", shuffle_data=False)
+
+    print(data.shape)
+    print(labels.shape)
 
     data = np.concatenate([data, test_d], axis=0).astype('float32')
     labels = np.concatenate([labels, test_l], axis=0).astype('float32')

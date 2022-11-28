@@ -3,8 +3,8 @@ import numpy as np
 from typing import Tuple
 from enum import Enum
 
-import sine
-import hydro
+from . import sine
+from . import hydro
 
 class DataType(Enum):
     Sine = 1,

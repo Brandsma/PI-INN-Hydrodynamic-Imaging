@@ -1,3 +1,7 @@
+if __name__=="__main__":
+    import sys
+    sys.path.append("..")
+
 import os
 from pathlib import Path
 
@@ -21,7 +25,7 @@ def read_inputs():
     data_split = 0.8
     dropout = 0.2
     # train_loc = get_scratch_dir() + "/data/combined.npy"
-    train_loc = "../data/simulation_data/combined.npy"
+    train_loc = "../../data/simulation_data/combined.npy"
     ac_fun = "tanh"
     return n_nodes, n_epochs, window_size, stride, \
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
@@ -49,7 +53,7 @@ if __name__ == "__main__":
     network.train()
 
     # Save the network for later use
-    trained_models_folder = "../data/trained_models/"
+    trained_models_folder = "../../data/trained_models/LSTM/"
     Path(trained_models_folder).mkdir(parents=True, exist_ok=True)
     log.info(f"Saving trained model to {trained_models_folder}{settings.name}...")
     network.save_model(f"{trained_models_folder}{settings.name}")

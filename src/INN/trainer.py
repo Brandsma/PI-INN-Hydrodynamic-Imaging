@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from flow import *
-from utils import *
+from .flow import *
+from .utils import *
 
 from matplotlib import pyplot as plt
 
