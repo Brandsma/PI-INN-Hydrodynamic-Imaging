@@ -10,6 +10,7 @@ def setup_data(subset="all", shuffle_data=True, run=-1):
     loaded_data = None
     loaded_labels = None
     if subset == "all":
+<<<<<<< HEAD
         loaded_data = np.load('../data/simulation_data/combined.npy')
         loaded_labels = np.load(
             '../data/simulation_data/combined_labels.npy')
@@ -17,6 +18,15 @@ def setup_data(subset="all", shuffle_data=True, run=-1):
         loaded_data = np.load(f'../data/simulation_data/{subset}/combined.npy')
         loaded_labels = np.load(
             f'../data/simulation_data/{subset}/combined_labels.npy')
+=======
+        loaded_data = np.load('../../../data/simulation_data/combined.npy')
+        loaded_labels = np.load(
+            '../../../data/simulation_data/combined_labels.npy')
+    else:
+        loaded_data = np.load(f'../../../data/simulation_data/{subset}/combined.npy')
+        loaded_labels = np.load(
+            f'../../../data/simulation_data/{subset}/combined_labels.npy')
+>>>>>>> ffa064dc54305dad278f7a9811620da743111c93
 
 
     # NOTE: reversing the data and labels here
