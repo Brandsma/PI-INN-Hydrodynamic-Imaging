@@ -108,7 +108,10 @@ def run_inn(given_data,
     if pde_loss_func != None:
         ax.plot(hist.history['pde_loss'], 'y.-', label='pde loss')
     plt.legend()
-    plt.savefig("../../data/trained_models/INN/latest/trained_model_train_hist")
+    if pde_loss_func == None:
+        plt.savefig("../data/trained_models/INN/latest/trained_model_train_hist")
+    else:
+        plt.savefig("../data/trained_models/INNPINN/latest/trained_model_train_hist")
 
     # z = np.random.multivariate_normal([1.] * z_dim, np.eye(z_dim), y.shape[0])
     # y_data = np.concatenate([y, z], axis=-1).astype('float32')
@@ -118,8 +121,12 @@ def run_inn(given_data,
 
     print(" -- Saving model")
     # model.save("./models/")
-    config.to_file("../../data/trained_models/INN/latest/INNConfig.pkl")
-    model.save_weights("../../data/trained_models/INN/latest/trained_model_weights.tf")
+    if pde_loss_func == None:
+        config.to_file("../data/trained_models/INN/latest/INNConfig.pkl")
+        model.save_weights("../data/trained_models/INN/latest/trained_model_weights.tf")
+    else:
+        config.to_file("../data/trained_models/INNPINN/latest/INNConfig.pkl")
+        model.save_weights("../data/trained_models/INNPINN/latest/trained_model_weights.tf")
 
     # if datatype == DataType.Sine:
     #     sine.plot_results(x_data, x_pred, y_data, y_pred, title="Sine")
@@ -135,66 +142,24 @@ def run_inn(given_data,
 
     print(" -- DONE -- ")
 
+def simple_run(dt, subset="offset", use_pde=False, config: INNConfig =None):
+    data, labels, _, _ = get_data(dt, subset=subset, shuffle_data=False)
 
-# def gridsearch_nn_architecture(dt):
-#     data, labels = get_data(dt)
-
-#     ## Gridsearch
-#     layer_list = [2, 4, 6]
-#     coupling_list = [2, 4, 6]
-#     hidden_dim_list = [16, 32, 64, 128]
-#     counter = 0
-#     total_iters = len(layer_list) * len(coupling_list) * len(hidden_dim_list)
-#     for layer_num in layer_list:
-#         for coupling_num in coupling_list:
-#             for hidden_dim_num in hidden_dim_list:
-#                 print(
-#                     f"\n\n------------------\n ---  Running # {counter+1}/{total_iters}... (coupling {coupling_num} layer {layer_num} dim {hidden_dim_num}) \n------------------\n\n"
-#                 )
-#                 run_inn(data,
-#                         labels,
-#                         coupling_num,
-#                         layer_num,
-#                         hidden_dim_num,
-#                         z_dim=33)
-#                 counter += 1
-
-
-# def gridsearch_z_dim(dt):
-#     data, labels = get_data(dt)
-
-#     ## Gridsearch
-#     z_list = list(range(1, 256, 8))
-#     counter = 0
-#     total_iters = len(z_list)
-#     for z in z_list:
-#         print(
-#             f"\n\n------------------\n ---  Running # {counter+1}/{total_iters}... (z {z}) \n------------------\n\n"
-#         )
-#         run_inn(data, labels, 4, 4, 128, z_dim=z)
-#         counter += 1
-
-
-# def simple_run_repeated(dt):
-#     data, labels = get_data(dt)
-
-#     for run_idx in range(5):
-#         run_inn(data, labels, 4, 4, 128, z_dim=32, run_idx=run_idx)
-
-def simple_run(dt, use_pde=False):
-    data, labels, test_d, test_l = get_data(dt, subset="offset", shuffle_data=False)
-
-    data = np.concatenate([data, test_d], axis=0).astype('float32')
-    labels = np.concatenate([labels, test_l], axis=0).astype('float32')
+    # data = np.concatenate([data, test_d], axis=0).astype('float32')
+    # labels = np.concatenate([labels, test_l], axis=0).astype('float32')
 
     print(f"{data.shape=}")
     print(f"{labels.shape=}")
 
-    pde_loss_func = None
+    if config == None:
+        config = INNConfig(4, 4, 128, 0, 0, 32, None)
+
+    config.x_dim = data.shape[1]
+    config.y_dim = labels.shape[1]
+    config.z_dim += (1 if ((32 + labels.shape[1]) % 2 == 1) else 0)
     if use_pde:
         pde_loss_func = hydro.interior_loss
-
-    config = INNConfig(4, 4, 128, data.shape[1], labels.shape[1], 32 + (1 if ((32 + labels.shape[1]) % 2 == 1) else 0), pde_loss_func)
+        config.pde_loss_func = pde_loss_func
     print("Running with config:", config)
 
     run_inn(data, labels, config, n_batch=8, n_epoch=16, datatype=dt)
@@ -203,5 +168,5 @@ def simple_run(dt, use_pde=False):
 if __name__ == '__main__':
     # gridsearch_z_dim()
     # gridsearch_nn_architecture()
-    simple_run(DataType.Hydro, use_pde=True)
+    simple_run(DataType.Hydro, use_pde=False)
     # simple_run_repeated()

@@ -31,5 +31,5 @@ def create_model(
     model = NVP(tot_dim, n_couple_layer, n_hid_layer, n_hid_dim, name='NVP')
     x = tfk.Input((tot_dim, ))
     model(x)
-    model.summary()
+    # model.summary()
     return model

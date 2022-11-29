@@ -13,23 +13,21 @@ from LSTM.get_volume import extract_volume
 
 from copy import deepcopy
 
-class INNTester():
-    def __init__(self, model_folder="../data/trained_models/INN/latest/", result_path="../data/results/INN/", save_to_file=True, debug=False):
+class INNPINNTester():
+    def __init__(self, model_folder="../data/trained_models/INNPINN/latest/", result_path="../data/results/INNPINN/", save_to_file=True, debug=False):
         self.result_path = result_path
         self.save_to_file = save_to_file
 
         self.model_folder = model_folder
+
         self.debug = debug
 
     def set_input_data(self, a, w, simulation_subset):
         ## Get Config
-        if a == 0 and w == 0:
-            self.train_location = f"../data/simulation_data/{simulation_subset}/combined_data.npy"
-        else:
-            self.train_location = f"../data/simulation_data/{simulation_subset}/a{a}_normw{w}_data.npy"
+        self.train_location = f"../data/simulation_data/{simulation_subset}/a{a}_normw{w}_data.npy"
 
         sys.path.append("./INN")
-        self.config: INNConfig = INNConfig.from_file(f"{self.model_folder}/INNConfig.pkl")
+        self.config: INNConfig = INNConfig.from_file(f"{self.model_folder}INNConfig.pkl")
 
         self.x_dim = self.config.x_dim
         self.y_dim = self.config.y_dim
@@ -65,8 +63,6 @@ class INNTester():
         for run_idx in range(0, len(self.test_labels)//1024):
             x_data, x_pred, y_data, y_pred = self.__predict_data(run_idx)
 
-            # print(x_pred[:, :self.x_dim].shape)
-            # exit()
 
             # hydro.plot_results(x_data, x_pred, y_data, y_pred, self.x_dim, self.y_dim, title=f"Hydro", savefig=False)
 
@@ -95,7 +91,7 @@ class INNTester():
                 print(f"\n\nVolume: {volume}\nSpeed: {speed}\n")
 
             result_data.append((x_pred, y_pred, mean_squared_error(y_data[:, :self.y_dim], y_pred[:, :self.y_dim]), mean_squared_error(x_data[:, :self.x_dim], x_pred[:, :self.x_dim]), volume, speed))
-        self.result_data = np.array(result_data, dtype=object)
+        self.result_data = np.array(result_data)
 
 
     def save_result_data(self):
@@ -109,6 +105,9 @@ class INNTester():
     def __predict_data(self, run_idx):
         data = self.test_data[(1024 * run_idx):(1024 + 1024*run_idx)]
         labels = self.test_labels[(1024 * run_idx):(1024 + 1024*run_idx)]
+
+        print(data.shape)
+        print(labels.shape)
 
         z_dim = self.z_dim
         tot_dim = self.y_dim + z_dim

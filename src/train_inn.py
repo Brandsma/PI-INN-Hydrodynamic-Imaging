@@ -1,9 +1,8 @@
 from INN.main import simple_run
 from INN.data import DataType
 
-def main():
-    simple_run(DataType.Hydro, use_pde=False)
-
+def train_inn(config=None, use_pde=False):
+    simple_run(DataType.Hydro, subset="tiny", use_pde=use_pde, config=config)
 
 if __name__ == '__main__':
-    main()
+    train_inn()

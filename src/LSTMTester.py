@@ -13,7 +13,7 @@ from lib import LSTM, params
 import tensorflow as tf
 
 class LSTMTester():
-    def __init__(self, model_folder="../data/trained_models/LSTM/", result_path="../data/results/", save_to_file=True):
+    def __init__(self, model_folder="../data/trained_models/LSTM/", result_path="../data/results/LSTM/", save_to_file=True, debug=False):
         # TODO: path maybe?
         self.result_path = result_path
         self.save_to_file = save_to_file
@@ -23,6 +23,7 @@ class LSTMTester():
         self.model = tf.keras.models.load_model(
         f"{model_folder}{self.model_location}"
     )
+        self.debug = debug
 
     def set_input_data(self, a, w, simulation_subset):
         self.train_location = f"../data/simulation_data/{simulation_subset}/a{a}_normw{w}_data.npy"
@@ -47,8 +48,9 @@ class LSTMTester():
             print("Make sure to run 'set_input_data' before trying to retrieve data!")
             return
 
+        result_data = []
 
-        for run_idx in tqdm(range(0, len(self.data.test_labels))):
+        for run_idx in range(0, len(self.data.test_labels)):
             # Get location and angle
             results, associated_labels = self.__predict_data(run_idx)
 
@@ -75,8 +77,20 @@ class LSTMTester():
                                     real_volume=self.a)
 
 
-            print(f" --- Data for run {run_idx} ---\n")
-            print(f"{volume=}\n {speed=}\n {localization_error=}\n")
+            if self.debug:
+                print(f" --- Data for run {run_idx} ---\n")
+                print(f"{volume=}\n {speed=}\n {localization_error=}\n")
+
+            result_data.append((results, localization_error, volume, speed))
+        self.result_data = np.array(result_data)
+
+
+    def save_result_data(self):
+        if not hasattr(self, "result_data"):
+            print("First run get_data and set 'result_data' before trying to save it")
+
+        np.save(Path(f"{self.result_path}{self.simulation_subset}_a{self.a}_w{self.w}.npy"), self.result_data)
+        del self.result_data
 
 
     def __predict_data(self, run_idx):

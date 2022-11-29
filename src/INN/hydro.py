@@ -6,51 +6,90 @@ from matplotlib import pyplot as plt
 
 from sklearn.model_selection import train_test_split
 
-def setup_data(subset="all", shuffle_data=True, run=-1):
-    loaded_data = None
-    loaded_labels = None
-    if subset == "all":
-<<<<<<< HEAD
-        loaded_data = np.load('../data/simulation_data/combined.npy')
-        loaded_labels = np.load(
-            '../data/simulation_data/combined_labels.npy')
-    else:
-        loaded_data = np.load(f'../data/simulation_data/{subset}/combined.npy')
-        loaded_labels = np.load(
-            f'../data/simulation_data/{subset}/combined_labels.npy')
-=======
-        loaded_data = np.load('../../../data/simulation_data/combined.npy')
-        loaded_labels = np.load(
-            '../../../data/simulation_data/combined_labels.npy')
-    else:
-        loaded_data = np.load(f'../../../data/simulation_data/{subset}/combined.npy')
-        loaded_labels = np.load(
-            f'../../../data/simulation_data/{subset}/combined_labels.npy')
->>>>>>> ffa064dc54305dad278f7a9811620da743111c93
+from lib import params
 
-
+def add_noise(train_data, train_labels, test_data, test_labels, run):
     # NOTE: reversing the data and labels here
-    data = loaded_labels
-    labels = loaded_data
+    if run == -1:
+        train_data = np.reshape(train_data[0:32], (-1, train_data.shape[2]))
+        train_labels = np.reshape(train_labels[0:32], (-1, train_labels.shape[2]))
+    elif run >= 0:
+        train_data = train_data[run]
+        train_labels = train_labels[run]
+
+
 
     if run == -1:
-        data = np.reshape(data[0:32], (-1, data.shape[2]))
-        labels = np.reshape(labels[0:32], (-1, labels.shape[2]))
+        test_data = np.reshape(test_data[0:32], (-1, test_data.shape[2]))
+        test_labels = np.reshape(test_labels[0:32], (-1, test_labels.shape[2]))
     elif run >= 0:
-        data = data[run]
-        labels = labels[run]
+        test_data = test_data[run]
+        test_labels = test_labels[run]
 
 
-    data_noise = np.random.normal(0, .005, data.shape)
-    labels_noise = np.random.normal(0, .005, labels.shape)
+    ## Train noise
+    train_data_noise = np.random.normal(0, .005, train_data.shape)
+    train_labels_noise = np.random.normal(0, .005, train_labels.shape)
 
-    data = data + data_noise
-    labels = labels + labels_noise
-    labels = labels[:, 63:65]
+    train_data = train_data + train_data_noise
+    train_labels = train_labels + train_labels_noise
 
-    train_data, test_data, train_labels, test_labels = train_test_split(data, labels, test_size=0.2, shuffle=shuffle_data, random_state=42)
 
-    # print(train_data.shape)
+
+    # Number of sensors
+    train_labels = train_labels[:, 61:67]
+
+
+
+
+    ## Test noise
+    test_data_noise = np.random.normal(0, .005, test_data.shape)
+    test_labels_noise = np.random.normal(0, .005, test_labels.shape)
+
+    test_data = test_data + test_data_noise
+    test_labels = test_labels + test_labels_noise
+
+    # Number of sensors
+    test_labels = test_labels[:, 61:67]
+
+    return train_data, train_labels, test_data, test_labels
+
+def setup_data_with_data(data, run=-1):
+    data.normalize()
+
+    train_labels = data.train_data
+    train_data = data.train_labels
+
+    test_labels = data.test_data
+    test_data = data.test_labels
+
+    train_data, train_labels, test_data, test_labels = add_noise(train_data, train_labels, test_data, test_labels, run)
+
+    return train_data, train_labels, test_data, test_labels
+
+def setup_data(subset="all", shuffle_data=True, run=-1, a=0, w=0):
+    if subset == "all":
+        subset = 'combined_groups'
+
+    if a != 0 and w != 0:
+        train_location = f"../data/simulation_data/{subset}/a{a}_normw{w}_data.npy"
+    else:
+        train_location = f"../data/simulation_data/{subset}/combined.npy"
+
+
+    # Load data
+    settings = params.Settings(shuffle_data=shuffle_data, train_location=train_location)
+    data = params.Data(settings, train_location)
+    data.normalize()
+
+    train_labels = data.train_data
+    train_data = data.train_labels
+
+    test_labels = data.test_data
+    test_data = data.test_labels
+
+    train_data, train_labels, test_data, test_labels = add_noise(train_data, train_labels, test_data, test_labels, run)
+
     return train_data, train_labels, test_data, test_labels
 
 #TODO Check this

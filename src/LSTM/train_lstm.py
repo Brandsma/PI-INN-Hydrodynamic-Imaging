@@ -30,6 +30,22 @@ def read_inputs():
     return n_nodes, n_epochs, window_size, stride, \
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
 
+def train_lstm(trained_models_folder="../../data/trained_models/LSTM/", data=None, settings=None):
+    # Initiate the LSTM network using data and settings
+    network = LSTM.LSTM_network(data, settings)
+    network.model.summary()
+    # Train the network
+    network.train()
+
+    # Save the network for later use
+    Path(trained_models_folder).mkdir(parents=True, exist_ok=True)
+    log.info(f"Saving trained model to {trained_models_folder}{settings.name}...")
+    network.save_model(f"{trained_models_folder}{settings.name}")
+
+    # # Test the network
+    # network.test(data.test_data, data.test_labels)
+    # # Save results
+    # network.save_results()
 
 if __name__ == "__main__":
 
@@ -45,20 +61,5 @@ if __name__ == "__main__":
     data = params.Data(settings, train_location)
 
     data.normalize()
+    train_lstm()
 
-    # Initiate the LSTM network using data and settings
-    network = LSTM.LSTM_network(data, settings)
-    network.model.summary()
-    # Train the network
-    network.train()
-
-    # Save the network for later use
-    trained_models_folder = "../../data/trained_models/LSTM/"
-    Path(trained_models_folder).mkdir(parents=True, exist_ok=True)
-    log.info(f"Saving trained model to {trained_models_folder}{settings.name}...")
-    network.save_model(f"{trained_models_folder}{settings.name}")
-
-    # # Test the network
-    # network.test(data.test_data, data.test_labels)
-    # # Save results
-    # network.save_results()

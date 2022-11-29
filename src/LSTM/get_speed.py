@@ -33,6 +33,8 @@ def get_speed_from_model_predicts(model_predicts, labels, timestamp, window_size
 
     speeds = []
     for idx, y_pred in enumerate(model_predicts):
+        if (len(model_predicts) + window_size > len(timestamp)):
+            window_size -= 1
         time = timestamp[idx + window_size][0]
 
         if idx != 0:

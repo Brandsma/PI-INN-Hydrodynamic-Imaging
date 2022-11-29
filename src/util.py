@@ -1,4 +1,12 @@
-import os 
+import os
+
+import numpy as np
+
+def cartesian_coord(*arrays):
+    grid = np.meshgrid(*arrays)
+    coord_list = [entry.ravel() for entry in grid]
+    points = np.vstack(coord_list).T
+    return points
 
 def get_scratch_dir():
     # Find the folder where the data should be found and should be saved

@@ -21,7 +21,7 @@ def main():
 
     # Get Model
     model = create_model(tot_dim, config.n_couple_layer, config.n_hid_layer, config.n_hid_dim)
-    latest_model_path = "./models/trained_model_weights.tf"
+    latest_model_path = "../../../data/trained_models/inn/latest/trained_model_weights.tf"
     model.load_weights(latest_model_path)
 
     forward_mse_errors = []
@@ -29,10 +29,10 @@ def main():
 
     for run_idx in tqdm(range(16)):
         # Get dataset
-        train_data, train_labels, data, labels = get_data(dt, subset="offset", shuffle_data=False, run=run_idx + 64)
+        _, _, data, labels = get_data(dt, subset="offset", shuffle_data=False)
 
-        data = np.concatenate([train_data, data], axis=0).astype('float32')
-        labels = np.concatenate([train_labels, labels], axis=0).astype('float32')
+        # data = np.concatenate([train_data, data], axis=0).astype('float32')
+        # labels = np.concatenate([train_labels, labels], axis=0).astype('float32')
 
         x_data, x_pred, y_data, y_pred = test_model(model, data, labels, x_dim, y_dim, z_dim)
 

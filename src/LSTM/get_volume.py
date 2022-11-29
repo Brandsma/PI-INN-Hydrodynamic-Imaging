@@ -10,71 +10,55 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
+from numba import jit
+
 from .get_speed import get_speed_from_model_predicts
 from lib.params import Data, Settings
-from lib import LSTM
+np.seterr('raise')
 
 count_idx = 1
 MSE = 0
 error = {10: [], 20: [], 30: [], 40: [], 50: []}
 
+EPSILON = 1e-8
 
+
+@jit
 def wavelet_e(p):
     return (1 - 2 * p**2) / ((1 + p**2)**(5 / 2))
 
 
+@jit
 def wavelet_o(p):
     return (-3 * p) / ((1 + p**2)**(5 / 2))
 
 
+@jit
 def wavelet_n(p):
     return (2 - p**2) / ((1 + p**2)**(5 / 2))
 
 
-# TODO: Update both inverse volume calculation for a theta that is not zero
+@jit
 def inverse_volume_vx_calculation(vx, sensor, speed, x, y, theta):
     p = (sensor - x) / y
     we = wavelet_e(p)
     wo = wavelet_o(p)
 
-    below_line = (speed * (-we * math.cos(theta) + wo * math.sin(theta)))
-    if below_line == 0:
-        return None
+    above_line = (2 * y**3 * vx)
+    below_line = (speed * (-we * math.cos(theta) + wo * math.sin(theta))) + EPSILON
 
-    answer = ((2 * y**3 * vx) /
-              below_line)**(1 / 3)
+    return (abs( above_line / below_line ))**(1 / 3)
 
-    if math.isnan(answer):
-        answer = abs(
-            (2 * y**3 * vx) /
-            below_line)**(1 / 3)
-
-    if math.isnan(answer):
-        return None
-
-    return answer
-
-
+@jit
 def inverse_volume_vy_calculation(vy, sensor, speed, x, y, theta):
     p = (sensor - x) / y
     wo = wavelet_o(p)
     wn = wavelet_n(p)
 
-    below_line = (speed * (wn * math.sin(theta) + wo * math.cos(theta)))
-    if below_line == 0:
-        return None
+    above_line = (2 * y**3 * vy)
+    below_line = (speed * (wn * math.sin(theta) + wo * math.cos(theta))) + EPSILON
 
-    answer = ((2 * y**3 * vy) /
-              below_line)**(1 / 3)
-    if math.isnan(answer):
-        answer = abs(
-            (2 * y**3 * vy) /
-            below_line)**(1 / 3)
-
-    if math.isnan(answer):
-        return None
-
-    return answer
+    return (abs( above_line / below_line ))**(1 / 3)
 
 
 def extract_volume(points,

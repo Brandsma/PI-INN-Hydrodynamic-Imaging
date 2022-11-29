@@ -119,7 +119,7 @@ class Data:
     - splits data in train and test split. ratio depends on the settings.
     """
     def __init__(self, settings, location, supplied_data: Tuple = None):
-        print("Loading dataset from " + location + "...")
+        # print("Loading dataset from " + location + "...")
 
         self.settings = settings
         # load data
@@ -158,7 +158,7 @@ class Data:
         self.n_outputs = np.shape(self.train_labels[0])[1]
         self.n_datapoints = len(self.train_data)
 
-        print("Dataset loaded.")
+        # print("Dataset loaded.")
 
 
     @classmethod
@@ -172,7 +172,7 @@ class Data:
     """
 
     def _load_data_numpy(self, file_location, split_ratio):
-        print("Loading numpy data")
+        # print("Loading numpy data")
         # Extract name of numpy struct from file and load it
         base_name = os.path.splitext(file_location)
         labels = np.load(f"{base_name[0]}_labels{base_name[-1]}")
