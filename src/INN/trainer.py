@@ -109,6 +109,45 @@ class Trainer(tfk.Model):
 
     def test_step(self, data):
         x_data, y_data = data
-        print(x_data.shape, y_data.shape)
-        return NotImplementedError()
+        y = y_data[:, :self.y_dim]
+        z = y_data[:, -self.z_dim:]
+        y_short = tf.concat([y, z], axis=-1)
 
+        pde_loss = None
+
+        y_out = self.model(x_data)
+        # TODO: invert z and y dim
+        pred_loss = self.w1 * self.loss_fit(
+            y_data[:, :self.z_dim],
+            y_out[:, :self.z_dim])  # [zeros, y] <=> [zeros, yhat]
+        output_block_grad = tf.concat(
+            [y_out[:, -self.z_dim:], y_out[:, :self.y_dim]],
+            axis=-1)  # take out [z, y] only (not zeros)
+        latent_loss = self.w2 * self.loss_latent(
+            y_short, output_block_grad)  # [z, y] <=> [zhat, yhat]
+
+        forward_loss = pred_loss + latent_loss
+        if not (self.pde_loss_func is None or not self.pde_applied_forward):
+            pde_loss = self.pde_loss_func(self.model, x_data, self.x_dim, self.y_dim)
+            forward_loss += pde_loss
+
+        x_rev = self.model.inverse(y_data)
+        # PDE loss
+        # pde_loss = interior_loss(self.model, x_data, self.x_dim, self.y_dim)
+        rev_loss = self.w3 * self.loss_factor * self.loss_fit(
+            x_rev, x_data)# + pde_loss
+
+        if not (self.pde_loss_func is None or self.pde_applied_forward):
+            pde_loss = self.pde_loss_func(self.model, x_data, self.x_dim, self.y_dim)
+            rev_loss += pde_loss
+
+        total_loss = forward_loss + latent_loss + rev_loss
+        if self.pde_loss_func is None:
+            return {
+                'loss': total_loss,
+            }
+        else:
+            total_loss += pde_loss
+            return {
+                'loss': total_loss,
+            }

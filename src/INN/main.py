@@ -45,6 +45,8 @@ def run_inn(given_data,
     X = given_data
     y = given_labels
 
+    data_length = X.shape[0] // n_batch
+
     ###
     # Preprocess
     # print(X_raw.shape)
@@ -71,6 +73,10 @@ def run_inn(given_data,
         (x_data, y_data)).shuffle(buffer_size=X.shape[0]).batch(
             n_batch, drop_remainder=True).repeat())
 
+    val_dataset = dataset.take(int(data_length * 0.15))
+    train_dataset = dataset.skip(int(data_length * 0.15))
+
+
     ## INITIALIZE MODEL ##
     model = create_model(tot_dim, n_couple_layer, n_hid_layer, n_hid_dim)
     # model = NVP(tot_dim, n_couple_layer, n_hid_layer, n_hid_dim, name='NVP')
@@ -90,28 +96,39 @@ def run_inn(given_data,
     trainer.compile(optimizer=tf.keras.optimizers.Adam(clipvalue=0.5))
 
     LossFactor = UpdateLossFactor(n_epoch)
+    EarlyStop = tf.keras.callbacks.EarlyStopping(
+        monitor="val_loss",
+        min_delta=0,
+        patience=6,
+        verbose=0,
+        mode="auto",
+        baseline=None,
+        restore_best_weights=True,
+    )
+
     # logger = NBatchLogger(n_display, n_epoch)
-    hist = trainer.fit(dataset,
+    _ = trainer.fit(train_dataset,
                        batch_size=n_batch,
                        epochs=n_epoch,
                        steps_per_epoch=n_data // n_batch,
-                       callbacks=[LossFactor],
-                       verbose=1)
+                       callbacks=[LossFactor, EarlyStop],
+                       verbose=1,
+                       validation_data=val_dataset)
 
     ## CHECK RESULTS ##
 
-    fig, ax = plt.subplots(1, facecolor='white', figsize=(8, 5))
-    ax.plot(hist.history['total_loss'], 'k.-', label='total loss')
-    ax.plot(hist.history['forward_loss'], 'b.-', label='forward loss')
-    ax.plot(hist.history['latent_loss'], 'g.-', label='latent loss')
-    ax.plot(hist.history['rev_loss'], 'r.-', label='inverse loss')
-    if pde_loss_func != None:
-        ax.plot(hist.history['pde_loss'], 'y.-', label='pde loss')
-    plt.legend()
-    if pde_loss_func == None:
-        plt.savefig("../data/trained_models/INN/latest/trained_model_train_hist")
-    else:
-        plt.savefig("../data/trained_models/INNPINN/latest/trained_model_train_hist")
+    # fig, ax = plt.subplots(1, facecolor='white', figsize=(8, 5))
+    # ax.plot(hist.history['total_loss'], 'k.-', label='total loss')
+    # ax.plot(hist.history['forward_loss'], 'b.-', label='forward loss')
+    # ax.plot(hist.history['latent_loss'], 'g.-', label='latent loss')
+    # ax.plot(hist.history['rev_loss'], 'r.-', label='inverse loss')
+    # if pde_loss_func != None:
+    #     ax.plot(hist.history['pde_loss'], 'y.-', label='pde loss')
+    # plt.legend()
+    # if pde_loss_func == None:
+    #     plt.savefig("../data/trained_models/INN/latest/trained_model_train_hist")
+    # else:
+    #     plt.savefig("../data/trained_models/INNPINN/latest/trained_model_train_hist")
 
     # z = np.random.multivariate_normal([1.] * z_dim, np.eye(z_dim), y.shape[0])
     # y_data = np.concatenate([y, z], axis=-1).astype('float32')
@@ -119,14 +136,14 @@ def run_inn(given_data,
     # x_data = np.concatenate([X, pad_x], axis=-1).astype('float32')
     # y_pred = model(x_data).numpy()
 
-    print(" -- Saving model")
-    # model.save("./models/")
-    if pde_loss_func == None:
-        config.to_file("../data/trained_models/INN/latest/INNConfig.pkl")
-        model.save_weights("../data/trained_models/INN/latest/trained_model_weights.tf")
-    else:
-        config.to_file("../data/trained_models/INNPINN/latest/INNConfig.pkl")
-        model.save_weights("../data/trained_models/INNPINN/latest/trained_model_weights.tf")
+    # print(" -- Saving model")
+    # # model.save("./models/")
+    # if pde_loss_func == None:
+    #     config.to_file("../data/trained_models/INN/latest/INNConfig.pkl")
+    #     model.save_weights("../data/trained_models/INN/latest/trained_model_weights.tf")
+    # else:
+    #     config.to_file("../data/trained_models/INNPINN/latest/INNConfig.pkl")
+    #     model.save_weights("../data/trained_models/INNPINN/latest/trained_model_weights.tf")
 
     # if datatype == DataType.Sine:
     #     sine.plot_results(x_data, x_pred, y_data, y_pred, title="Sine")
@@ -148,8 +165,8 @@ def simple_run(dt, subset="offset", use_pde=False, config: INNConfig =None):
     # data = np.concatenate([data, test_d], axis=0).astype('float32')
     # labels = np.concatenate([labels, test_l], axis=0).astype('float32')
 
-    print(f"{data.shape=}")
-    print(f"{labels.shape=}")
+    # print(f"{data.shape=}")
+    # print(f"{labels.shape=}")
 
     if config == None:
         config = INNConfig(4, 4, 128, 0, 0, 32, None)

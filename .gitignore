@@ -19,6 +19,7 @@ data/
 *.mat
 */models/*
 models/
+*.csv
 
 # May want this, but for now keep it out
 results/

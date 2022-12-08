@@ -1,5 +1,6 @@
 from lib import params
 from pathlib import Path
+from util import cartesian_coord
 import sys
 from tqdm import tqdm
 import numpy as np
@@ -96,6 +97,7 @@ class INNTester():
 
             result_data.append((x_pred, y_pred, mean_squared_error(y_data[:, :self.y_dim], y_pred[:, :self.y_dim]), mean_squared_error(x_data[:, :self.x_dim], x_pred[:, :self.x_dim]), volume, speed))
         self.result_data = np.array(result_data, dtype=object)
+        # print(self.result_data[:, 2])
 
 
     def save_result_data(self):
@@ -126,3 +128,11 @@ class INNTester():
         y_pred = self.network(x_data).numpy()
 
         return x_data, x_pred, y_data, y_pred
+
+def generate_inn_options():
+    n_couple_layer_options = [2,4,8]
+    n_hid_layers_options = [2,4,8]
+    n_hid_dim_options = [16,32,64,128, 256]
+    z_dim_options = [2,16,32,64]
+
+    return cartesian_coord(n_couple_layer_options, n_hid_layers_options, n_hid_dim_options, z_dim_options)

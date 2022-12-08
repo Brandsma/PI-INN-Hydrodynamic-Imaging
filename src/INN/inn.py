@@ -24,6 +24,9 @@ class INNConfig:
         with open(filename, 'rb') as inp:
             return pickle.load(inp)
 
+    def __hash__(self):
+        return hash(repr(self))
+
 
 def create_model(
         tot_dim, n_couple_layer, n_hid_layer, n_hid_dim
