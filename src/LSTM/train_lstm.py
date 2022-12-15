@@ -26,7 +26,7 @@ def read_inputs():
     dropout = 0.2
     # train_loc = get_scratch_dir() + "/data/combined.npy"
     train_loc = "../../data/simulation_data/combined.npy"
-    ac_fun = "tanh"
+    ac_fun = "relu"
     return n_nodes, n_epochs, window_size, stride, \
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
 

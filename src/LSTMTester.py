@@ -1,5 +1,6 @@
 import os
 from sklearn.metrics import mean_squared_error
+from util import cartesian_coord
 import numpy as np
 from copy import deepcopy
 from pathlib import Path
@@ -82,7 +83,7 @@ class LSTMTester():
                 print(f"{volume=}\n {speed=}\n {localization_error=}\n")
 
             result_data.append((results, localization_error, volume, speed))
-        self.result_data = np.array(result_data)
+        self.result_data = np.array(result_data, dtype=object)
 
 
     def save_result_data(self):
@@ -115,3 +116,9 @@ class LSTMTester():
             y_true = np.vstack((y_true, true_label))
 
         return (y_pred, y_true)
+
+def generate_lstm_options():
+    n_nodes_options = [32, 64, 128, 256]
+    ac_fun_options = ["relu", "tanh", "sigmoid"]
+
+    return cartesian_coord(n_nodes_options, ac_fun_options)

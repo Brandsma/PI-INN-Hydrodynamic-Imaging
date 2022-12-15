@@ -70,20 +70,24 @@ class LSTM_network:
         model.add(
             LSTM(n_nodes,
                  input_shape=(win_size, n_inputs),
-                 activation=self.activation,
-            dropout=dropout))
+                 activation=self.activation))
         # and a dropout layer (which only does something if dropout > 0).
-        # model.add(Dropout(dropout))
+        model.add(Dropout(dropout))
         # Finally we have a fully connected layer with 2 to 3 nodes - the x and y positions and an angle
         model.add(Dense(n_outputs, activation='linear'))
         # Compile the model with euclidean error and adam
         optimizer = optimizers.Adam(learning_rate=alpha,
-                                       # epsilon=None,
+                                       epsilon=None,
                                        decay=decay,
-                                       clipnorm=.5)
-        model.compile(loss=losses.MeanSquaredError(), optimizer=optimizer)
+                                       clipnorm=1.)
+        # model.compile(loss=losses.MeanSquaredError(), optimizer=optimizer)
+        model.compile(loss=self.__euclidean_error_loss, optimizer=optimizer)
         # Return the resulting model
         return model
+
+
+    def __euclidean_error_loss(self, y_true, y_pred):
+        return K.sqrt(K.sum(K.square(y_true - y_pred), axis=-1))
 
     """
     LSTM_network::train()

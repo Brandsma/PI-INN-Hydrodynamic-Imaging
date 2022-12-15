@@ -77,6 +77,9 @@ class Settings:
                    setting_elements[8][1], data_location,
                    setting_elements[9][1])
 
+    def __hash__(self):
+        return hash(repr(self))
+
     @property
     def name(self):
         setting_values = self.__dict__
