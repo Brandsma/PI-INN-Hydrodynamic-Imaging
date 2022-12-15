@@ -5,6 +5,7 @@ from INNTester import INNTester, generate_inn_options
 from INNPINNTester import INNPINNTester
 from tqdm import tqdm
 import pyfiglet
+from time import perf_counter
 
 from util import cartesian_coord
 

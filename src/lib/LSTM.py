@@ -76,13 +76,25 @@ class LSTM_network:
         # Finally we have a fully connected layer with 2 to 3 nodes - the x and y positions and an angle
         model.add(Dense(n_outputs, activation='linear'))
         # Compile the model with euclidean error and adam
-        optimizer = optimizers.Adam(learning_rate=alpha,
+        optimizer = optimizers.Adagrad(learning_rate=alpha,
                                        epsilon=None,
                                        decay=decay,
                                        clipnorm=1.)
         model.compile(loss=losses.MeanSquaredError(), optimizer=optimizer)
+        # model.compile(loss=self.__euclidean_error_loss, optimizer=optimizer)
         # Return the resulting model
         return model
+
+    """
+    LSTM_network::euclidean_error_loss(y_true, y_pred)
+    - private function
+    - loss function which calculates the euclidean error between
+      the predicted value y_pred and actual (teacher) output y_pred
+    - used by model.Compile in init_network().
+    """
+
+    def __euclidean_error_loss(self, y_true, y_pred):
+        return K.sqrt(K.sum(K.square(y_true - y_pred), axis=-1))
 
     """
     LSTM_network::train()
