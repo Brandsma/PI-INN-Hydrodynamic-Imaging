@@ -3,6 +3,8 @@ import tensorflow as tf
 import os
 
 from matplotlib import pyplot as plt
+import matplotlib.tri as tri
+from matplotlib.colors import LinearSegmentedColormap
 
 from sklearn.model_selection import train_test_split
 
@@ -120,7 +122,41 @@ def interior_loss(model, x_data, x_dim, y_dim):
     # Use the residuals of the PDE (anything other than zero is an error)
     return tf.math.reduce_mean(tf.math.square(pde_loss_output))
 
-def plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, title="", savefig=False, savepath="./results"):
+
+def plot_results_from_array(x_data, x_pred, y_data, y_pred, x_dim, y_dim, test_idx=0, title="", savefig=False, savepath="./results"):
+    print(f"{'Saving' if savefig else 'Showing'} figures...")
+    if savefig:
+        os.makedirs(savepath, exist_ok=True)
+
+
+    # Determine data to plot
+    input_sensors = np.linspace(-200, 200, num=8)
+    x = x_pred[:, 0]
+    y = x_pred[:, 1]
+    label_x = x_data[:1024, 0]
+    label_y = x_data[:1024, 1]
+
+    # Plot the predicted hist vs the labels
+    plt.hist2d(x, y, bins=(128, 128), label="predicted", cmap=plt.cm.viridis)
+    plt.plot(label_x, label_y, color='orange', linestyle='solid', label="label", linewidth=2)
+
+    # Plot the sensor array
+    plt.plot(input_sensors, [min(y)] * len(input_sensors), 'go')
+
+    # plt.legend()
+    plt.show()
+    exit()
+
+
+
+    if savefig:
+        plt.savefig(f"{savepath}/{title}_forward")
+        plt.close()
+
+    if not savefig:
+        plt.show()
+
+def plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, run_idx, title="", savefig=False, savepath="./results"):
     print(f"{'Saving' if savefig else 'Showing'} figures...")
 
     if savefig:
@@ -129,12 +165,12 @@ def plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, title="", savefig
     plt.figure()
     plt.title(
         f"Backward Process - ($V_x$, $V_y$ -> x,y,$\\theta$) {title}")
-    plt.plot(x_pred[:, 0], label="predicted x")
-    plt.plot(x_pred[:, 1], label="predicted y")
-    plt.plot(x_pred[:, 2], label="predicted $\\theta$")
-    plt.plot(x_data[:, 0], label="label x")
-    plt.plot(x_data[:, 1], label="label y")
-    plt.plot(x_data[:, 2], label="label $\\theta$")
+    plt.plot(x_pred[(1024 * run_idx):((run_idx + 1) * 1023), 0], label="predicted x")
+    plt.plot(x_pred[(1024 * run_idx):((run_idx + 1) * 1023), 1], label="predicted y")
+    plt.plot(x_pred[(1024 * run_idx):((run_idx + 1) * 1023), 2], label="predicted $\\theta$")
+    plt.plot(x_data[(1024 * run_idx):((run_idx + 1) * 1023), 0], label="label x")
+    plt.plot(x_data[(1024 * run_idx):((run_idx + 1) * 1023), 1], label="label y")
+    plt.plot(x_data[(1024 * run_idx):((run_idx + 1) * 1023), 2], label="label $\\theta$")
     plt.xlabel("Measurement")
     plt.ylabel("x | y")
     plt.legend()
@@ -144,8 +180,8 @@ def plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, title="", savefig
 
     plt.figure()
     plt.title(f"Forward Process - (x,y,$\\theta$ -> $V_x$, $V_y$) {title}")
-    plt.plot(y_pred[:, :y_dim], label="predicted")
-    plt.plot(y_data[:, :y_dim], label="label")
+    plt.plot(y_pred[(1024 * run_idx):((run_idx + 1) * 1024), :y_dim], label="predicted")
+    plt.plot(y_data[(1024 * run_idx):((run_idx + 1) * 1024), :y_dim], label="label")
     plt.xticks(np.linspace(0, 2048, num=8),
                map(round, np.linspace(-1, 1, num=8), [2] * 8))
     plt.xlabel("x")

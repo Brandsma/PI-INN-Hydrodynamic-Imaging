@@ -1,16 +1,20 @@
 import statistics
-from data import get_data, DataType
+from INN.data import get_data, DataType
 from tqdm import tqdm
 
 import numpy as np
-from inn import create_model, INNConfig
-import hydro
-import sine
+from INN.inn import create_model, INNConfig
+import INN.hydro as hydro
+import INN.sine as sine
 from sklearn.metrics import mean_squared_error
 
-def main():
+def run_test_on_model(test_pinn=True):
+    base_folder= "../data/trained_models/INN"
+    if test_pinn:
+        base_folder= "../data/trained_models/INNPINN"
+
     # Config
-    config: INNConfig = INNConfig.from_file("../../../data/trained_models/INN/latest/INNConfig.pkl")
+    config: INNConfig = INNConfig.from_file(f"{base_folder}/latest/INNConfig.pkl")
     dt = DataType.Hydro
 
     x_dim = config.x_dim
@@ -21,7 +25,7 @@ def main():
 
     # Get Model
     model = create_model(tot_dim, config.n_couple_layer, config.n_hid_layer, config.n_hid_dim)
-    latest_model_path = "../../../data/trained_models/inn/latest/trained_model_weights.tf"
+    latest_model_path = f"{base_folder}/latest/trained_model_weights.tf"
     model.load_weights(latest_model_path)
 
     forward_mse_errors = []
@@ -39,7 +43,8 @@ def main():
         if dt == DataType.Sine:
             sine.plot_results(x_data, x_pred, y_data, y_pred, title="Sine")
         elif dt == DataType.Hydro:
-            hydro.plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, title=f"Hydro | {run_idx}", savefig=True)
+            hydro.plot_results_from_array(x_data, x_pred, y_data, y_pred, x_dim, y_dim, run_idx, title=f"Hydro | {run_idx}", savefig=True)
+            # hydro.plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, run_idx, title=f"Hydro | {run_idx}", savefig=True)
 
         
         forward_mse_errors.append(mean_squared_error(y_data[:, :y_dim], y_pred[:, :y_dim]))
@@ -75,4 +80,4 @@ def test_model(model, data, labels, x_dim, y_dim, z_dim):
 
 
 if __name__ == '__main__':
-    main()
+    run_test_on_model()

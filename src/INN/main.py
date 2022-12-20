@@ -137,13 +137,13 @@ def run_inn(given_data,
     # y_pred = model(x_data).numpy()
 
     # print(" -- Saving model")
-    # # model.save("./models/")
-    # if pde_loss_func == None:
-    #     config.to_file("../data/trained_models/INN/latest/INNConfig.pkl")
-    #     model.save_weights("../data/trained_models/INN/latest/trained_model_weights.tf")
-    # else:
-    #     config.to_file("../data/trained_models/INNPINN/latest/INNConfig.pkl")
-    #     model.save_weights("../data/trained_models/INNPINN/latest/trained_model_weights.tf")
+    # model.save("./models/")
+    if pde_loss_func == None:
+        config.to_file("../data/trained_models/INN/latest/INNConfig.pkl")
+        model.save_weights("../data/trained_models/INN/latest/trained_model_weights.tf")
+    else:
+        config.to_file("../data/trained_models/INNPINN/latest/INNConfig.pkl")
+        model.save_weights("../data/trained_models/INNPINN/latest/trained_model_weights.tf")
 
     # if datatype == DataType.Sine:
     #     sine.plot_results(x_data, x_pred, y_data, y_pred, title="Sine")
@@ -159,7 +159,7 @@ def run_inn(given_data,
 
     print(" -- DONE -- ")
 
-def simple_run(dt, subset="offset", use_pde=False, config: INNConfig =None):
+def simple_run(dt, subset="all", use_pde=False, config: INNConfig =None):
     data, labels, _, _ = get_data(dt, subset=subset, shuffle_data=False)
 
     # data = np.concatenate([data, test_d], axis=0).astype('float32')

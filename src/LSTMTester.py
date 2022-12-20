@@ -14,12 +14,16 @@ from lib import LSTM, params
 import tensorflow as tf
 
 class LSTMTester():
-    def __init__(self, model_folder="../data/trained_models/LSTM/", result_path="../data/results/LSTM/", save_to_file=True, debug=False):
+    def __init__(self, model_folder="../data/trained_models/LSTM/", model_name=None, result_path="../data/results/LSTM/", save_to_file=True, debug=False):
         # TODO: path maybe?
         self.result_path = result_path
         self.save_to_file = save_to_file
 
-        self.model_location = "window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:8&shuffle_data:True&data_split:0.8&dropout_ratio:0.5&ac_fun:tanh"
+        if model_name is None:
+            print("Error: No model name was provided to tester")
+            return
+
+        self.model_location = model_name
 
         self.model = tf.keras.models.load_model(
         f"{model_folder}{self.model_location}"
@@ -118,7 +122,8 @@ class LSTMTester():
         return (y_pred, y_true)
 
 def generate_lstm_options():
-    n_nodes_options = [32, 64, 128, 256]
+    n_nodes_options = [64, 128, 256]
     ac_fun_options = ["relu", "tanh", "sigmoid"]
+    dropout_options = [0, 0.2]
 
-    return cartesian_coord(n_nodes_options, ac_fun_options)
+    return cartesian_coord(n_nodes_options, ac_fun_options, dropout_options)
