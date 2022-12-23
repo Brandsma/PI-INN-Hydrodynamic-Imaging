@@ -38,8 +38,6 @@ def add_noise(train_data, train_labels, test_data, test_labels, run):
 
 
 
-    # Number of sensors
-    train_labels = train_labels[:, 61:67]
 
 
 
@@ -51,8 +49,6 @@ def add_noise(train_data, train_labels, test_data, test_labels, run):
     test_data = test_data + test_data_noise
     test_labels = test_labels + test_labels_noise
 
-    # Number of sensors
-    test_labels = test_labels[:, 61:67]
 
     return train_data, train_labels, test_data, test_labels
 
@@ -69,7 +65,7 @@ def setup_data_with_data(data, run=-1):
 
     return train_data, train_labels, test_data, test_labels
 
-def setup_data(subset="all", shuffle_data=True, run=-1, a=0, w=0):
+def setup_data(subset="all", shuffle_data=True, num_sensors=64, run=-1, a=0, w=0):
     if subset == "all":
         subset = 'combined_groups'
 
@@ -78,11 +74,14 @@ def setup_data(subset="all", shuffle_data=True, run=-1, a=0, w=0):
     else:
         train_location = f"../data/simulation_data/{subset}/combined.npy"
 
+    print(f"Getting training data from {train_location}")
+
 
     # Load data
     settings = params.Settings(shuffle_data=shuffle_data, train_location=train_location)
     data = params.Data(settings, train_location)
     data.normalize()
+
 
     train_labels = data.train_data
     train_data = data.train_labels
@@ -91,6 +90,16 @@ def setup_data(subset="all", shuffle_data=True, run=-1, a=0, w=0):
     test_data = data.test_labels
 
     train_data, train_labels, test_data, test_labels = add_noise(train_data, train_labels, test_data, test_labels, run)
+
+
+
+    print("Getting sensors between: ")
+    print((train_labels.shape[1] // 2 - num_sensors),(train_labels.shape[1] // 2 + num_sensors))
+    # Number of sensors
+    # train_labels = train_labels[:, 61:67]
+    train_labels = train_labels[:, (train_labels.shape[1] // 2 - num_sensors):(train_labels.shape[1] // 2 + num_sensors)]
+    test_labels = test_labels[:, (test_labels.shape[1] // 2 - num_sensors):(test_labels.shape[1] // 2 + num_sensors)]
+    # test_labels = test_labels[:, 61:67]
 
     return train_data, train_labels, test_data, test_labels
 
@@ -123,7 +132,7 @@ def interior_loss(model, x_data, x_dim, y_dim):
     return tf.math.reduce_mean(tf.math.square(pde_loss_output))
 
 
-def plot_results_from_array(x_data, x_pred, y_data, y_pred, x_dim, y_dim, test_idx=0, title="", savefig=False, savepath="./results"):
+def plot_results_from_array(x_data, x_pred, subset, num_sensors, title="", savefig=False, savepath="./results"):
     print(f"{'Saving' if savefig else 'Showing'} figures...")
     if savefig:
         os.makedirs(savepath, exist_ok=True)
@@ -133,24 +142,31 @@ def plot_results_from_array(x_data, x_pred, y_data, y_pred, x_dim, y_dim, test_i
     input_sensors = np.linspace(-200, 200, num=8)
     x = x_pred[:, 0]
     y = x_pred[:, 1]
-    label_x = x_data[:1024, 0]
-    label_y = x_data[:1024, 1]
+    label_x = x_data[:1020, 0]
+    label_y = x_data[:1020, 1]
+
+    y = np.append(y, [250])
+    y = np.append([0], y)
+
+    x = np.append(x, [500])
+    x = np.append([-500], x)
 
     # Plot the predicted hist vs the labels
     plt.hist2d(x, y, bins=(128, 128), label="predicted", cmap=plt.cm.viridis)
-    plt.plot(label_x, label_y, color='orange', linestyle='solid', label="label", linewidth=2)
+    plt.plot(label_x, label_y, color='red', linestyle='dashed', label="label", linewidth=2, alpha=0.4)
 
     # Plot the sensor array
     plt.plot(input_sensors, [min(y)] * len(input_sensors), 'go')
+    plt.title(f"{subset} with {num_sensors} sensors")
 
     # plt.legend()
-    plt.show()
-    exit()
+    # plt.show()
+    # exit()
 
 
 
     if savefig:
-        plt.savefig(f"{savepath}/{title}_forward")
+        plt.savefig(f"{savepath}/hydro_{subset}_{num_sensors}")
         plt.close()
 
     if not savefig:

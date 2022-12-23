@@ -33,5 +33,13 @@ def main():
 
     print(tabulate(inn_df, headers="keys", tablefmt="latex"))
 
+    lstm_df = pd.read_csv("./lstm_score.csv")
+    print(lstm_df.head())
+    lstm_df = lstm_df.sort_values("weighted_score")
+
+    lstm_df = lstm_df.drop("weighted_score", axis=1)
+
+    print(tabulate(lstm_df, headers="keys", tablefmt="latex"))
+
 if __name__ == '__main__':
-    main() 
+    main()

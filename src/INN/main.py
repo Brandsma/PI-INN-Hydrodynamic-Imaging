@@ -159,8 +159,8 @@ def run_inn(given_data,
 
     print(" -- DONE -- ")
 
-def simple_run(dt, subset="all", use_pde=False, config: INNConfig =None):
-    data, labels, _, _ = get_data(dt, subset=subset, shuffle_data=False)
+def simple_run(dt, subset="all", num_sensors=64, use_pde=False, config: INNConfig =None):
+    data, labels, _, _ = get_data(dt, subset=subset, num_sensors=num_sensors, shuffle_data=False)
 
     # data = np.concatenate([data, test_d], axis=0).astype('float32')
     # labels = np.concatenate([labels, test_l], axis=0).astype('float32')

@@ -8,10 +8,12 @@ import INN.hydro as hydro
 import INN.sine as sine
 from sklearn.metrics import mean_squared_error
 
-def run_test_on_model(test_pinn=True):
+def run_test_on_model(subset="all", num_sensors=64, test_pinn=False):
     base_folder= "../data/trained_models/INN"
     if test_pinn:
         base_folder= "../data/trained_models/INNPINN"
+
+    print(f"using {base_folder} now...")
 
     # Config
     config: INNConfig = INNConfig.from_file(f"{base_folder}/latest/INNConfig.pkl")
@@ -28,12 +30,12 @@ def run_test_on_model(test_pinn=True):
     latest_model_path = f"{base_folder}/latest/trained_model_weights.tf"
     model.load_weights(latest_model_path)
 
-    forward_mse_errors = []
-    backward_mse_errors = []
+    # forward_mse_errors = []
+    # backward_mse_errors = []
 
-    for run_idx in tqdm(range(16)):
+    for run_idx in range(1):
         # Get dataset
-        _, _, data, labels = get_data(dt, subset="offset", shuffle_data=False)
+        _, _, data, labels = get_data(dt, subset=subset, num_sensors=num_sensors, shuffle_data=False)
 
         # data = np.concatenate([train_data, data], axis=0).astype('float32')
         # labels = np.concatenate([train_labels, labels], axis=0).astype('float32')
@@ -43,18 +45,18 @@ def run_test_on_model(test_pinn=True):
         if dt == DataType.Sine:
             sine.plot_results(x_data, x_pred, y_data, y_pred, title="Sine")
         elif dt == DataType.Hydro:
-            hydro.plot_results_from_array(x_data, x_pred, y_data, y_pred, x_dim, y_dim, run_idx, title=f"Hydro | {run_idx}", savefig=True)
+            hydro.plot_results_from_array(x_data, x_pred, subset, num_sensors, title=f"Hydro | {run_idx}", savefig=True)
             # hydro.plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, run_idx, title=f"Hydro | {run_idx}", savefig=True)
 
-        
-        forward_mse_errors.append(mean_squared_error(y_data[:, :y_dim], y_pred[:, :y_dim]))
-        backward_mse_errors.append(mean_squared_error(x_data[:, :x_dim], x_pred[:, :x_dim]))
 
-    print("Forward --")
-    print(sum(forward_mse_errors) / len(forward_mse_errors), statistics.stdev(forward_mse_errors))
-    print("Backward --")
-    print(backward_mse_errors)
-    print(sum(backward_mse_errors) / len(backward_mse_errors), statistics.stdev(backward_mse_errors))
+    #     forward_mse_errors.append(mean_squared_error(y_data[:, :y_dim], y_pred[:, :y_dim]))
+    #     backward_mse_errors.append(mean_squared_error(x_data[:, :x_dim], x_pred[:, :x_dim]))
+
+    # print("Forward --")
+    # print(sum(forward_mse_errors) / len(forward_mse_errors), statistics.stdev(forward_mse_errors))
+    # print("Backward --")
+    # print(backward_mse_errors)
+    # print(sum(backward_mse_errors) / len(backward_mse_errors), statistics.stdev(backward_mse_errors))
 
     print(" -- Done -- ")
 
