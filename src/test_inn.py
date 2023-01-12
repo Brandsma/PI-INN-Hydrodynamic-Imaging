@@ -4,7 +4,7 @@ from INN.inn import INNConfig
 from INN.main import simple_run
 from INN.data import DataType
 
-def main():
+def test_inn():
     config = INNConfig(4, 4, 64, 0, 0, 32, None)
 
     subsets = ["offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"]
@@ -16,4 +16,4 @@ def main():
             run_test_on_model(subset=subset, num_sensors=num_sensors)
 
 if __name__ == '__main__':
-    main()
+    test_inn()

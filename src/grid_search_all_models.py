@@ -81,17 +81,20 @@ def write_lstm_config(config_score_dict):
         for config in config_score_dict:
             scores = config_score_dict[config]
             line = [config.n_nodes, config.ac_fun, config.dropout_ratio, scores["weighted_score"],
-                    scores["localization_error"], scores["volume_error"], scores["speed_error"],
-                    scores["localization_error_std"], scores["volume_error_std"], scores["speed_error_std"],
+                    scores["localization_error"], scores["speed_error"], scores["volume_error"],
+                    scores["weighted_score_std"], scores["localization_error_std"], scores["speed_error_std"], scores["volume_error_std"],
                     scores["train_time"], scores["test_time"]]
             w.writerow(line)
 
 def grid_search(test_inn=True, test_pinn=True, test_lstm=True):
-    print("Trying INN...")
 
-    inn_options = generate_inn_options()
+    inn_options = None
+    if test_inn or test_pinn:
+        inn_options = generate_inn_options()
 
     if test_inn:
+
+        print("Trying INN...")
 
         config_score_dict = {}
         # Try out various hyperparameter combinations

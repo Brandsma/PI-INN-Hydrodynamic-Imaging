@@ -140,7 +140,11 @@ class LSTM_network:
     - automatically plots network prediction vs actual source locations.
     - test() always tests with a stride of 1.
     """
-    def test(self, data, labels, dirname=None):
+    def test(self, data, labels, dirname=None, num_runs=0):
+
+        assert len(labels) >= num_runs, "Not enough runs were provided to the LSTM test function"
+
+
         # TODO: Check that network is trained
         print("Testing network...")
         # TODO: Make this function more efficient
@@ -162,8 +166,11 @@ class LSTM_network:
         self.labels = np.zeros((0, self.data.n_outputs))
         self.pred = np.zeros((0, self.data.n_outputs))
 
+        if num_runs == 0:
+            num_runs = len(labels)
+
         # Test all windows in the test set
-        for lab_idx in tqdm(range(0, len(labels))):
+        for lab_idx in tqdm(range(0, num_runs)):
             y_pred = np.zeros((0, self.data.n_outputs))
             y_true = np.zeros((0, self.data.n_outputs))
             for idx in range(0, len(data[lab_idx]) - win_size + 1):
@@ -186,24 +193,24 @@ class LSTM_network:
                     self.pred = np.vstack((self.pred, test_result))
 
             # Automatically make figure every 10th window
-            if lab_idx % 10 == 0:
-                plt.plot(y_pred)
-                plt.plot(y_true)
-                plt.legend(['x_pred', 'y_pred', 'theta_pred', 'x_true', 'y_true', 'theta_true'],
-                           loc='upper left')
-                # plt.ylim(-35, 35)
-                plt.savefig(dirname + '/lab_vs_out_' + str(lab_idx) + '.png')
-                plt.clf()
-                plt.cla()
-                plt.close()
+            # if lab_idx % 10 == 0:
+            #     plt.plot(y_pred)
+            #     plt.plot(y_true)
+            #     plt.legend(['x_pred', 'y_pred', 'theta_pred', 'x_true', 'y_true', 'theta_true'],
+            #                loc='upper left')
+            #     # plt.ylim(-35, 35)
+            #     plt.savefig(dirname + '/lab_vs_out_' + str(lab_idx) + '.png')
+            #     plt.clf()
+            #     plt.cla()
+            #     plt.close()
 
-                np.savetxt(dirname + "/" + "pred_ " + str(lab_idx) + ".out",
-                           y_pred)
-                np.savetxt(dirname + "/" + "true_" + str(lab_idx) + ".out",
-                           y_true)
+            #     np.savetxt(dirname + "/" + "pred_ " + str(lab_idx) + ".out",
+            #                y_pred)
+            #     np.savetxt(dirname + "/" + "true_" + str(lab_idx) + ".out",
+            #                y_true)
 
         # print errors
-        print("\n", np.mean(self.errors), "+/-", np.std(self.errors))
+        # print("\n", np.mean(self.errors), "+/-", np.std(self.errors))
 
     """
     LSTM_network()::generator(data, labels)

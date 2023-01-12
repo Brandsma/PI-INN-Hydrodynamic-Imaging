@@ -168,8 +168,7 @@ def plot_results_from_array(x_data, x_pred, subset, num_sensors, title="", savef
     if savefig:
         plt.savefig(f"{savepath}/hydro_{subset}_{num_sensors}")
         plt.close()
-
-    if not savefig:
+    else:
         plt.show()
 
 def plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, run_idx, title="", savefig=False, savepath="./results"):

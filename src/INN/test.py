@@ -13,6 +13,7 @@ def run_test_on_model(subset="all", num_sensors=64, test_pinn=False):
     if test_pinn:
         base_folder= "../data/trained_models/INNPINN"
 
+    results_folder = f"../results/{'PINN' if test_pinn else 'INN'}/{subset}"
     print(f"using {base_folder} now...")
 
     # Config
@@ -33,20 +34,24 @@ def run_test_on_model(subset="all", num_sensors=64, test_pinn=False):
     # forward_mse_errors = []
     # backward_mse_errors = []
 
-    for run_idx in range(1):
-        # Get dataset
-        _, _, data, labels = get_data(dt, subset=subset, num_sensors=num_sensors, shuffle_data=False)
+    # Get dataset
+    _, _, data, labels = get_data(dt, subset=subset, num_sensors=num_sensors, shuffle_data=False)
 
-        # data = np.concatenate([train_data, data], axis=0).astype('float32')
-        # labels = np.concatenate([train_labels, labels], axis=0).astype('float32')
+    # data = np.concatenate([train_data, data], axis=0).astype('float32')
+    # labels = np.concatenate([train_labels, labels], axis=0).astype('float32')
 
-        x_data, x_pred, y_data, y_pred = test_model(model, data, labels, x_dim, y_dim, z_dim)
+    x_data, x_pred, y_data, y_pred = test_model(model, data, labels, x_dim, y_dim, z_dim)
 
-        if dt == DataType.Sine:
-            sine.plot_results(x_data, x_pred, y_data, y_pred, title="Sine")
-        elif dt == DataType.Hydro:
-            hydro.plot_results_from_array(x_data, x_pred, subset, num_sensors, title=f"Hydro | {run_idx}", savefig=True)
-            # hydro.plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, run_idx, title=f"Hydro | {run_idx}", savefig=True)
+    if dt == DataType.Sine:
+        sine.plot_results(x_data, x_pred, y_data, y_pred, title="Sine")
+    elif dt == DataType.Hydro:
+        hydro.plot_results_from_array(x_data, x_pred, subset, num_sensors, title=f"Sensors: {num_sensors}", savefig=True, savepath=results_folder)
+        # hydro.plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, run_idx, title=f"Hydro | {run_idx}", savefig=True)
+
+    np.save(results_folder+f"/x_data_{num_sensors}.npy", x_data)
+    np.save(results_folder+f"/y_data_{num_sensors}.npy", y_data)
+    np.save(results_folder+f"/x_pred_{num_sensors}.npy", x_pred)
+    np.save(results_folder+f"/y_pred_{num_sensors}.npy", y_pred)
 
 
     #     forward_mse_errors.append(mean_squared_error(y_data[:, :y_dim], y_pred[:, :y_dim]))
