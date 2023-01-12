@@ -6,7 +6,6 @@ import scipy.io as sio
 from sklearn.preprocessing import normalize
 
 from lib.util import is_boolean, is_float, is_int
-
 """
 Settings class.
 - contains all meta-parameters such as number of
@@ -15,9 +14,20 @@ Settings class.
 
 
 class Settings:
-    def __init__(self, window_size=16, stride=2, n_nodes=128, alpha=0.05, decay=1e-9, n_epochs=4,
-                 shuffle_data=True, data_split=0.8, dropout_ratio=0, train_location="../data/simulation_data/combined.npy",
-                 ac_fun="relu"):
+
+    def __init__(self,
+                 window_size=16,
+                 stride=2,
+                 n_nodes=128,
+                 alpha=0.05,
+                 decay=1e-9,
+                 n_epochs=4,
+                 shuffle_data=True,
+                 data_split=0.8,
+                 dropout_ratio=0,
+                 train_location="../data/simulation_data/combined.npy",
+                 ac_fun="relu",
+                 num_sensors=64):
         # Window size
         self.window_size = window_size
         # Stride
@@ -40,6 +50,8 @@ class Settings:
         self.train_location = train_location
         # Activation function used by LSTM.
         self.ac_fun = ac_fun
+        # Number of sensors to take from the dataset
+        self.num_sensors = num_sensors
 
         if os.path.splitext(train_location)[-1] == ".mat":
             # Calculate length of data:
@@ -121,6 +133,7 @@ class Data:
     - extracts number of sensors and number of samples from data.
     - splits data in train and test split. ratio depends on the settings.
     """
+
     def __init__(self, settings, location, supplied_data: Tuple = None):
         # print("Loading dataset from " + location + "...")
 
@@ -137,7 +150,9 @@ class Data:
                 )
                 exit(1)
         else:
-            d_1, l_1, d_2, l_2, d_3, l_3, t_1, t_2, t_3, v_1, v_2, v_3 = self._split_data(supplied_data[0], supplied_data[1], supplied_data[2], supplied_data[3], settings.data_split)
+            d_1, l_1, d_2, l_2, d_3, l_3, t_1, t_2, t_3, v_1, v_2, v_3 = self._split_data(
+                supplied_data[0], supplied_data[1], supplied_data[2],
+                supplied_data[3], settings.data_split)
 
         # assign to data members.
         self.train_data = d_1
@@ -147,6 +162,8 @@ class Data:
         self.val_data = d_3
         self.val_labels = l_3
 
+        self.select_subset_of_data_based_on_sensors()
+
         self.train_timestamp = t_1
         self.val_timestamp = t_2
         self.test_timestamp = t_3
@@ -155,7 +172,6 @@ class Data:
         self.val_volumes = v_2
         self.test_volumes = v_3
 
-
         # extract dimensionality and length of data.
         self.n_inputs = np.shape(self.train_data[0])[1]
         self.n_outputs = np.shape(self.train_labels[0])[1]
@@ -163,10 +179,28 @@ class Data:
 
         # print("Dataset loaded.")
 
+    def select_subset_of_data_based_on_sensors(self):
+        if self.settings.num_sensors == 0:
+            return
+
+        lower_bound_sensor = (self.train_data.shape[2] // 2 -
+                              self.settings.num_sensors)
+        upper_bound_sensor = (self.train_data.shape[2] // 2 +
+                              self.settings.num_sensors)
+
+        self.train_data = self.train_data[:, :, lower_bound_sensor:
+                                          upper_bound_sensor]
+        self.test_data = self.test_data[:, :,
+                                        lower_bound_sensor:upper_bound_sensor]
+        self.val_data = self.val_data[:, :,
+                                      lower_bound_sensor:upper_bound_sensor]
 
     @classmethod
     def from_data(cls, settings, data, labels, timestamp, volumes):
-        return cls(settings, "custom", supplied_data=(data, labels, timestamp, volumes))
+        return cls(settings,
+                   "custom",
+                   supplied_data=(data, labels, timestamp, volumes))
+
     """
     Data::__load_data_numpy(location):
     - private function
@@ -229,7 +263,8 @@ class Data:
         test_volumes = volumes[perm[val_idx:test_idx]]
 
         return (train_data, train_labels, test_data, test_labels, val_data,
-                val_labels, train_timestamp, val_timestamp, test_timestamp, train_volumes, val_volumes, test_volumes)
+                val_labels, train_timestamp, val_timestamp, test_timestamp,
+                train_volumes, val_volumes, test_volumes)
 
     def normalize(self):
         for run_idx in range(self.train_data.shape[0]):
