@@ -14,7 +14,8 @@ def test_lstm():
 
     for num_sensors in sensor_options:
         # TODO: Load model based on num_sensors
-        model_location = "window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0.0&ac_fun:tanh"
+        # model_location = "window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0.0&ac_fun:tanh"
+        model_location = f"window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:{num_sensors}"
         model = tf.keras.models.load_model(
             f"../data/trained_models/LSTM/{model_location}"
         )
@@ -27,13 +28,16 @@ def test_lstm():
             # Load settings
             settings = params.Settings.from_model_location(model_location,
                                                         train_location)
+
+            settings.num_sensors = num_sensors
+
             # Load data
             data = params.Data(settings, train_location)
 
             data.normalize()
 
             # Select a subset of sensors
-            test_data = data.test_data[0:32][:, :, (data.test_data[0:32].shape[2] // 2 - num_sensors):(data.test_data[0:32].shape[2] // 2 + num_sensors)]
+            test_data = data.test_data[0:32]
 
 
             network = LSTM.LSTM_network(data, settings)

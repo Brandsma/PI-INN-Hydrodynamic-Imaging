@@ -39,5 +39,9 @@ if __name__ == "__main__":
                train_location, ac_fun)
     num_sensor_variants = [1, 3, 8, 64]
     for num_sensor in num_sensor_variants:
+        print(f"Training LSTM with {num_sensor} sensors")
+
         settings.num_sensors = num_sensor
         train_lstm(settings, train_location)
+
+    print("Done")
