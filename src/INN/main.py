@@ -17,7 +17,9 @@ def run_inn(given_data,
             config: INNConfig,
             n_batch = 8,
             n_epoch = 32,
-            datatype=DataType.Hydro):
+            datatype=DataType.Hydro,
+            subset="offset",
+            num_sensors=8):
 
     # plt.plot(given_data, label="given_data")
     # plt.plot(given_labels, label="given_labels")
@@ -138,12 +140,15 @@ def run_inn(given_data,
 
     # print(" -- Saving model")
     # model.save("./models/")
-    if pde_loss_func == None:
-        config.to_file("../data/trained_models/INN/latest/INNConfig.pkl")
-        model.save_weights("../data/trained_models/INN/latest/trained_model_weights.tf")
-    else:
-        config.to_file("../data/trained_models/INNPINN/latest/INNConfig.pkl")
-        model.save_weights("../data/trained_models/INNPINN/latest/trained_model_weights.tf")
+
+    # Make the folder if it does not exist
+    save_model_path = f"../data/trained_models/{'INN' if pde_loss_func == None else 'INNPINN'}/{subset}_sensors{num_sensors}"
+    if not os.path.exists(save_model_path):
+        os.makedirs(save_model_path, exist_ok=True)
+
+    # Save the model
+    config.to_file(f"{save_model_path}/INNConfig.pkl")
+    model.save_weights(f"{save_model_path}/trained_model_weights.tf")
 
     # if datatype == DataType.Sine:
     #     sine.plot_results(x_data, x_pred, y_data, y_pred, title="Sine")
@@ -160,7 +165,7 @@ def run_inn(given_data,
     print(" -- DONE -- ")
 
 def simple_run(dt, subset="all", num_sensors=64, use_pde=False, config: INNConfig =None):
-    data, labels, _, _ = get_data(dt, subset=subset, num_sensors=num_sensors, shuffle_data=False)
+    data, labels, _, _ = get_data(dt, subset=subset, num_sensors=num_sensors, shuffle_data=True, use_pde=use_pde)
 
     # data = np.concatenate([data, test_d], axis=0).astype('float32')
     # labels = np.concatenate([labels, test_l], axis=0).astype('float32')
@@ -179,7 +184,7 @@ def simple_run(dt, subset="all", num_sensors=64, use_pde=False, config: INNConfi
         config.pde_loss_func = pde_loss_func
     print("Running with config:", config)
 
-    run_inn(data, labels, config, n_batch=8, n_epoch=16, datatype=dt)
+    run_inn(data, labels, config, n_batch=8, n_epoch=16, datatype=dt, subset=subset, num_sensors=num_sensors)
 
 
 if __name__ == '__main__':

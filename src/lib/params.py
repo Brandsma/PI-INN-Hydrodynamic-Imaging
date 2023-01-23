@@ -27,7 +27,8 @@ class Settings:
                  dropout_ratio=0,
                  train_location="../data/simulation_data/combined.npy",
                  ac_fun="relu",
-                 num_sensors=64):
+                 num_sensors=64,
+                 seed=None):
         # Window size
         self.window_size = window_size
         # Stride
@@ -52,6 +53,8 @@ class Settings:
         self.ac_fun = ac_fun
         # Number of sensors to take from the dataset
         self.num_sensors = num_sensors
+        # Seed for random number generator
+        self.seed = seed
 
         if os.path.splitext(train_location)[-1] == ".mat":
             # Calculate length of data:
@@ -138,6 +141,8 @@ class Data:
         # print("Loading dataset from " + location + "...")
 
         self.settings = settings
+        if self.settings.seed is not None:
+            np.random.seed(self.settings.seed)
         # load data
 
         if supplied_data == None:

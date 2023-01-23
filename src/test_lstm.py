@@ -1,8 +1,8 @@
 from INN.test import run_test_on_model
+import numpy as np
 import tensorflow as tf
 
 from lib import params, LSTM
-from LSTMTester import LSTMTester
 
 import INN.hydro as hydro
 
@@ -30,6 +30,8 @@ def test_lstm():
                                                         train_location)
 
             settings.num_sensors = num_sensors
+            settings.seed = 42
+            settings.shuffle_data = True
 
             # Load data
             data = params.Data(settings, train_location)
@@ -37,7 +39,7 @@ def test_lstm():
             data.normalize()
 
             # Select a subset of sensors
-            test_data = data.test_data[0:32]
+            test_data = data.test_data[0:80]
 
 
             network = LSTM.LSTM_network(data, settings)
@@ -46,9 +48,18 @@ def test_lstm():
             network.test(test_data,
                          data.test_labels,
                          dirname=f"../results/LSTM/{subset}/",
-                         num_runs=32)
+                         num_runs=80)
 
-            hydro.plot_results_from_array(data.test_labels[0], network.pred, subset, num_sensors, savefig=True, savepath=f"../results/LSTM/{subset}")
+
+            results_folder = f"../results/LSTM/{subset}/"
+
+            hydro.plot_results_from_array(data.test_labels[0], network.pred, subset, num_sensors, savefig=True, title=f"{subset} | {num_sensors}", savepath=results_folder)
+
+            print ("Saving the following files:")
+            print(data.test_data.reshape(-1, num_sensors * 2).shape, data.test_labels.reshape(-1, 3).shape, network.pred.shape)
+            np.save(results_folder+f"/x_data_{num_sensors}.npy", data.test_data.reshape(-1, num_sensors * 2))
+            np.save(results_folder+f"/y_data_{num_sensors}.npy", data.test_labels.reshape(-1, 3))
+            np.save(results_folder+f"/y_pred_{num_sensors}.npy", network.pred)#.reshape(-1, 3))
 
 def main():
     test_lstm()

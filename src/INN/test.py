@@ -17,7 +17,7 @@ def run_test_on_model(subset="all", num_sensors=64, test_pinn=False):
     print(f"using {base_folder} now...")
 
     # Config
-    config: INNConfig = INNConfig.from_file(f"{base_folder}/latest/INNConfig.pkl")
+    config: INNConfig = INNConfig.from_file(f"{base_folder}/{subset}_sensors{num_sensors}/INNConfig.pkl")
     dt = DataType.Hydro
 
     x_dim = config.x_dim
@@ -28,14 +28,14 @@ def run_test_on_model(subset="all", num_sensors=64, test_pinn=False):
 
     # Get Model
     model = create_model(tot_dim, config.n_couple_layer, config.n_hid_layer, config.n_hid_dim)
-    latest_model_path = f"{base_folder}/latest/trained_model_weights.tf"
+    latest_model_path = f"{base_folder}/{subset}_sensors{num_sensors}/trained_model_weights.tf"
     model.load_weights(latest_model_path)
 
     # forward_mse_errors = []
     # backward_mse_errors = []
 
     # Get dataset
-    _, _, data, labels = get_data(dt, subset=subset, num_sensors=num_sensors, shuffle_data=False)
+    _, _, data, labels = get_data(dt, subset=subset, num_sensors=num_sensors, shuffle_data=True)
 
     # data = np.concatenate([train_data, data], axis=0).astype('float32')
     # labels = np.concatenate([train_labels, labels], axis=0).astype('float32')

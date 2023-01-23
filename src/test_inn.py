@@ -12,8 +12,9 @@ def test_inn():
 
     for subset in subsets:
         for num_sensors in sensor_options:
-            simple_run(DataType.Hydro, subset=subset, num_sensors=num_sensors, use_pde=False, config=config)
+            # simple_run(DataType.Hydro, subset=subset, num_sensors=num_sensors, use_pde=False, config=config)
             run_test_on_model(subset=subset, num_sensors=num_sensors)
+
 
 if __name__ == '__main__':
     test_inn()

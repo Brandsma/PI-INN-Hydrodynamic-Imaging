@@ -10,41 +10,44 @@ from sklearn.model_selection import train_test_split
 
 from lib import params
 
-def add_noise(train_data, train_labels, test_data, test_labels, run):
+def add_noise(train_data, train_labels, test_data, test_labels, run, use_pde=False):
     # NOTE: reversing the data and labels here
     if run == -1:
-        train_data = np.reshape(train_data[0:32], (-1, train_data.shape[2]))
-        train_labels = np.reshape(train_labels[0:32], (-1, train_labels.shape[2]))
+        train_data = np.reshape(train_data, (-1, train_data.shape[2]))
+        train_labels = np.reshape(train_labels, (-1, train_labels.shape[2]))
     elif run >= 0:
         train_data = train_data[run]
         train_labels = train_labels[run]
 
-
-
     if run == -1:
-        test_data = np.reshape(test_data[0:32], (-1, test_data.shape[2]))
-        test_labels = np.reshape(test_labels[0:32], (-1, test_labels.shape[2]))
+        test_data = np.reshape(test_data, (-1, test_data.shape[2]))
+        test_labels = np.reshape(test_labels, (-1, test_labels.shape[2]))
     elif run >= 0:
         test_data = test_data[run]
         test_labels = test_labels[run]
+
+
 
 
     ## Train noise
     train_data_noise = np.random.normal(0, .005, train_data.shape)
     train_labels_noise = np.random.normal(0, .005, train_labels.shape)
 
+    if use_pde:
+        train_data_noise *= 0.05
+        train_labels_noise *= 0.05
+
     train_data = train_data + train_data_noise
     train_labels = train_labels + train_labels_noise
-
-
-
-
-
 
 
     ## Test noise
     test_data_noise = np.random.normal(0, .005, test_data.shape)
     test_labels_noise = np.random.normal(0, .005, test_labels.shape)
+
+    if use_pde:
+        test_data_noise *= 0.05
+        test_labels_noise *= 0.05
 
     test_data = test_data + test_data_noise
     test_labels = test_labels + test_labels_noise
@@ -65,7 +68,7 @@ def setup_data_with_data(data, run=-1):
 
     return train_data, train_labels, test_data, test_labels
 
-def setup_data(subset="all", shuffle_data=True, num_sensors=64, run=-1, a=0, w=0):
+def setup_data(subset="all", shuffle_data=True, num_sensors=64, run=-1, use_pde=False, a=0, w=0):
     if subset == "all":
         subset = 'combined_groups'
 
@@ -78,7 +81,8 @@ def setup_data(subset="all", shuffle_data=True, num_sensors=64, run=-1, a=0, w=0
 
 
     # Load data
-    settings = params.Settings(shuffle_data=shuffle_data, train_location=train_location)
+    settings = params.Settings(shuffle_data=shuffle_data, train_location=train_location, seed=42)
+
     data = params.Data(settings, train_location)
     data.normalize()
 
@@ -89,7 +93,7 @@ def setup_data(subset="all", shuffle_data=True, num_sensors=64, run=-1, a=0, w=0
     test_labels = data.test_data
     test_data = data.test_labels
 
-    train_data, train_labels, test_data, test_labels = add_noise(train_data, train_labels, test_data, test_labels, run)
+    train_data, train_labels, test_data, test_labels = add_noise(train_data, train_labels, test_data, test_labels, run, use_pde)
 
 
 
@@ -154,6 +158,8 @@ def plot_results_from_array(x_data, x_pred, subset, num_sensors, title="", savef
     # Plot the predicted hist vs the labels
     plt.hist2d(x, y, bins=(128, 128), label="predicted", cmap=plt.cm.viridis)
     plt.plot(label_x, label_y, color='red', linestyle='dashed', label="label", linewidth=2, alpha=0.4)
+    # plt.plot(label_x, x_data[:1020, 2], color='green', linestyle='dashed', label="angle", linewidth=2, alpha=0.4)
+    # plt.plot(label_x, x_pred[:1020, 2], color='white', linestyle='dashed', label="angle", linewidth=2, alpha=0.4)
 
     # Plot the sensor array
     plt.plot(input_sensors, [min(y)] * len(input_sensors), 'go')
