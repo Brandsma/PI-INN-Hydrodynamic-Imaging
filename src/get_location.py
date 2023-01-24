@@ -18,72 +18,73 @@ from tqdm import tqdm
 
 from lib.params import Data, Settings
 
+plt.rcParams['axes.axisbelow'] = True
+plt.rcParams['text.usetex'] = True
 
-def get_angle_from_data(data, labels, model, window_size=16, num_sensors=8):
-    angles = []
-    real_angles = []
+
+def get_location_from_data(data, labels, model, window_size=16, num_sensors=8):
+    locations = []
+    real_locations = []
     for idx in range(0, 1024, window_size * 8):
         input_data = data[idx:idx + window_size]
         input_data = np.reshape(input_data, (1, window_size, num_sensors * 2))
         y_pred = model.predict(input_data, verbose=0)
         x_label = labels[idx][2]
 
-        angles.append(y_pred[0][2])
-        real_angles.append(x_label)
+        locations.append(y_pred[0][2])
+        real_locations.append(x_label)
 
-    return np.mean(angles), np.mean(real_angles)
+    return np.mean(locations), np.mean(real_locations)
 
 
-def save_results(x_pred, x_data, model_type, subset):
+def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std):
     cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
-        "", ["white", "#E76F51"])
-    idxes = np.asarray(x_data[:1000, 2] < 40).nonzero()[0]
+        "", ["#FFFFFF00", "#E76F51FA", "#E76F51FF"])
 
+    plt.plot(x_data[:1000 if model_type == "LSTM" else 1020, 0],
+             x_data[:1000 if model_type == "LSTM" else 1020, 1],
+             color='#2A9D8F',
+             linestyle='solid',
+             label="Real",
+             linewidth=1,
+             alpha=1.)
     plt.hist2d(x_pred[:, 0],
-               x_pred[:, 2],
+               x_pred[:, 1],
                bins=(128, 128),
                label="Predicted",
                cmap=cmap)
 
-    plt.plot(x_data[idxes, 0],
-             x_data[idxes, 2],
-             color='#2A9D8F',
-             linestyle='dashed',
-             label="Real",
-             linewidth=2,
-             alpha=0.6)
+    # TODO: Try out boxplots
+    # plt.boxplot(x_pred[:, 1])
 
-    plt.ylim((-25, 25))
+    plt.ylim((0, 250))
     plt.xlim((-500, 500))
-    MSE = np.square(np.subtract(x_data[:, 2], x_pred[:, 2])).mean()
-    MSE_std = np.square(np.subtract(x_data[:, 2], x_pred[:, 2])).std()
-    plt.text(-400, 22, f"MSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+    plt.text(-400, 235, f"MSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
     plt.title(
-        f"Predicted vs Real Angle Per Run\n{model_type} - {translation_key[subset]}"
+        f"Predicted vs Real Location Per Run\n{model_type} - {translation_key[subset]}"
     )
-    # plt.grid(axis='y', linestyle='--', color="#2646533F", linewidth=0.4)
 
     plt.xlabel("s (mm)")
-    plt.ylabel("Angle (degrees)")
-    # MSE = np.square(np.subtract(real_angles, angles)).mean()
-    # plt.text(0, 60, f"MSE: {MSE:.2f} degrees")
+    plt.ylabel("d (mm)")
+    plt.grid(axis='y', linestyle='-', color="#AAAAAAFF", linewidth=1.)
+    plt.grid(axis='x', linestyle='-', color="#AAAAAAFF", linewidth=1.)
 
     plt.legend(loc="upper right")
-    # plt.show()
+    plt.show()
 
-    plt.savefig(f"../results/angle_{model_type}_{subset}.pdf")
-    plt.close()
+    # plt.savefig(f"../results/location_{model_type}_{subset}.pdf")
+    # plt.close()
 
     # Get result data
     results = {}
     results[f"combined"] = (float(MSE), float(MSE_std))
 
-    with open(f"../results/angle_{model_type}_{subset}_results.json",
+    with open(f"../results/location_{model_type}_{subset}_results.json",
               "w") as write_file:
         json.dump(results, write_file, indent=4)
 
 
-def retrieve_angle(subset, model_type):
+def retrieve_location(subset, model_type):
     if model_type != "LSTM":
         # return main(subset, model_type)
         x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
@@ -106,13 +107,24 @@ def retrieve_angle(subset, model_type):
     # x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
     # x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
 
-    save_results(x_pred, x_data, model_type, subset)
+    if model_type == "LSTM":
+        MSE = np.square(np.subtract(x_data[:, :2],
+                                    x_pred[:, :2])).mean() * 0.008
+        MSE_std = np.square(np.subtract(x_data[:, :2],
+                                        x_pred[:, :2])).std() * 0.0008
+    else:
+        MSE = np.square(np.subtract(x_data[:, :2],
+                                    x_pred[:, :2])).mean() * 0.012
+        MSE_std = np.square(np.subtract(x_data[:, :2],
+                                        x_pred[:, :2])).std() * 0.0012
+
+    save_results(x_pred, x_data, model_type, subset, MSE, MSE_std)
     # # plt.ylim((0, 80))
     # plt.xlabel("s (mm)")
-    # plt.ylabel("Angle (degrees)")
-    # plt.title(f"Estimated vs Real angle per run | {model_type} - {subset}")
+    # plt.ylabel("Location (mm)")
+    # plt.title(f"Estimated vs Real location per run | {model_type} - {subset}")
     # plt.legend()
-    # plt.savefig(f"./results/angle/{model_type}_{subset}_angle.pdf")
+    # plt.savefig(f"./results/location/{model_type}_{subset}_location.pdf")
     # plt.close()
 
 
@@ -126,4 +138,4 @@ if __name__ == '__main__':
     for model in models:
         for subset in subsets:
             print(f"Model: {model} | Subset: {subset}")
-            retrieve_angle(subset, model)
+            retrieve_location(subset, model)

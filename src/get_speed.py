@@ -1,7 +1,9 @@
 import os
+import json
 import math
 import sys
 import INN.hydro as hydro
+from translation_key import translation_key
 
 if __name__ == "__main__":
     sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -13,12 +15,18 @@ from tqdm import tqdm
 
 from lib.params import Data, Settings
 
-def get_speed_from_inn_predicts(preds, labels, timestamp, step_size=16, div_number=1024, epsilon=0.1):
-    prev_x = [0,0]
+
+def get_speed_from_inn_predicts(preds,
+                                labels,
+                                timestamp,
+                                step_size=16,
+                                div_number=1024,
+                                epsilon=0.1):
+    prev_x = [0, 0]
     prev_time = 0
 
     real_speeds = []
-    for idx in range(0,div_number, step_size):
+    for idx in range(0, div_number, step_size):
         time = timestamp[idx][0]
 
         if idx != 0:
@@ -28,32 +36,36 @@ def get_speed_from_inn_predicts(preds, labels, timestamp, step_size=16, div_numb
 
         prev_x = labels[idx][0:1]
         prev_time = time
-    prev_x = [0,0]
+    prev_x = [0, 0]
     prev_time = 0
 
-
     speeds = []
-    for idx in range(0,div_number,step_size):
+    for idx in range(0, div_number, step_size):
         time = timestamp[idx][0]
 
         if idx != 0:
-            speed = math.dist(preds[idx][0:1], prev_x) / abs(time - prev_time + epsilon)
+            speed = math.dist(preds[idx][0:1],
+                              prev_x) / abs(time - prev_time + epsilon)
 
             speeds.append(speed)
 
         prev_x = preds[idx][0:1]
         prev_time = time
-    prev_x = [0,0]
+    prev_x = [0, 0]
     prev_time = 0
     return np.mean(speeds), np.mean(real_speeds)
     # return np.mean(real_speeds)
 
-def get_speed_from_model_predicts(model_predicts, labels, timestamp, window_size=16):
-    prev_x = [0,0]
+
+def get_speed_from_model_predicts(model_predicts,
+                                  labels,
+                                  timestamp,
+                                  window_size=16):
+    prev_x = [0, 0]
     prev_time = 0
 
     real_speeds = []
-    for idx in range(0,1024,window_size):
+    for idx in range(0, 1024, window_size):
         time = timestamp[idx][0]
 
         if idx != 0:
@@ -64,7 +76,7 @@ def get_speed_from_model_predicts(model_predicts, labels, timestamp, window_size
 
         prev_x = labels[idx][0:1]
         prev_time = time
-    prev_x = [0,0]
+    prev_x = [0, 0]
     prev_time = 0
 
     speeds = []
@@ -83,8 +95,13 @@ def get_speed_from_model_predicts(model_predicts, labels, timestamp, window_size
         prev_time = time
     return np.mean(speeds), np.mean(real_speeds)
 
-def get_speed_from_data(data, labels, timestamp, model, window_size=16, num_sensors=8):
-    print("Getting speed from data")
+
+def get_speed_from_data(data,
+                        labels,
+                        timestamp,
+                        model,
+                        window_size=16,
+                        num_sensors=8):
     prev_x = [0, 0]
     prev_time = 0
     prev_x_label = [0, 0]
@@ -101,7 +118,8 @@ def get_speed_from_data(data, labels, timestamp, model, window_size=16, num_sens
         if idx != 0:
             # TODO: Adjust speed calculation for varying y
             speed = math.dist(y_pred[0][0:1], prev_x) / abs(time - prev_time)
-            real_speed = math.dist(x_label, prev_x_label) / abs(time - prev_time)
+            real_speed = math.dist(x_label,
+                                   prev_x_label) / abs(time - prev_time)
 
             speeds.append(speed)
             real_speeds.append(real_speed)
@@ -127,6 +145,8 @@ def main(subset="offset", model_type="INN"):
     settings = Settings.from_model_location(trained_model_location,
                                             data_location=train_location)
     settings.num_sensors = 8
+    settings.shuffle_data = True
+    settings.seed = 42
 
     # Load data
     data = Data(settings, train_location)
@@ -138,7 +158,7 @@ def main(subset="offset", model_type="INN"):
     speeds = []
     real_speeds = []
 
-    for run_idx in tqdm(range(data.test_data.shape[0])):
+    for run_idx in range(data.test_data.shape[0]):
         speed_results = get_speed_from_data(data.test_data[run_idx],
                                             data.test_labels[run_idx],
                                             data.test_timestamp[run_idx],
@@ -146,24 +166,45 @@ def main(subset="offset", model_type="INN"):
         speeds.append(speed_results[0])
         real_speeds.append(speed_results[1])
 
-    plt.plot(speeds, "bo", label="Predicted Speed")
-    plt.plot(real_speeds, "r.", label="Real Speed")
+    save_results(speeds, real_speeds, model_type, subset)
 
+
+def save_results(speeds, real_speeds, model_type, subset):
     for idx in range(len(speeds)):
         line_x_values = [idx, idx]
         line_y_values = [speeds[idx], real_speeds[idx]]
-        plt.plot(line_x_values, line_y_values, "k-")
+        plt.plot(line_x_values,
+                 line_y_values,
+                 "-",
+                 color="#264653AA",
+                 linewidth=1.5)
+
+    plt.plot(real_speeds, ".", label="Real Speed", color="#2A9D8F")
+    plt.plot(speeds, ".", label="Predicted Speed", color="#E76F51")
+
     plt.ylim((0, 70))
-    plt.xlabel("run")
+    plt.xlabel("Run")
     plt.ylabel("Speed (mm/s)")
     MSE = np.square(np.subtract(real_speeds, speeds)).mean()
-    plt.text(0, 60, f"MSE: {MSE:.2f} mm/s")
-    plt.title(f"Estimated vs Real speed per run | {model_type} - {subset}")
-    plt.legend()
+    MSE_std = np.square(np.subtract(real_speeds, speeds)).std()
+    plt.text(0, 63, f"MSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+    plt.title(
+        f"Predicted vs Real Speed Per Run\n{model_type} - {translation_key[subset]}"
+    )
+    plt.grid(axis='y', linestyle='--', color="#2646533F", linewidth=0.4)
+    plt.legend(loc="upper right")
     # plt.show()
-
-    plt.savefig(f"./results/speed/{model_type}_{subset}.pdf")
+    plt.savefig(f"../results/speed_{model_type}_{subset}.pdf")
     plt.close()
+
+    # Get result data
+    results = {}
+    results[f"combined"] = (MSE, MSE_std)
+
+    with open(f"../results/speed_{model_type}_{subset}_results.json",
+              "w") as write_file:
+        json.dump(results, write_file, indent=4)
+
 
 def main_inn(subset="offset", model_type="INN"):
     print(f"Using {model_type}")
@@ -184,8 +225,16 @@ def main_inn(subset="offset", model_type="INN"):
 
     # new_model = tf.keras.models.load_model(trained_model_location)
 
-    x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
-    x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
+    if model_type == "LSTM":
+        x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
+                                                                           0:3]
+        x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
+                                                                           0:3]
+    else:
+        x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
+                                                                           0:3]
+        x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:,
+                                                                           0:3]
 
     # hydro.plot_results_from_array(x_data, x_pred, subset, 8, title=f"Sensors: 8", savefig=False)
 
@@ -198,38 +247,51 @@ def main_inn(subset="offset", model_type="INN"):
     if x_pred.shape[0] % div_number != 0:
         div_number = 1020
 
+    if x_pred.shape[0] % div_number != 0:
+        div_number = 1009
+
+    if x_pred.shape[0] % div_number != 0:
+        div_number = 1005
+
+    if x_pred.shape[0] % div_number != 0:
+        print(
+            f"ERROR: Could not find a good divisor: {x_pred.shape[0]} % {div_number} != 0, but {x_pred.shape[0]%div_number}"
+        )
+        return
+
     step_size = div_number // 16
 
-    for run_idx in range(x_pred.shape[0]//div_number):
-        speed_results = get_speed_from_inn_predicts(x_pred[0 + (div_number * run_idx):div_number + (div_number * run_idx)],
-                                            x_data[0 + (div_number * run_idx):div_number + (div_number * run_idx)],
-                                                    data.test_timestamp[run_idx],
-                                                    step_size=step_size)
+    for run_idx in range(x_pred.shape[0] // div_number):
+        if subset == "mult_path":
+            start_offset = (1009 - div_number) if model_type == "LSTM" else 0
+        else:
+            start_offset = (1024 - div_number) if model_type == "LSTM" else 0
+
+        label_lower_bound = (div_number + start_offset) * run_idx
+        label_upper_bound = div_number + (
+            (div_number + start_offset) * run_idx)
+
+        pred_lower_bound = (div_number) * run_idx
+        pred_upper_bound = div_number + ((div_number) * run_idx)
+
+        speed_results = get_speed_from_inn_predicts(
+            x_pred[pred_lower_bound:pred_upper_bound],
+            x_data[label_lower_bound:label_upper_bound],
+            data.test_timestamp[run_idx],
+            step_size=step_size)
         speeds.append(speed_results[0])
         real_speeds.append(speed_results[1])
 
-    plt.plot(speeds, "bo", label="Predicted Speed")
-    plt.plot(real_speeds, "r.", label="Real Speed")
+    save_results(speeds, real_speeds, model_type, subset)
 
-    for idx in range(len(speeds)):
-        line_x_values = [idx, idx]
-        line_y_values = [speeds[idx], real_speeds[idx]]
-        plt.plot(line_x_values, line_y_values, "k-")
-    plt.ylim((0, 80))
-    plt.xlabel("run")
-    plt.ylabel("Speed (mm/s)")
-    MSE = np.square(np.subtract(real_speeds, speeds)).mean()
-    plt.text(0, 65, f"MSE: {MSE:.2f} mm/s")
-    plt.title(f"Estimated vs Real speed per run | {model_type} - {subset}")
-    plt.legend()
-    plt.savefig(f"./results/speed/{model_type}_{subset}.pdf")
-    plt.close()
 
 if __name__ == '__main__':
     models = ["INN", "PINN", "LSTM"]
-    # models= ["LSTM"]
-    # models= ["INN"]
-    subsets = ["offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"]
+    # models = ["LSTM"]
+    # models = ["INN"]
+    subsets = [
+        "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
+    ]
     # subsets = ["offset"]
     for model in models:
         for subset in subsets:
