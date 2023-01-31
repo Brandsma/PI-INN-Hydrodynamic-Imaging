@@ -179,19 +179,20 @@ def save_results(speeds, real_speeds, model_type, subset):
                  color="#264653AA",
                  linewidth=1.5)
 
-    plt.plot(real_speeds, ".", label="Real Speed", color="#2A9D8F")
+    plt.plot(real_speeds, "s", label="Real Speed", color="#2A9D8F", markersize=3)
     plt.plot(speeds, ".", label="Predicted Speed", color="#E76F51")
 
     plt.ylim((0, 70))
     plt.xlabel("Run")
     plt.ylabel("Speed (mm/s)")
-    MSE = np.square(np.subtract(real_speeds, speeds)).mean()
-    MSE_std = np.square(np.subtract(real_speeds, speeds)).std()
-    plt.text(0, 63, f"MSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+    MSE = np.sqrt(np.square(np.subtract(real_speeds, speeds))).mean()
+    MSE_std = np.sqrt(np.square(np.subtract(real_speeds, speeds))).std()
+    t = plt.text(0, 63, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+    t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
     plt.title(
         f"Predicted vs Real Speed Per Run\n{model_type} - {translation_key[subset]}"
     )
-    plt.grid(axis='y', linestyle='--', color="#2646533F", linewidth=0.4)
+    plt.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
     plt.legend(loc="upper right")
     # plt.show()
     plt.savefig(f"../results/speed_{model_type}_{subset}.pdf")
@@ -286,13 +287,13 @@ def main_inn(subset="offset", model_type="INN"):
 
 
 if __name__ == '__main__':
-    models = ["INN", "PINN", "LSTM"]
+    # models = ["INN", "PINN", "LSTM"]
     # models = ["LSTM"]
-    # models = ["INN"]
-    subsets = [
-        "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
-    ]
-    # subsets = ["offset"]
+    models = ["INN"]
+    # subsets = [
+    #     "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
+    # ]
+    subsets = ["sine"]
     for model in models:
         for subset in subsets:
             print(f"Running {model} on subset: '{subset}'...")

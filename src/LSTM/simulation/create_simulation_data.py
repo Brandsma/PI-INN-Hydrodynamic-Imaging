@@ -100,7 +100,7 @@ def parse_args():
         "--path",
         help=
         "The points along which the path of the sphere will run. example usage: '--path -500,0 500,0'",
-        type=int,
+        type=float,
         nargs='+',
         default=[-500, 0, 500, 0])
     parser.add_argument("--logging-level",

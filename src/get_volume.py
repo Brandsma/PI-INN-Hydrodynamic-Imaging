@@ -312,20 +312,21 @@ def retrieve_volume(subset, model_type):
                  color="#264653AA",
                  linewidth=1.5)
 
-    plt.plot(real_volumes, ".", label="Real Volume", color="#2A9D8F")
+    plt.plot(real_volumes, "s", label="Real Volume", color="#2A9D8F", markersize=3)
     plt.plot(volumes, ".", label="Predicted Volume", color="#E76F51")
     # plt.plot(actual_volumes, "g.", label="Actual Volume")
 
     plt.ylim((0, 70))
     plt.xlabel("Run")
     plt.ylabel("Volume Radius (mm)")
-    MSE = np.square(np.subtract(real_volumes, volumes)).mean()
-    MSE_std = np.square(np.subtract(real_volumes, volumes)).std()
-    plt.text(0, 63, f"MSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+    MSE = np.sqrt(np.square(np.subtract(real_volumes, volumes))).mean()
+    MSE_std = np.sqrt(np.square(np.subtract(real_volumes, volumes))).std()
+    t = plt.text(0, 63, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+    t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
     plt.title(
         f"Predicted vs Real Volume Radius Per Run\n{model_type} - {translation_key[subset]}"
     )
-    plt.grid(axis='y', linestyle='--', color="#2646533F", linewidth=0.4)
+    plt.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
     plt.legend(loc="upper right")
     # plt.figure()
     # plt.show()
@@ -346,12 +347,14 @@ def retrieve_volume(subset, model_type):
 
 
 if __name__ == '__main__':
-    models = ["INN", "PINN", "LSTM"]
+    models = "INN"
+    # models = ["INN", "PINN", "LSTM"]
     # models = ["LSTM"]
-    subsets = [
-        "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
-    ]
+    # subsets = [
+    #     "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
+    # ]
     # subsets = ["mult_path"]
+    subsets = ["sine"]
     for model in models:
         for subset in subsets:
             print(f"Running Model: {model} on Subset: {subset}...")

@@ -12,11 +12,12 @@ from .flow import *
 from .utils import *
 from .trainer import Trainer
 
+
 def run_inn(given_data,
             given_labels,
             config: INNConfig,
-            n_batch = 8,
-            n_epoch = 32,
+            n_batch=8,
+            n_epoch=32,
             datatype=DataType.Hydro,
             subset="offset",
             num_sensors=8):
@@ -78,7 +79,6 @@ def run_inn(given_data,
     val_dataset = dataset.take(int(data_length * 0.15))
     train_dataset = dataset.skip(int(data_length * 0.15))
 
-
     ## INITIALIZE MODEL ##
     model = create_model(tot_dim, n_couple_layer, n_hid_layer, n_hid_dim)
     # model = NVP(tot_dim, n_couple_layer, n_hid_layer, n_hid_dim, name='NVP')
@@ -93,8 +93,16 @@ def run_inn(given_data,
     # elif datatype == DataType.Hydro:
     #     pde_loss_func = hydro.interior_loss
 
-    trainer = Trainer(model, x_dim, y_dim, z_dim, tot_dim, n_couple_layer,
-                      n_hid_layer, n_hid_dim, pde_loss_func=pde_loss_func, pde_applied_forward=True)
+    trainer = Trainer(model,
+                      x_dim,
+                      y_dim,
+                      z_dim,
+                      tot_dim,
+                      n_couple_layer,
+                      n_hid_layer,
+                      n_hid_dim,
+                      pde_loss_func=pde_loss_func,
+                      pde_applied_forward=True)
     trainer.compile(optimizer=tf.keras.optimizers.Adam(clipvalue=0.5))
 
     LossFactor = UpdateLossFactor(n_epoch)
@@ -110,12 +118,12 @@ def run_inn(given_data,
 
     # logger = NBatchLogger(n_display, n_epoch)
     _ = trainer.fit(train_dataset,
-                       batch_size=n_batch,
-                       epochs=n_epoch,
-                       steps_per_epoch=n_data // n_batch,
-                       callbacks=[LossFactor, EarlyStop],
-                       verbose=1,
-                       validation_data=val_dataset)
+                    batch_size=n_batch,
+                    epochs=n_epoch,
+                    steps_per_epoch=n_data // n_batch,
+                    callbacks=[LossFactor, EarlyStop],
+                    verbose=1,
+                    validation_data=val_dataset)
 
     ## CHECK RESULTS ##
 
@@ -156,7 +164,6 @@ def run_inn(given_data,
     #     hydro.plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, title="Hydro")
     #     # pde_loss_func = hydro.interior_loss
 
-
     # plt.figure()
     # plt.title("Backward Process Distribution")
     # plt.plot(x_pred[:, 1:-1])
@@ -164,8 +171,17 @@ def run_inn(given_data,
 
     print(" -- DONE -- ")
 
-def simple_run(dt, subset="all", num_sensors=64, use_pde=False, config: INNConfig =None):
-    data, labels, _, _ = get_data(dt, subset=subset, num_sensors=num_sensors, shuffle_data=True, use_pde=use_pde)
+
+def simple_run(dt,
+               subset="all",
+               num_sensors=64,
+               use_pde=False,
+               config: INNConfig = None):
+    data, labels, _, _ = get_data(dt,
+                                  subset=subset,
+                                  num_sensors=num_sensors,
+                                  shuffle_data=True,
+                                  use_pde=use_pde)
 
     # data = np.concatenate([data, test_d], axis=0).astype('float32')
     # labels = np.concatenate([labels, test_l], axis=0).astype('float32')
@@ -184,7 +200,14 @@ def simple_run(dt, subset="all", num_sensors=64, use_pde=False, config: INNConfi
         config.pde_loss_func = pde_loss_func
     print("Running with config:", config)
 
-    run_inn(data, labels, config, n_batch=8, n_epoch=16, datatype=dt, subset=subset, num_sensors=num_sensors)
+    run_inn(data,
+            labels,
+            config,
+            n_batch=8,
+            n_epoch=16,
+            datatype=dt,
+            subset=subset,
+            num_sensors=num_sensors)
 
 
 if __name__ == '__main__':

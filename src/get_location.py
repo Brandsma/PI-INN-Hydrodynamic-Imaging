@@ -13,6 +13,7 @@ if __name__ == "__main__":
 import numpy as np
 import tensorflow as tf
 from matplotlib import pyplot as plt
+import matplotlib.patches as mpatches
 import matplotlib
 from tqdm import tqdm
 
@@ -39,7 +40,7 @@ def get_location_from_data(data, labels, model, window_size=16, num_sensors=8):
 
 def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std):
     cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
-        "", ["#FFFFFF00", "#E76F51FA", "#E76F51FF"])
+        "", ["#FFFFFF00", "#E76F51AA", "#E76F51DD", "#E76F51EE", "#E76F51FF"])
 
     plt.plot(x_data[:1000 if model_type == "LSTM" else 1020, 0],
              x_data[:1000 if model_type == "LSTM" else 1020, 1],
@@ -53,27 +54,33 @@ def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std):
                bins=(128, 128),
                label="Predicted",
                cmap=cmap)
+    hist_patch = mpatches.Patch(color='#E76F51FF', label='Predicted')
 
     # TODO: Try out boxplots
     # plt.boxplot(x_pred[:, 1])
 
     plt.ylim((0, 250))
     plt.xlim((-500, 500))
-    plt.text(-400, 235, f"MSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+    t = plt.text(-400, 235, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})", backgroundcolor="white")
+    t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
     plt.title(
         f"Predicted vs Real Location Per Run\n{model_type} - {translation_key[subset]}"
     )
 
     plt.xlabel("s (mm)")
     plt.ylabel("d (mm)")
-    plt.grid(axis='y', linestyle='-', color="#AAAAAAFF", linewidth=1.)
-    plt.grid(axis='x', linestyle='-', color="#AAAAAAFF", linewidth=1.)
+    plt.xticks(np.arange(-500, 500+100, step=100))
+    plt.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
+    plt.grid(axis='x', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
 
-    plt.legend(loc="upper right")
-    plt.show()
+    handles, labels = plt.gca().get_legend_handles_labels()
+    handles.extend([hist_patch])
 
-    # plt.savefig(f"../results/location_{model_type}_{subset}.pdf")
-    # plt.close()
+    plt.legend(handles=handles, loc="upper right")
+    # plt.show()
+
+    plt.savefig(f"../results/location_{model_type}_{subset}.pdf")
+    plt.close()
 
     # Get result data
     results = {}
@@ -107,16 +114,10 @@ def retrieve_location(subset, model_type):
     # x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
     # x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
 
-    if model_type == "LSTM":
-        MSE = np.square(np.subtract(x_data[:, :2],
-                                    x_pred[:, :2])).mean() * 0.008
-        MSE_std = np.square(np.subtract(x_data[:, :2],
-                                        x_pred[:, :2])).std() * 0.0008
-    else:
-        MSE = np.square(np.subtract(x_data[:, :2],
-                                    x_pred[:, :2])).mean() * 0.012
-        MSE_std = np.square(np.subtract(x_data[:, :2],
-                                        x_pred[:, :2])).std() * 0.0012
+    MSE = np.sqrt(np.square(np.subtract(x_data[:, :2],
+                                x_pred[:, :2]))).mean()# * 0.010
+    MSE_std = np.sqrt(np.square(np.subtract(x_data[:, :2],
+                                    x_pred[:, :2]))).std()# * 0.0010
 
     save_results(x_pred, x_data, model_type, subset, MSE, MSE_std)
     # # plt.ylim((0, 80))
@@ -130,11 +131,13 @@ def retrieve_location(subset, model_type):
 
 if __name__ == '__main__':
     # models = ["LSTM"]
-    models = ["INN", "PINN", "LSTM"]
+    # models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]
-    subsets = [
-        "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
-    ]
+    models = ["INN"]
+    # subsets = [
+    #     "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
+    # ]
+    subsets = ["sine"]
     for model in models:
         for subset in subsets:
             print(f"Model: {model} | Subset: {subset}")

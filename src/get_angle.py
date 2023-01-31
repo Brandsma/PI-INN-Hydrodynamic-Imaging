@@ -13,6 +13,7 @@ if __name__ == "__main__":
 import numpy as np
 import tensorflow as tf
 from matplotlib import pyplot as plt
+import matplotlib.patches as mpatches
 import matplotlib
 from tqdm import tqdm
 
@@ -36,8 +37,17 @@ def get_angle_from_data(data, labels, model, window_size=16, num_sensors=8):
 
 def save_results(x_pred, x_data, model_type, subset):
     cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
-        "", ["white", "#E76F51"])
+        "", ["#FFFFFF00", "#E76F51AA", "#E76F51DD", "#E76F51EE", "#E76F51FF"])
     idxes = np.asarray(x_data[:1000, 2] < 40).nonzero()[0]
+
+    plt.plot(x_data[idxes, 0],
+             x_data[idxes, 2],
+             color='#2A9D8F',
+             linestyle='solid',
+             label="Real",
+             linewidth=1,
+             alpha=1)
+
 
     plt.hist2d(x_pred[:, 0],
                x_pred[:, 2],
@@ -45,19 +55,12 @@ def save_results(x_pred, x_data, model_type, subset):
                label="Predicted",
                cmap=cmap)
 
-    plt.plot(x_data[idxes, 0],
-             x_data[idxes, 2],
-             color='#2A9D8F',
-             linestyle='dashed',
-             label="Real",
-             linewidth=2,
-             alpha=0.6)
-
     plt.ylim((-25, 25))
     plt.xlim((-500, 500))
-    MSE = np.square(np.subtract(x_data[:, 2], x_pred[:, 2])).mean()
-    MSE_std = np.square(np.subtract(x_data[:, 2], x_pred[:, 2])).std()
-    plt.text(-400, 22, f"MSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+    MSE = np.sqrt(np.square(np.subtract(x_data[:, 2], x_pred[:, 2]))).mean()
+    MSE_std = np.sqrt(np.square(np.subtract(x_data[:, 2], x_pred[:, 2]))).std()
+    t = plt.text(-400, 22, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+    t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
     plt.title(
         f"Predicted vs Real Angle Per Run\n{model_type} - {translation_key[subset]}"
     )
@@ -65,10 +68,17 @@ def save_results(x_pred, x_data, model_type, subset):
 
     plt.xlabel("s (mm)")
     plt.ylabel("Angle (degrees)")
+    plt.xticks(np.arange(-500, 500+100, step=100))
+    plt.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
+    plt.grid(axis='x', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
     # MSE = np.square(np.subtract(real_angles, angles)).mean()
     # plt.text(0, 60, f"MSE: {MSE:.2f} degrees")
 
-    plt.legend(loc="upper right")
+    hist_patch = mpatches.Patch(color='#E76F51FF', label='Predicted')
+    handles, labels = plt.gca().get_legend_handles_labels()
+    handles.extend([hist_patch])
+
+    plt.legend(handles=handles, loc="upper right")
     # plt.show()
 
     plt.savefig(f"../results/angle_{model_type}_{subset}.pdf")
@@ -118,11 +128,13 @@ def retrieve_angle(subset, model_type):
 
 if __name__ == '__main__':
     # models = ["LSTM"]
-    models = ["INN", "PINN", "LSTM"]
+    models = ["INN"]
+    # models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]
-    subsets = [
-        "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
-    ]
+    # subsets = [
+    #     "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
+    # ]
+    subsets = ["sine"]
     for model in models:
         for subset in subsets:
             print(f"Model: {model} | Subset: {subset}")

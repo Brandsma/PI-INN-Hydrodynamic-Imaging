@@ -10,11 +10,11 @@ import INN.hydro as hydro
 def test_lstm():
 
     # subsets = ["offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"]
-    # sensor_options = [1,3,8,64]
+    sensor_options = [1,3,8,64]
 
 
-    subsets = ["far_off_parallel"]
-    sensor_options = [64]
+    subsets = ["sine"]
+    # sensor_options = [64]
     for num_sensors in sensor_options:
         # TODO: Load model based on num_sensors
         # model_location = "window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0.0&ac_fun:tanh"

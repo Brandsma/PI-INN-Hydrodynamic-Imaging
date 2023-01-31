@@ -34,7 +34,7 @@ def table_data(dt="speed"):
               axis=0,
               inplace=True)
 
-    print(df.style.to_latex())
+    print(df.to_latex(bold_rows=True, escape=False, caption=f"Results for {dt} data. The mean and standard deviation of the combined error is shown for each model and subset.", label=f"tab:{dt}_MSE_results"))
 
 
 def main():
