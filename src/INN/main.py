@@ -150,7 +150,9 @@ def run_inn(given_data,
     # model.save("./models/")
 
     # Make the folder if it does not exist
-    save_model_path = f"../data/trained_models/{'INN' if pde_loss_func == None else 'INNPINN'}/{subset}_sensors{num_sensors}"
+    # save_model_path = f"../data/trained_models/{'INN' if pde_loss_func == None else 'INNPINN'}/{subset}_sensors{num_sensors}"
+    print("WARNING\n\n\n\n\n\n Save model path has been temporarily changed!!! \n\n\n\n\n\n\n\n\nWARNING\n================================\n\n\n\n\n")
+    save_model_path = f"../data/trained_models/{'INN' if pde_loss_func == None else 'INNPINN'}/latest"
     if not os.path.exists(save_model_path):
         os.makedirs(save_model_path, exist_ok=True)
 

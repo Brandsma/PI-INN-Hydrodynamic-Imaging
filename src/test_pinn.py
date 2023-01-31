@@ -14,8 +14,8 @@ def test_pinn():
 
     for subset in subsets:
         for num_sensors in sensor_options:
-            simple_run(DataType.Hydro, subset=subset, num_sensors=num_sensors, use_pde=True, config=config)
-            # run_test_on_model(subset=subset, num_sensors=num_sensors, test_pinn=True)
+            # simple_run(DataType.Hydro, subset=subset, num_sensors=num_sensors, use_pde=True, config=config)
+            run_test_on_model(subset=subset, num_sensors=num_sensors, test_pinn=True)
 
 if __name__ == '__main__':
     test_pinn()
