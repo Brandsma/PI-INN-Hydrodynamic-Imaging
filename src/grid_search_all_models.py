@@ -9,7 +9,7 @@ from time import perf_counter
 
 from util import cartesian_coord
 
-from train_inn import train_inn
+from train_inn import train_inn_with_config
 from INN.inn import INNConfig
 
 from train_lstm import train_lstm
@@ -102,7 +102,7 @@ def grid_search(test_inn=True, test_pinn=True, test_lstm=True):
             config = INNConfig(n_couple_layer, n_hid_layer,
                             n_hid_dim, 0, 0, z_dim, None)
             train_time_start = perf_counter()
-            train_inn(config, use_pde=False)
+            train_inn_with_config(config, use_pde=False)
             train_time_end = perf_counter()
             train_time = train_time_end - train_time_start
 
@@ -158,7 +158,7 @@ def grid_search(test_inn=True, test_pinn=True, test_lstm=True):
                             n_hid_dim, 0, 0, z_dim, None)
 
             train_time_start = perf_counter()
-            train_inn(config, use_pde=True)
+            train_inn_with_config(config, use_pde=True)
             train_time_end = perf_counter()
             train_time = train_time_end - train_time_start
 
