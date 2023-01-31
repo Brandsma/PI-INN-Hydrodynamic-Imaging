@@ -263,4 +263,4 @@ def grid_search(test_inn=True, test_pinn=True, test_lstm=True):
 if __name__ == "__main__":
     ascii_banner = pyfiglet.figlet_format("Welcome To The Testing Suite")
     print(ascii_banner)
-    grid_search(test_inn=False, test_pinn=False, test_lstm=True)
+    grid_search(test_inn=False, test_pinn=True, test_lstm=False)

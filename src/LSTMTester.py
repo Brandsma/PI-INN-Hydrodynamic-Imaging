@@ -4,10 +4,9 @@ from util import cartesian_coord
 import numpy as np
 from copy import deepcopy
 from pathlib import Path
-from tqdm import tqdm
 
-from LSTM.get_speed import get_speed_from_model_predicts
-from LSTM.get_volume import extract_volume
+from get_speed import get_speed_from_model_predicts
+from get_volume import extract_volume
 
 from lib import LSTM, params
 

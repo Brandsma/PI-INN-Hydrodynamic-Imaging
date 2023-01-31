@@ -8,8 +8,8 @@ from INN.inn import INNConfig, create_model
 from INN.hydro import setup_data_with_data
 import INN.hydro as hydro
 
-from LSTM.get_speed import get_speed_from_model_predicts
-from LSTM.get_volume import extract_volume
+from get_speed import get_speed_from_model_predicts
+from get_volume import extract_volume
 
 from copy import deepcopy
 
