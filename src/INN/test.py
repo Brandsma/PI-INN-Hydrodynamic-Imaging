@@ -8,10 +8,15 @@ import INN.hydro as hydro
 import INN.sine as sine
 from sklearn.metrics import mean_squared_error
 
-def run_test_on_model(subset="all", num_sensors=64, test_pinn=False):
-    base_folder= "../data/trained_models/INN"
-    if test_pinn:
-        base_folder= "../data/trained_models/INNPINN"
+def run_test_on_model(subset="all", num_sensors=64, test_pinn=False, noise_experiment=False):
+    if noise_experiment:
+        base_folder= "../data/trained_models/noise/INN"
+        if test_pinn:
+            base_folder= "../data/trained_models/noise/INNPINN"
+    else:
+        base_folder= "../data/trained_models/INN"
+        if test_pinn:
+            base_folder= "../data/trained_models/INNPINN"
 
     results_folder = f"../results/{'PINN' if test_pinn else 'INN'}/{subset}"
     print(f"using {base_folder} now...")
@@ -35,7 +40,7 @@ def run_test_on_model(subset="all", num_sensors=64, test_pinn=False):
     # backward_mse_errors = []
 
     # Get dataset
-    _, _, data, labels = get_data(dt, subset=subset, num_sensors=num_sensors, shuffle_data=True)
+    _, _, data, labels = get_data(dt, subset=subset, num_sensors=num_sensors, shuffle_data=True, noise_experiment=noise_experiment)
 
     # data = np.concatenate([train_data, data], axis=0).astype('float32')
     # labels = np.concatenate([train_labels, labels], axis=0).astype('float32')

@@ -14,7 +14,7 @@ def read_inputs():
     data_split = 0.8
     dropout = 0
     # train_loc = get_scratch_dir() + "/data/combined.npy"
-    train_loc = "../data/simulation_data/combined.npy"
+    train_loc = "../data/simulation_data/noise/combined_groups/combined.npy"
     ac_fun = "tanh"
     return n_nodes, n_epochs, window_size, stride, \
         alpha, decay, shuffle_data, data_split, dropout, train_loc, ac_fun
@@ -25,19 +25,24 @@ def train_lstm(settings=None,
     data = params.Data(settings, data_folder)
     data.normalize()
 
-    trained_models_folder = "../data/trained_models/LSTM/"
+    trained_models_folder = "../data/trained_models/noise/LSTM/"
 
     external_train_lstm(trained_models_folder, data, settings)
 
 
 if __name__ == "__main__":
+    noise_experiment = True
+
     (n_nodes, n_epochs, window_size, stride, alpha, decay, \
      shuffle_data, data_split, dropout_ratio, train_location, ac_fun) =  \
         read_inputs()
     settings = params.Settings(window_size, stride, n_nodes, \
                                alpha, decay, n_epochs, shuffle_data, data_split, dropout_ratio, \
                train_location, ac_fun)
-    num_sensor_variants = [1, 3, 8, 64]
+    if noise_experiment:
+        num_sensor_variants = [8]
+    else:
+        num_sensor_variants = [1, 3, 8, 64]
     for num_sensor in num_sensor_variants:
         print(f"Training LSTM with {num_sensor} sensors")
 

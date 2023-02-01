@@ -20,7 +20,8 @@ def run_inn(given_data,
             n_epoch=32,
             datatype=DataType.Hydro,
             subset="offset",
-            num_sensors=8):
+            num_sensors=8,
+            noise_experiment=False):
 
     # plt.plot(given_data, label="given_data")
     # plt.plot(given_labels, label="given_labels")
@@ -150,9 +151,10 @@ def run_inn(given_data,
     # model.save("./models/")
 
     # Make the folder if it does not exist
-    # save_model_path = f"../data/trained_models/{'INN' if pde_loss_func == None else 'INNPINN'}/{subset}_sensors{num_sensors}"
-    print("WARNING\n\n\n\n\n\n Save model path has been temporarily changed!!! \n\n\n\n\n\n\n\n\nWARNING\n================================\n\n\n\n\n")
-    save_model_path = f"../data/trained_models/{'INN' if pde_loss_func == None else 'INNPINN'}/latest"
+    if noise_experiment:
+        save_model_path = f"../data/trained_models/noise/{'INN' if pde_loss_func == None else 'INNPINN'}/{subset}_sensors{num_sensors}"
+    else:
+        save_model_path = f"../data/trained_models/{'INN' if pde_loss_func == None else 'INNPINN'}/{subset}_sensors{num_sensors}"
     if not os.path.exists(save_model_path):
         os.makedirs(save_model_path, exist_ok=True)
 
@@ -178,12 +180,14 @@ def simple_run(dt,
                subset="all",
                num_sensors=64,
                use_pde=False,
+               noise_experiment=False,
                config: INNConfig = None):
     data, labels, _, _ = get_data(dt,
                                   subset=subset,
                                   num_sensors=num_sensors,
                                   shuffle_data=True,
-                                  use_pde=use_pde)
+                                  use_pde=use_pde,
+                                  noise_experiment=noise_experiment)
 
     # data = np.concatenate([data, test_d], axis=0).astype('float32')
     # labels = np.concatenate([labels, test_l], axis=0).astype('float32')
@@ -209,7 +213,8 @@ def simple_run(dt,
             n_epoch=16,
             datatype=dt,
             subset=subset,
-            num_sensors=num_sensors)
+            num_sensors=num_sensors,
+            noise_experiment=noise_experiment)
 
 
 if __name__ == '__main__':

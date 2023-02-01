@@ -68,14 +68,17 @@ def setup_data_with_data(data, run=-1):
 
     return train_data, train_labels, test_data, test_labels
 
-def setup_data(subset="all", shuffle_data=True, num_sensors=64, run=-1, use_pde=False, a=0, w=0):
+def setup_data(subset="all", shuffle_data=True, num_sensors=64, run=-1, use_pde=False, a=0, w=0, noise_experiment=False):
     if subset == "all":
         subset = 'combined_groups'
 
     if a != 0 and w != 0:
         train_location = f"../data/simulation_data/{subset}/a{a}_normw{w}_data.npy"
     else:
-        train_location = f"../data/simulation_data/{subset}/combined.npy"
+        if noise_experiment:
+            train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
+        else:
+            train_location = f"../data/simulation_data/{subset}/combined.npy"
 
     print(f"Getting training data from {train_location}")
 
