@@ -128,9 +128,9 @@ def retrieve_angle(subset, model_type):
 
 if __name__ == '__main__':
     # models = ["LSTM"]
-    models = ["INN"]
+    # models = ["INN"]
     # models = ["INN", "PINN", "LSTM"]
-    # models = ["INN", "PINN"]
+    models = ["INN", "PINN"]
     # subsets = [
     #     "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
     # ]

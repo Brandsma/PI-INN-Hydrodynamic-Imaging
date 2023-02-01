@@ -20,6 +20,9 @@ data/
 */models/*
 models/
 *.csv
+*.tar
+*.pdf
+*.svg
 
 # May want this, but for now keep it out
 results/

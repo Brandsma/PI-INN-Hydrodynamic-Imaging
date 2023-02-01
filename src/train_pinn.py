@@ -10,7 +10,8 @@ def train_pinn():
 
     # subsets = ["offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"]
     subsets = ["sine"]
-    sensor_options = [1,3,8,64]
+    # sensor_options = [1,3,8,64]
+    sensor_options = [64]
 
     for subset in subsets:
         for num_sensors in sensor_options:
