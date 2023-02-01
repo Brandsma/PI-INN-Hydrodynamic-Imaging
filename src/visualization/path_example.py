@@ -3,6 +3,7 @@ if __name__=="__main__":
     sys.path.append('..')
 
 from matplotlib import pyplot as plt
+from sine_path import get_sine_path
 plt.rcParams['axes.axisbelow'] = True
 plt.rcParams['text.usetex'] = True
 
@@ -45,6 +46,11 @@ def main():
     p = calculate_path(points, 1024, simulation_area_offset=75)
     paths.append(p)
 
+    x, y = get_sine_path()
+    points = list(zip(x,y))
+    p = calculate_path(points, 1024, simulation_area_offset=75)
+    paths.append(p)
+
 
 
     # For each subplot
@@ -57,7 +63,7 @@ def main():
     ax.set_title("Sphere Paths")
     # Sphere
 
-    colors = ['#2A9D8FFF', '#E9C46AFF', '#0496FFFF', '#F4A261FF', '#E76F51FF']
+    colors = ['#2A9D8FFF', '#E9C46AFF', '#0496FFFF', '#F4A261FF', '#E76F51FF', "#550527FF"]
     assert len(paths) == len(colors), "length color and paths needs to be the same"
     for idx, path in enumerate(paths):
         # color="#E9C46A"
