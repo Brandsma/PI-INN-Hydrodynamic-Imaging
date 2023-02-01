@@ -347,8 +347,8 @@ def retrieve_volume(subset, model_type):
 
 
 if __name__ == '__main__':
-    models = "INN"
-    # models = ["INN", "PINN", "LSTM"]
+    # models = "INN"
+    models = ["INN", "PINN", "LSTM"]
     # models = ["LSTM"]
     # subsets = [
     #     "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"

@@ -288,8 +288,9 @@ def main_inn(subset="offset", model_type="INN"):
 
 if __name__ == '__main__':
     # models = ["INN", "PINN", "LSTM"]
+    models = ["INN", "PINN"]
     # models = ["LSTM"]
-    models = ["INN"]
+    # models = ["INN"]
     # subsets = [
     #     "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
     # ]
