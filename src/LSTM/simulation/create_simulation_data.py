@@ -35,7 +35,7 @@ def parse_args():
     )
     parser.add_argument(
         "--noise-power",
-        type=int,
+        type=float,
         default=1.5e-5,
         help=
         "The standard deviation of the Gaussian White noise that is added to the simulation. Default is 1.5e-5 based on existing sensors (see bot et al.)."
