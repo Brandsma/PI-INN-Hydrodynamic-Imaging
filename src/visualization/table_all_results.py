@@ -21,7 +21,7 @@ def table_data(dt="speed"):
         s = []
         for subset in subsets:
             with open(Path(
-                    f"../../results/{dt}_{model}_{subset}_results.json")) as f:
+                    f"../../bunch/{dt}_{model}_{subset}_results.json")) as f:
                 results = json.load(f)
 
             # Add element to Series

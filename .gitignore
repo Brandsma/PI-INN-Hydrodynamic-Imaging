@@ -23,6 +23,7 @@ models/
 *.tar
 *.pdf
 *.svg
+bunch/
 
 # May want this, but for now keep it out
 results/
