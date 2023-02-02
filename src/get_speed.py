@@ -3,7 +3,7 @@ import json
 import math
 import sys
 import INN.hydro as hydro
-from translation_key import translation_key
+from translation_key import translation_key, model_key
 
 if __name__ == "__main__":
     sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -190,10 +190,10 @@ def save_results(speeds, real_speeds, model_type, subset):
     t = plt.text(0, 63, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
     t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
     plt.title(
-        f"Predicted vs Real Speed Per Run\n{model_type} - {translation_key[subset]}"
+        f"Predicted vs Real Speed Per Run\n{model_key[model_type]} - {translation_key[subset]}"
     )
     plt.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
-    plt.legend(loc="upper right")
+    plt.legend(loc="best", bbox_to_anchor=(0.6, 0., 0.4, 1.0) )
     # plt.show()
     plt.savefig(f"../results/speed_{model_type}_{subset}.pdf")
     plt.close()
@@ -246,10 +246,16 @@ def main_inn(subset="offset", model_type="INN"):
 
     div_number = 1024
     if x_pred.shape[0] % div_number != 0:
+        div_number = 1023
+
+    if x_pred.shape[0] % div_number != 0:
         div_number = 1020
 
     if x_pred.shape[0] % div_number != 0:
         div_number = 1009
+
+    if x_pred.shape[0] % div_number != 0:
+        div_number = 1008
 
     if x_pred.shape[0] % div_number != 0:
         div_number = 1005
@@ -287,14 +293,13 @@ def main_inn(subset="offset", model_type="INN"):
 
 
 if __name__ == '__main__':
-    # models = ["INN", "PINN", "LSTM"]
-    models = ["INN", "PINN"]
+    models = ["INN", "PINN", "LSTM"]
+    # models = ["INN", "PINN"]
     # models = ["LSTM"]
     # models = ["INN"]
-    # subsets = [
-    #     "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
-    # ]
-    subsets = ["sine"]
+    subsets = [
+            "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+    ]
     for model in models:
         for subset in subsets:
             print(f"Running {model} on subset: '{subset}'...")

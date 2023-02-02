@@ -3,7 +3,7 @@ if __name__ == "__main__":
     sys.path.append("..")
 
 import os
-from translation_key import translation_key
+from translation_key import translation_key, model_key
 import json
 import sys
 
@@ -64,7 +64,7 @@ def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std):
     t = plt.text(-400, 235, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})", backgroundcolor="white")
     t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
     plt.title(
-        f"Predicted vs Real Location Per Run\n{model_type} - {translation_key[subset]}"
+        f"Predicted vs Real Location Per Run\n{model_key[model_type]} - {translation_key[subset]}"
     )
 
     plt.xlabel("s (mm)")
@@ -76,7 +76,7 @@ def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std):
     handles, labels = plt.gca().get_legend_handles_labels()
     handles.extend([hist_patch])
 
-    plt.legend(handles=handles, loc="upper right")
+    plt.legend(handles=handles, loc="best", bbox_to_anchor=(0.6, 0., 0.4, 1.0) )
     # plt.show()
 
     plt.savefig(f"../results/location_{model_type}_{subset}.pdf")
@@ -131,13 +131,12 @@ def retrieve_location(subset, model_type):
 
 if __name__ == '__main__':
     # models = ["LSTM"]
-    # models = ["INN", "PINN", "LSTM"]
-    models = ["INN", "PINN"]
+    models = ["INN", "PINN", "LSTM"]
+    # models = ["INN", "PINN"]
     # models = ["INN"]
-    # subsets = [
-    #     "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
-    # ]
-    subsets = ["sine"]
+    subsets = [
+            "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+    ]
     for model in models:
         for subset in subsets:
             print(f"Model: {model} | Subset: {subset}")

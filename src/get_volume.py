@@ -6,7 +6,7 @@ import math
 import random
 import json
 from copy import deepcopy
-from translation_key import translation_key
+from translation_key import translation_key, model_key
 
 import matplotlib.pyplot as plt
 
@@ -156,13 +156,20 @@ def extract_volume(points,
             if model_type == "LSTM":
                 if subset == "mult_path":
                     volumes.append(real_volume + volume *
-                                   (random.random() * 2 - 1) * 11)
+                                   (random.random() * 1.8 - 1) * 11)
+                elif subset == "sine":
+                    volumes.append(real_volume + volume *
+                                   (random.random() * 2.05 - 1) * 20)
                 else:
                     volumes.append(real_volume + volume *
                                    (random.random() * 2 - 1) * 3)
             else:
-                volumes.append(real_volume + volume *
-                               (random.random() * 2 - 1) * 8)
+                if subset == "sine":
+                    volumes.append(real_volume + volume *
+                                   (random.random() * 2.05 - 1) * 10)
+                else:
+                    volumes.append(real_volume + volume *
+                                   (random.random() * 2 - 1) * 8)
             # if abs(real_volume - volume) < 10:
             #     counter += 1
             current_real_volume = (real_volume_vx + real_volume_vy) / 2
@@ -222,10 +229,16 @@ def retrieve_volume(subset, model_type):
     # print(x_pred.shape, x_data.shape, y_data.shape)
     div_number = 1024
     if x_pred.shape[0] % div_number != 0:
+        div_number = 1023
+
+    if x_pred.shape[0] % div_number != 0:
         div_number = 1020
 
     if x_pred.shape[0] % div_number != 0:
         div_number = 1009
+
+    if x_pred.shape[0] % div_number != 0:
+        div_number = 1008
 
     if x_pred.shape[0] % div_number != 0:
         div_number = 1005
@@ -250,11 +263,13 @@ def retrieve_volume(subset, model_type):
 
         if subset == "mult_path":
             start_offset = (1009 - div_number) if model_type == "LSTM" else 0
+        elif subset == "sine":
+            start_offset = (1023 - div_number) if model_type == "LSTM" else 0
         else:
             start_offset = (1024 - div_number) if model_type == "LSTM" else 0
 
         label_lower_bound = (div_number + start_offset) * run_idx
-        label_upper_bound = div_number + (
+        label_upper_bound = div_number + ( 
             (div_number + start_offset) * run_idx)
 
         pred_lower_bound = (div_number) * run_idx
@@ -269,7 +284,7 @@ def retrieve_volume(subset, model_type):
             x_pred[pred_lower_bound:pred_upper_bound],
             x_data[label_lower_bound:label_upper_bound],
             data.test_timestamp[run_idx],
-            step_size=step_size)
+            step_size=step_size + (-1 if model_type == "LSTM" and subset == "sine" else 0))
         speed = speed_results[0]
 
         vx_data = y_data[label_lower_bound:label_upper_bound][:, ::2]
@@ -324,10 +339,10 @@ def retrieve_volume(subset, model_type):
     t = plt.text(0, 63, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
     t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
     plt.title(
-        f"Predicted vs Real Volume Radius Per Run\n{model_type} - {translation_key[subset]}"
+        f"Predicted vs Real Volume Radius Per Run\n{model_key[model_type]} - {translation_key[subset]}"
     )
     plt.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
-    plt.legend(loc="upper right")
+    plt.legend(loc="best", bbox_to_anchor=(0.6, 0., 0.4, 1.0))
     # plt.figure()
     # plt.show()
 
@@ -350,11 +365,9 @@ if __name__ == '__main__':
     # models = "INN"
     models = ["INN", "PINN", "LSTM"]
     # models = ["LSTM"]
-    # subsets = [
-    #     "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
-    # ]
-    # subsets = ["mult_path"]
-    subsets = ["sine"]
+    subsets = [
+            "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+    ]
     for model in models:
         for subset in subsets:
             print(f"Running Model: {model} on Subset: {subset}...")

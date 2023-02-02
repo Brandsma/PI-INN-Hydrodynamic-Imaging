@@ -7,3 +7,12 @@ translation_key = {
     "offset_inverse": "Inverse Offset",
     "sine": "Sine",
 }
+
+model_key = {
+    "INN": "INN",
+    "PINN": "PI/INN",
+    "LSTM": "LSTM",
+    "lstm": "LSTM",
+    "inn": "INN",
+    "pinn": "PI/INN",
+}
