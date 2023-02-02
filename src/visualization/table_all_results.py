@@ -13,7 +13,7 @@ def table_data(dt="speed"):
     models = ["INN", "PINN", "LSTM"]
 
     subsets = [
-        "parallel", "offset", "offset_inverse", "far_off_parallel", "mult_path"
+        "parallel", "offset", "offset_inverse", "far_off_parallel", "mult_path", "sine"
     ]
 
     df = pd.DataFrame()
@@ -26,7 +26,7 @@ def table_data(dt="speed"):
 
             # Add element to Series
             s.append(
-                f"{results['combined'][0]:.2f} (± {results['combined'][1]:.2f})"
+                f"{results['combined'][0]:.2f} (±{results['combined'][1]:.2f})"
             )
         df = pd.concat([df, pd.Series(s, name=model)], axis=1)
     df.rename({x: translation_key[subsets[x]]
@@ -34,7 +34,7 @@ def table_data(dt="speed"):
               axis=0,
               inplace=True)
 
-    print(df.to_latex(bold_rows=True, escape=False, caption=f"Results for {dt} data. The mean and standard deviation of the combined error is shown for each model and subset.", label=f"tab:{dt}_MSE_results"))
+    print(df.style.to_latex(position_float="centering", hrules=True, caption=f"Results for {dt} estimation. The mean and standard deviation of the combined RMS error is shown for each model and path.", label=f"tab:{dt}_MSE_results", ))
 
 
 def main():
