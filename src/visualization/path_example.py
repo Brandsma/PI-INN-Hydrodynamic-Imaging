@@ -25,31 +25,38 @@ def main():
     fig, ax = plt.subplots(1,1)
 
     paths=[]
+    labels = []
 
     points = [[-500, 0], [500, 0]]
     p = calculate_path(points, 1024, simulation_area_offset=75)
     paths.append(p)
+    labels.append("Parallel")
 
     points = [[-500, 0], [500, 75]]
     p = calculate_path(points, 1024, simulation_area_offset=75)
     paths.append(p)
+    labels.append("Offset")
 
     points = [[-500, 75], [500, 0]]
     p = calculate_path(points, 1024, simulation_area_offset=75)
     paths.append(p)
+    labels.append("Inverse Offset")
 
     points = [[-500, 150], [500, 150]]
     p = calculate_path(points, 1024, simulation_area_offset=75)
     paths.append(p)
+    labels.append("Far Off Parallel")
 
     points = [[-500, 0], [-300, 75], [-100, 0], [100, 75], [300,0], [500, 75]]
     p = calculate_path(points, 1024, simulation_area_offset=75)
     paths.append(p)
+    labels.append("Saw")
 
     x, y = get_sine_path()
     points = list(zip(x,y))
     p = calculate_path(points, 1024, simulation_area_offset=75)
     paths.append(p)
+    labels.append("Sine")
 
 
 
@@ -67,7 +74,7 @@ def main():
     assert len(paths) == len(colors), "length color and paths needs to be the same"
     for idx, path in enumerate(paths):
         # color="#E9C46A"
-        ax.plot([x[0] for x in path], [y[1] for y in path], zorder=1, linestyle="dashed", color=colors[idx])
+        ax.plot([x[0] for x in path], [y[1] for y in path], zorder=1, linestyle="dashed", color=colors[idx], label=labels[idx])
 
     draw_arrow(plt, [-500, 33], [500,33])
 
@@ -75,7 +82,7 @@ def main():
     num_sensors = 8
     sensors_x = list(np.linspace(-200, 200, num=num_sensors))
     sensors_y = [0] * num_sensors
-    ax.scatter(sensors_x, sensors_y, s=60, label="Sphere", color="#2A9D8F", zorder=1)
+    ax.scatter(sensors_x, sensors_y, s=60, color="#2A9D8F", zorder=1)
     ax.set_ylim((0,250))
     ax.set_xticks([-500, -250, 0, 250, 500])
     ax.set_yticks([0, 75, 150, 225])
@@ -83,6 +90,8 @@ def main():
     # Axes
     ax.set_ylabel("$d$ (mm)")
     ax.set_xlabel("$s$ (mm)")
+
+    plt.legend(loc="lower left", prop={"size": 7})
 
     plt.savefig("./path_example.pdf")
 

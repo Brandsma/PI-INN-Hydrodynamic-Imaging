@@ -91,18 +91,30 @@ def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std):
         json.dump(results, write_file, indent=4)
 
 
-def retrieve_location(subset, model_type):
+def retrieve_location(subset, model_type, noise_experiment):
     if model_type != "LSTM":
         # return main(subset, model_type)
-        x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
-                                                                           0:3]
-        x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:,
-                                                                           0:3]
+        if noise_experiment:
+            x_pred = np.load(f"../results/noise/{model_type}/{subset}/x_pred_8.npy")[:,
+                                                                            0:3]
+            x_data = np.load(f"../results/noise/{model_type}/{subset}/x_data_8.npy")[:,
+                                                                            0:3]
+        else:
+            x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
+                                                                            0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:,
+                                                                            0:3]
     else:
-        x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
-                                                                           0:3]
-        x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
-                                                                           0:3]
+        if noise_experiment:
+            x_pred = np.load(f"../results/noise/{model_type}/{subset}/y_pred_8.npy")[:,
+                                                                            0:3]
+            x_data = np.load(f"../results/noise/{model_type}/{subset}/y_data_8.npy")[:,
+                                                                            0:3]
+        else:
+            x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
+                                                                            0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
+                                                                            0:3]
 
         x_pred = x_pred.reshape(80, -1, 3)
         x_data = x_data.reshape(80, -1, 3)
@@ -141,14 +153,22 @@ def retrieve_location(subset, model_type):
 
 
 if __name__ == '__main__':
-    # models = ["LSTM"]
+    noise_experiment = True
     models = ["INN", "PINN", "LSTM"]
+
+    if noise_experiment:
+        subsets = [
+            "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
+            "low_noise_saw", "medium_noise_saw", "high_noise_saw",
+        ]
+    else:
+        subsets = [
+                "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+        ]
+    # models = ["LSTM"]
     # models = ["INN", "PINN"]
     # models = ["INN"]
-    subsets = [
-            "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
-    ]
     for model in models:
         for subset in subsets:
             print(f"Model: {model} | Subset: {subset}")
-            retrieve_location(subset, model)
+            retrieve_location(subset, model, noise_experiment)
