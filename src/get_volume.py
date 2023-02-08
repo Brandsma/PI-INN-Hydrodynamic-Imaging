@@ -267,8 +267,6 @@ def retrieve_volume(subset, model_type, noise_experiment):
         if a not in volume_error:
             volume_error[a] = []
 
-        print(subset[-3:])
-        exit()
         if subset == "mult_path" or subset[-3:] == "saw":
             start_offset = (1009 - div_number) if model_type == "LSTM" else 0
         elif subset == "sine":
