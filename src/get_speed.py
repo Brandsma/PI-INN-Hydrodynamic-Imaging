@@ -130,17 +130,21 @@ def get_speed_from_data(data,
     return np.mean(speeds), np.mean(real_speeds)
 
 
-def main(subset="offset", model_type="INN"):
+def main(subset="offset", model_type="INN", noise_experiment=False):
     if model_type == "INN" or model_type == "PINN":
-        return main_inn(subset, model_type)
+        return main_inn(subset, model_type, noise_experiment)
     elif model_type == "LSTM":
         print("Using LSTM")
     else:
         print("No valid model type given")
         return
 
-    train_location = f"../data/simulation_data/{subset}/combined.npy"
-    trained_model_location = "../data/trained_models/LSTM/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8"
+    if noise_experiment:
+        train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
+        trained_model_location = f"../data/trained_models/noise/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
+    else:
+        train_location = f"../data/simulation_data/{subset}/combined.npy"
+        trained_model_location = "../data/trained_models/LSTM/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8"
 
     settings = Settings.from_model_location(trained_model_location,
                                             data_location=train_location)
@@ -207,10 +211,14 @@ def save_results(speeds, real_speeds, model_type, subset):
         json.dump(results, write_file, indent=4)
 
 
-def main_inn(subset="offset", model_type="INN"):
+def main_inn(subset="offset", model_type="INN", noise_experiment=False):
     print(f"Using {model_type}")
-    train_location = f"../data/simulation_data/{subset}/combined.npy"
-    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:8&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh"
+    if noise_experiment:
+        train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
+        trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:8&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh"
+    else:
+        train_location = f"../data/simulation_data/{subset}/combined.npy"
+        trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:8&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh"
 
     settings = Settings.from_model_location(trained_model_location,
                                             data_location=train_location)
@@ -293,14 +301,21 @@ def main_inn(subset="offset", model_type="INN"):
 
 
 if __name__ == '__main__':
+    noise_experiment = True
     models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]
     # models = ["LSTM"]
     # models = ["INN"]
-    subsets = [
-            "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
-    ]
+    if noise_experiment:
+        subsets = [
+            "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
+            "low_noise_saw", "medium_noise_saw", "high_noise_saw",
+        ]
+    else:
+        subsets = [
+                "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+        ]
     for model in models:
         for subset in subsets:
             print(f"Running {model} on subset: '{subset}'...")
-            main(subset, model_type=model)
+            main(subset, model_type=model, noise_experiment=noise_experiment)
