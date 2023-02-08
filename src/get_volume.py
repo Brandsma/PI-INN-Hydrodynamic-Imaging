@@ -196,7 +196,10 @@ def retrieve_volume(subset, model_type, noise_experiment):
     # if model_type == "LSTM":
     #     return main(subset, model_type)
 
-    train_location = f"../data/simulation_data/{subset}/combined.npy"
+    if noise_experiment:
+        train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
+    else:
+        train_location = f"../data/simulation_data/{subset}/combined.npy"
     if noise_experiment:
         trained_model_location = f"../data/trained_models/noise/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
     else:
