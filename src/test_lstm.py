@@ -29,7 +29,7 @@ def test_lstm():
     for num_sensors in sensor_options:
         # TODO: Load model based on num_sensors
         # model_location = "window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0.0&ac_fun:tanh"
-        model_location = f"window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:{num_sensors}"
+        model_location = f"window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:{num_sensors}&seed:None"
         model = tf.keras.models.load_model(
             f"../data/trained_models/LSTM/{model_location}" if not noise_experiment else f"../data/trained_models/noise/LSTM/{model_location}"
         )

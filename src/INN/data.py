@@ -14,7 +14,7 @@ def get_data(dt: DataType, subset="all", num_sensors=64, shuffle_data=True, run=
     if dt == DataType.Sine:
         return sine.setup_data(shuffle_data)
     elif dt == DataType.Hydro:
-        return hydro.setup_data(subset, shuffle_data, num_sensors, run, use_pde, noise_experiment)
+        return hydro.setup_data(subset, shuffle_data, num_sensors, run, use_pde, noise_experiment=noise_experiment)
     else:
         print("Warning: Incorrect data type found, returning null")
 

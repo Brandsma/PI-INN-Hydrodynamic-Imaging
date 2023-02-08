@@ -250,6 +250,8 @@ class Data:
         val_idx = n_entries - int((n_entries - train_idx) / 2)
         test_idx = n_entries
 
+        print(train_idx, val_idx, test_idx)
+
         # Take subsets by using the permutation array as index
         train_data = data[perm[0:train_idx]]
         val_data = data[perm[train_idx:val_idx]]

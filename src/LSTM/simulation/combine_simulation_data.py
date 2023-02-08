@@ -13,7 +13,7 @@ import numpy as np
 from lib.logger import LOGGING_LEVELS, set_global_logging_level, setup_logger
 from lib.peregrine_util import ensure_scratch_dir, is_running_on_peregrine
 
-log = setup_logger(__name__)
+log = setup_logger(__name__, "DEBUG")
 
 
 def find_files(folder_path: str):
@@ -68,11 +68,10 @@ def main():
     # Start making the combined data from the first found data
     if args.combined:
         current_filename = os.path.splitext(base_names.pop(0))
-        all_data = np.load(current_filename[0] + current_filename[1])
-        all_labels = np.load(f"{current_filename[0][0:-5]}_labels{current_filename[-1]}")
-        print(all_labels.shape)
+        all_data = np.load(current_filename[0] + current_filename[1])[:, :1020, :]
+        all_labels = np.load(f"{current_filename[0][0:-5]}_labels{current_filename[-1]}")[:, :1020, :]
         all_timestamp = np.load(
-            f"{current_filename[0][0:-5]}_timestamp{current_filename[-1]}")
+            f"{current_filename[0][0:-5]}_timestamp{current_filename[-1]}")[:, :1020, :]
         all_volumes = np.load(
             f"{current_filename[0][0:-5]}_volumes{current_filename[-1]}")
     else:
@@ -88,10 +87,9 @@ def main():
     for name in base_names:
         base_name = os.path.splitext(name)
         if args.combined:
-            data = np.load(name)
-            labels = np.load(f"{base_name[0][0:-5]}_labels{base_name[-1]}")
-            print(f"{labels.shape=}")
-            timestamp = np.load(f"{base_name[0][0:-5]}_timestamp{base_name[-1]}")
+            data = np.load(name)[:, :1020, :]
+            labels = np.load(f"{base_name[0][0:-5]}_labels{base_name[-1]}")[:, :1020, :]
+            timestamp = np.load(f"{base_name[0][0:-5]}_timestamp{base_name[-1]}")[:, :1020, :]
             volume = np.load(f"{base_name[0][0:-5]}_volumes{base_name[-1]}")
         else:
             data = np.load(name)
@@ -112,6 +110,11 @@ def main():
     log.debug(all_labels.shape)
     log.debug(all_timestamp.shape)
     log.debug(all_volumes.shape)
+
+    print(all_data.shape)
+    print(all_labels.shape)
+    print(all_timestamp.shape)
+    print(all_volumes.shape)
 
     # Save it to disk
     result_filename = "combined"

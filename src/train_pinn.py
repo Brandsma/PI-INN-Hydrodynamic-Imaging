@@ -13,7 +13,7 @@ def train_pinn():
     # ]
 
     subsets = [
-        "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
+        # "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
         "low_noise_saw", "medium_noise_saw", "high_noise_saw",
     ]
     noise_experiment = True

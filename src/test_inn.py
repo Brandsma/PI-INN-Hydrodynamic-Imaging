@@ -11,12 +11,12 @@ def test_inn():
     # subsets = [
     #     "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"
     # ]
-    # subsets = [
-    #     "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
-    #     "low_noise_saw", "medium_noise_saw", "high_noise_saw",
-    # ]
-    noise_experiment = False
-    subsets = ["sine"]
+    subsets = [
+        "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
+        "low_noise_saw", "medium_noise_saw", "high_noise_saw",
+    ]
+    noise_experiment = True
+    # subsets = ["sine"]
     sensor_options = [8]
 
     for subset in subsets:
