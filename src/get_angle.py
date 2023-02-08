@@ -128,12 +128,19 @@ def retrieve_angle(subset, model_type):
 
 if __name__ == '__main__':
     # models = ["LSTM"]
+    noise_experiment = True
     # models = ["INN"]
     models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]
-    subsets = [
-            "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
-    ]
+    if noise_experiment:
+        subsets = [
+            "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
+            "low_noise_saw", "medium_noise_saw", "high_noise_saw",
+        ]
+    else:
+        subsets = [
+                "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+        ]
     for model in models:
         for subset in subsets:
             print(f"Model: {model} | Subset: {subset}")

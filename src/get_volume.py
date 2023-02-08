@@ -192,12 +192,15 @@ def extract_volume(points,
 #     # plt.show()
 
 
-def retrieve_volume(subset, model_type):
+def retrieve_volume(subset, model_type, noise_experiment):
     # if model_type == "LSTM":
     #     return main(subset, model_type)
 
     train_location = f"../data/simulation_data/{subset}/combined.npy"
-    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8"
+    if noise_experiment:
+        trained_model_location = f"../data/trained_models/noise/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
+    else:
+        trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8"
 
     # Load settings
     settings = Settings.from_model_location(trained_model_location,
@@ -261,7 +264,9 @@ def retrieve_volume(subset, model_type):
         if a not in volume_error:
             volume_error[a] = []
 
-        if subset == "mult_path":
+        print(subset[-3:])
+        exit()
+        if subset == "mult_path" or subset[-3:] == "saw":
             start_offset = (1009 - div_number) if model_type == "LSTM" else 0
         elif subset == "sine":
             start_offset = (1023 - div_number) if model_type == "LSTM" else 0
@@ -362,14 +367,21 @@ def retrieve_volume(subset, model_type):
 
 
 if __name__ == '__main__':
+    noise_experiment = True
     # models = "INN"
     models = ["INN", "PINN", "LSTM"]
     # models = ["LSTM"]
-    subsets = [
-            "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
-    ]
+    if noise_experiment:
+        subsets = [
+            "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
+            "low_noise_saw", "medium_noise_saw", "high_noise_saw",
+        ]
+    else:
+        subsets = [
+                "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+        ]
     for model in models:
         for subset in subsets:
             print(f"Running Model: {model} on Subset: {subset}...")
-            retrieve_volume(subset, model)
+            retrieve_volume(subset, model, noise_experiment)
         # plt.show()
