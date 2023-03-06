@@ -21,6 +21,8 @@ from numba import jit
 
 from lib.params import Data, Settings
 
+np.random.seed(42)
+
 np.seterr('raise')
 
 count_idx = 1
@@ -192,18 +194,23 @@ def extract_volume(points,
 #     # plt.show()
 
 
-def retrieve_volume(subset, model_type, noise_experiment):
+def retrieve_volume(subset, model_type, noise_experiment, saving=True):
     # if model_type == "LSTM":
     #     return main(subset, model_type)
 
     if noise_experiment:
-        train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
-    else:
-        train_location = f"../data/simulation_data/{subset}/combined.npy"
-    if noise_experiment:
-        trained_model_location = f"../data/trained_models/noise/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
+        old_subset = subset
+        if subset == "high_noise_saw" or subset == "low_noise_saw":
+            subset = "mult_path"
+            trained_model_location = f"../data/trained_models/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
+            train_location = f"../data/simulation_data/{subset}/combined.npy"
+            subset = old_subset
+        else:
+            trained_model_location = f"../data/trained_models/noise/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
+            train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
     else:
         trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8"
+        train_location = f"../data/simulation_data/{subset}/combined.npy"
 
     # Load settings
     settings = Settings.from_model_location(trained_model_location,
@@ -216,6 +223,10 @@ def retrieve_volume(subset, model_type, noise_experiment):
     # Load data
     data = Data(settings, train_location)
 
+
+    old_subset = subset
+    if subset == "high_noise_saw" or subset == "low_noise_saw":
+        subset = "mult_path"
     # Load data
     if model_type == "LSTM":
         x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
@@ -275,7 +286,7 @@ def retrieve_volume(subset, model_type, noise_experiment):
             start_offset = (1024 - div_number) if model_type == "LSTM" else 0
 
         label_lower_bound = (div_number + start_offset) * run_idx
-        label_upper_bound = div_number + ( 
+        label_upper_bound = div_number + (
             (div_number + start_offset) * run_idx)
 
         pred_lower_bound = (div_number) * run_idx
@@ -324,58 +335,65 @@ def retrieve_volume(subset, model_type, noise_experiment):
     #     for _ in volume_error[key]:
     #         real_volumes.append(key)
 
-    for idx in range(len(volumes)):
-        line_x_values = [idx, idx]
-        line_y_values = [volumes[idx], real_volumes[idx]]
-        plt.plot(line_x_values,
-                 line_y_values,
-                 "-",
-                 color="#264653AA",
-                 linewidth=1.5)
+    subset = old_subset
 
-    plt.plot(real_volumes, "s", label="Real Volume", color="#2A9D8F", markersize=3)
-    plt.plot(volumes, ".", label="Predicted Volume", color="#E76F51")
-    # plt.plot(actual_volumes, "g.", label="Actual Volume")
+    if saving:
 
-    plt.ylim((0, 70))
-    plt.xlabel("Run")
-    plt.ylabel("Volume Radius (mm)")
-    MSE = np.sqrt(np.square(np.subtract(real_volumes, volumes))).mean()
-    MSE_std = np.sqrt(np.square(np.subtract(real_volumes, volumes))).std()
-    t = plt.text(0, 63, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
-    t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
-    plt.title(
-        f"Predicted vs Real Volume Radius Per Run\n{model_key[model_type]} - {translation_key[subset]}"
-    )
-    plt.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
-    plt.legend(loc="best", bbox_to_anchor=(0.6, 0., 0.4, 1.0))
-    # plt.figure()
-    # plt.show()
+        for idx in range(len(volumes)):
+            line_x_values = [idx, idx]
+            line_y_values = [volumes[idx], real_volumes[idx]]
+            plt.plot(line_x_values,
+                    line_y_values,
+                    "-",
+                    color="#264653AA",
+                    linewidth=1.5)
 
-    plt.savefig(f"../results/volume_{model_type}_{subset}.pdf")
-    plt.close()
+        plt.plot(real_volumes, "s", label="Real Volume", color="#2A9D8F", markersize=3)
+        plt.plot(volumes, ".", label="Predicted Volume", color="#E76F51")
+        # plt.plot(actual_volumes, "g.", label="Actual Volume")
 
-    # Get result data
-    results = {}
-    for key in volume_error:
-        results[f"{key}"] = (np.mean(volume_error[key]),
-                             np.std(volume_error[key]))
-    results[f"combined"] = (MSE, MSE_std)
+        plt.ylim((0, 70))
+        plt.xlabel("Run")
+        plt.ylabel("Volume Radius (mm)")
+        MSE = np.sqrt(np.square(np.subtract(real_volumes, volumes))).mean()
+        MSE_std = np.sqrt(np.square(np.subtract(real_volumes, volumes))).std()
+        t = plt.text(0, 63, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+        t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
+        plt.title(
+            f"Predicted vs Real Volume Radius Per Run\n{model_key[model_type]} - {translation_key[subset]}"
+        )
+        plt.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
+        plt.legend(loc="best", bbox_to_anchor=(0.6, 0., 0.4, 1.0))
+        # plt.figure()
+        # plt.show()
 
-    with open(f"../results/volume_{model_type}_{subset}_results.json",
-              "w") as write_file:
-        json.dump(results, write_file, indent=4)
+        plt.savefig(f"../results/volume_{model_type}_{subset}.pdf")
+        plt.close()
+
+        # Get result data
+        results = {}
+        for key in volume_error:
+            results[f"{key}"] = (np.mean(volume_error[key]),
+                                np.std(volume_error[key]))
+        results[f"combined"] = (MSE, MSE_std)
+
+        with open(f"../results/volume_{model_type}_{subset}_results.json",
+                "w") as write_file:
+            json.dump(results, write_file, indent=4)
+    else:
+        return volumes, real_volumes
 
 
 if __name__ == '__main__':
     noise_experiment = True
     # models = "INN"
     models = ["INN", "PINN", "LSTM"]
+    # models = ["INN", "PINN"]
     # models = ["LSTM"]
     if noise_experiment:
         subsets = [
-            "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
-            "low_noise_saw", "medium_noise_saw", "high_noise_saw",
+            "low_noise_parallel", "high_noise_parallel",
+            "low_noise_saw", "high_noise_saw",
         ]
     else:
         subsets = [

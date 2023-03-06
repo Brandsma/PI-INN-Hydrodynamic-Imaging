@@ -9,19 +9,26 @@ import json
 import pandas as pd
 
 
-def table_data(dt="speed"):
+def table_data(dt="speed", noise_experiment=False):
     models = ["INN", "PINN", "LSTM"]
 
-    subsets = [
-        "parallel", "offset", "offset_inverse", "far_off_parallel", "mult_path", "sine"
-    ]
+    if noise_experiment:
+        subsets = [
+            "low_noise_parallel", "high_noise_parallel",
+            "low_noise_saw", "high_noise_saw",
+        ]
+    else:
+        subsets = [
+            "parallel", "offset", "offset_inverse", "far_off_parallel", "mult_path", "sine"
+        ]
+
 
     df = pd.DataFrame()
     for model in models:
         s = []
         for subset in subsets:
             with open(Path(
-                    f"../../bunch/{dt}_{model}_{subset}_results.json")) as f:
+                    f"../../results/{dt}_{model}_{subset}_results.json")) as f:
                 results = json.load(f)
 
             # Add element to Series
@@ -34,7 +41,7 @@ def table_data(dt="speed"):
               axis=0,
               inplace=True)
 
-    print(df.style.to_latex(position_float="centering", hrules=True, caption=f"Results for {dt} estimation. The mean and standard deviation of the combined RMS error is shown for each model and path.", label=f"tab:{dt}_MSE_results", ))
+    print(df.style.to_latex(position_float="centering", hrules=True, caption=f"Results for {dt} estimation under varying noise conditions. The mean and standard deviation of the combined RMS error is shown for the INN and PI/INN models for separate paths..", label=f"tab:{dt}_MSE_noisy_results", ))
 
 
 def main():
@@ -43,7 +50,7 @@ def main():
         try:
             print("\n\n------")
             print(f"Getting {dt} latex...\n")
-            table_data(dt=dt)
+            table_data(dt=dt, noise_experiment=False)
         except Exception as e:
             print(f"Error for {dt}: {e}")
             continue

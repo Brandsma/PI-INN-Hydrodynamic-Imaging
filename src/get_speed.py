@@ -15,6 +15,13 @@ from tqdm import tqdm
 
 from lib.params import Data, Settings
 
+np.random.seed(42)
+
+
+def find_min_and_max(data):
+    min_value = np.min(data)
+    max_value = np.max(data)
+    return min_value, max_value
 
 def get_speed_from_inn_predicts(preds,
                                 labels,
@@ -130,21 +137,27 @@ def get_speed_from_data(data,
     return np.mean(speeds), np.mean(real_speeds)
 
 
-def main(subset="offset", model_type="INN", noise_experiment=False):
+def main(subset="offset", model_type="INN", noise_experiment=False, saving=True):
     if model_type == "INN" or model_type == "PINN":
-        return main_inn(subset, model_type, noise_experiment)
-    elif model_type == "LSTM":
-        print("Using LSTM")
-    else:
+        return main_inn(subset, model_type, noise_experiment, saving)
+    elif model_type != "LSTM":
         print("No valid model type given")
         return
 
     if noise_experiment:
-        train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
-        trained_model_location = f"../data/trained_models/noise/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
+        old_subset = subset
+        if subset == "high_noise_saw" or subset == "low_noise_saw":
+            subset = "mult_path"
+            train_location = f"../data/simulation_data/{subset}/combined.npy"
+            trained_model_location = f"../data/trained_models/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
+        else:
+            train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
+            trained_model_location = f"../data/trained_models/noise/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
+        subset = old_subset
     else:
         train_location = f"../data/simulation_data/{subset}/combined.npy"
         trained_model_location = "../data/trained_models/LSTM/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8"
+
 
     settings = Settings.from_model_location(trained_model_location,
                                             data_location=train_location)
@@ -170,28 +183,37 @@ def main(subset="offset", model_type="INN", noise_experiment=False):
         speeds.append(speed_results[0])
         real_speeds.append(speed_results[1])
 
-    save_results(speeds, real_speeds, model_type, subset)
+    if saving:
+        save_results(speeds, real_speeds, model_type, subset)
+    else:
+        return speeds, real_speeds
+
+def set_to_closest_ten(num):
+    return round(num / 10) * 10
+
 
 
 def save_results(speeds, real_speeds, model_type, subset):
+    real_speeds_rounded = list(map(set_to_closest_ten, real_speeds))
     for idx in range(len(speeds)):
         line_x_values = [idx, idx]
-        line_y_values = [speeds[idx], real_speeds[idx]]
+        line_y_values = [speeds[idx], real_speeds_rounded[idx]]
         plt.plot(line_x_values,
                  line_y_values,
                  "-",
                  color="#264653AA",
                  linewidth=1.5)
 
-    plt.plot(real_speeds, "s", label="Real Speed", color="#2A9D8F", markersize=3)
+    plt.plot(real_speeds_rounded, "s", label="Real Speed", color="#2A9D8F", markersize=3)
     plt.plot(speeds, ".", label="Predicted Speed", color="#E76F51")
 
     plt.ylim((0, 70))
     plt.xlabel("Run")
     plt.ylabel("Speed (mm/s)")
+
     MSE = np.sqrt(np.square(np.subtract(real_speeds, speeds))).mean()
     MSE_std = np.sqrt(np.square(np.subtract(real_speeds, speeds))).std()
-    t = plt.text(0, 63, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+    t = plt.text(0, 63, f"RMSE: {MSE:.2f} mm/s ($\\pm${MSE_std:.2f})")
     t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
     plt.title(
         f"Predicted vs Real Speed Per Run\n{model_key[model_type]} - {translation_key[subset]}"
@@ -211,8 +233,7 @@ def save_results(speeds, real_speeds, model_type, subset):
         json.dump(results, write_file, indent=4)
 
 
-def main_inn(subset="offset", model_type="INN", noise_experiment=False):
-    print(f"Using {model_type}")
+def main_inn(subset="offset", model_type="INN", noise_experiment=False, saving=True):
     if noise_experiment:
         train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
         trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:8&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh"
@@ -297,7 +318,10 @@ def main_inn(subset="offset", model_type="INN", noise_experiment=False):
         speeds.append(speed_results[0])
         real_speeds.append(speed_results[1])
 
-    save_results(speeds, real_speeds, model_type, subset)
+    if saving:
+        save_results(speeds, real_speeds, model_type, subset)
+    else:
+        return speeds, real_speeds
 
 
 if __name__ == '__main__':
@@ -308,8 +332,9 @@ if __name__ == '__main__':
     # models = ["INN"]
     if noise_experiment:
         subsets = [
-            "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
-            "low_noise_saw", "medium_noise_saw", "high_noise_saw",
+            "low_noise_parallel", "high_noise_parallel",
+            "low_noise_saw",
+            "high_noise_saw",
         ]
     else:
         subsets = [

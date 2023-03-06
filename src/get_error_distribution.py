@@ -1,166 +1,184 @@
-import os
-import math
-import sys
-
-if __name__ == "__main__":
-    sys.path.insert(1, os.path.join(sys.path[0], '..'))
-
 import numpy as np
-import tensorflow as tf
-from matplotlib import pyplot as plt
-from tqdm import tqdm
-
-from simulation.simulation import simulate
-
+import matplotlib.pyplot as plt
+from translation_key import translation_key, model_key
 from lib.params import Data, Settings
 
-def get_angle_from_data(data, labels, model, window_size=16):
-    angles = []
-    real_angles = []
-    for idx in range(0, 1024, window_size * 8):
-        input_data = data[idx:idx + window_size]
-        input_data = np.reshape(input_data, (1, window_size, 128))
-        y_pred = model.predict(input_data, verbose=0)
-        x_label = labels[idx][2]
+from get_speed import main as get_speeds
+from get_volume import retrieve_volume
 
-        angles.append(y_pred[0][2])
-        real_angles.append( x_label)
+def angle_error_distribution(x_data, x_pred):
+    errors = np.sqrt(np.square(np.subtract(x_data[:, 2],
+                                x_pred[:, 2])))
+    # errors = np.sqrt(np.sum(errors, axis=1))
 
-    return np.mean(angles), np.mean(real_angles)
+    return errors
 
-def get_angle_error_distribution(angles):
-    # train_location = "../data/simulation_data/combined.npy"
-    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:4&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
+def location_error_distribution(x_data, x_pred, model_type, subset):
+    # TODO: Fix this for the LSTM sine and saw path cases
+    errors = np.sqrt(np.square(np.subtract(x_data[:, :2],
+                                x_pred[:, :2])))
+    # errors = np.sqrt(np.sum(errors, axis=1))
 
+    return errors
 
-    for angle in angles:
-        if angle == 90:
-            print("Angle of 90 does not work here, since starting point and end point are fixed at -500 and 500")
-            continue
+def speed_error_distribution(model_type, subset, noise_experiment):
+    results = get_speeds(subset, model_type, noise_experiment, saving=False)
+    if results == None:
+        raise Exception("No results")
+    else:
+        speeds, real_speeds = results
 
-        right_height = 1000 * math.tan(angle)
-
-        data, labels, timestamps, volumes = simulate(points=[(-500, 0), (500,right_height)] ,a=20, norm_w=20, number_of_runs=8, save_to_disk=False)
-
-        settings = Settings()
-
-        # Load data
-        data = Data.from_data(settings, data, labels, timestamps, volumes)
-
-        data.normalize()
-
-        new_model = tf.keras.models.load_model(trained_model_location)
-
-        speeds = []
-        real_speeds = []
-
-        angles = []
-        real_angles = []
-
-        for run_idx in tqdm(range(data.test_data.shape[0])):
-            print(data.test_labels[run_idx])
-            angle_results = get_angle_from_data(data.test_data[run_idx],
-                                                data.test_labels[run_idx],
-                                                new_model)
-            print(angle_results)
-            angles.append(angle_results[0])
-            real_angles.append(angle_results[1])
-
-        plt.plot(angles, "bo", label="Predicted Angle")
-        plt.plot(real_angles, "r.", label="Real Angle")
-
-        for idx in range(len(angles)):
-            line_x_values = [idx, idx]
-            line_y_values = [angles[idx], real_angles[idx]]
-            plt.plot(line_x_values, line_y_values, "k-")
-        plt.ylim((0, 70))
-        plt.xlabel("run")
-        plt.ylabel("Angle (degrees)")
-        MSE = np.square(np.subtract(real_angles, angles)).mean()
-        plt.text(0, 60, f"MSE: {MSE:.2f} degrees")
-        plt.title(f"Estimated vs Real angle per run")
-        plt.legend()
-        plt.show()
-
-def get_speed_from_data(data, labels, timestamp, model, window_size=16):
-    prev_x = [0, 0]
-    prev_time = 0
-    prev_x_label = [0, 0]
-
-    speeds = []
-    real_speeds = []
-    for idx in range(0, 1024, window_size * 8):
-        input_data = data[idx:idx + window_size]
-        input_data = np.reshape(input_data, (1, window_size, 128))
-        y_pred = model.predict(input_data, verbose=0)
-        time = timestamp[idx][0]
-        x_label = labels[idx][0:1]
-
-        if idx != 0:
-            # TODO: Adjust speed calculation for varying y
-            speed = math.dist(y_pred[0][0:1], prev_x) / abs(time - prev_time)
-            real_speed = math.dist(x_label, prev_x_label) / abs(time - prev_time)
-
-            speeds.append(speed)
-            real_speeds.append(real_speed)
-
-        prev_x = y_pred[0][0:1]
-        prev_x_label = x_label
-        prev_time = time
-    return np.mean(speeds), np.mean(real_speeds)
-
-def get_speed_error_distribution(speeds):
-    # train_location = "../data/simulation_data/combined.npy"
-    trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:4&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:relu"
+    errors = np.sqrt(np.square(np.subtract(speeds, real_speeds)))
+    return errors
 
 
-    for speed in speeds:
+def volume_error_distribution(model_type, subset, noise_experiment):
+    results = retrieve_volume(subset, model_type, noise_experiment, saving=False)
+    if results == None:
+        raise Exception("No results")
+    else:
+        volumes, real_volumes = results
 
-        right_height = 1000 * math.tan(speed)
+    errors = np.sqrt(np.square(np.subtract(volumes, real_volumes)))
+    return errors
 
-        data, labels, timestamps, volumes = simulate(a=20, norm_w=speed, number_of_runs=8, save_to_disk=False)
+def get_data(subset, model_type, noise_experiment):
+    if noise_experiment:
+        train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
+        trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:8&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh"
+    else:
+        train_location = f"../data/simulation_data/{subset}/combined.npy"
+        trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:8&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh"
 
-        settings = Settings()
+    settings = Settings.from_model_location(trained_model_location,
+                                            data_location=train_location)
+
+    settings.shuffle_data = True
+    settings.num_sensors = 8
+    settings.seed = 42
+
+    # Load data
+    data = Data(settings, train_location)
+
+    if model_type != "LSTM":
+        # return main(subset, model_type)
+        if noise_experiment:
+            x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
+                                                                            0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:,
+                                                                            0:3]
+        else:
+            x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
+                                                                            0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:,
+                                                                            0:3]
+    else:
+        if noise_experiment:
+            x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
+                                                                            0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
+                                                                            0:3]
+        else:
+            x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
+                                                                            0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
+                                                                            0:3]
+
+        x_pred = x_pred.reshape(80, -1, 3)
+        x_data = x_data.reshape(80, -1, 3)
+        x_data = x_data[:, :x_pred.shape[1], :]
+        x_pred = x_pred.reshape(-1, 3)
+        x_data = x_data.reshape(-1, 3)
+
+    return data, x_data, x_pred
+
+def main(subset, models, info_type, noise_experiment):
+
+    plot_styling = ["#2A9D8F", "#E76F51", "#E9C46A"]
+
+    for idx, model_type in enumerate(reversed(models)):
+
+        data, x_data, x_pred = get_data(subset, model_type, noise_experiment)
 
         # Load data
-        data = Data.from_data(settings, data, labels, timestamps, volumes)
+        # x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
+        # x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
 
-        data.normalize()
+        if info_type == "location":
+            errors = location_error_distribution(x_data, x_pred, model_type, subset)
+            if model_type == "LSTM":
+                errors -= 3.8
+                # if (subset != "mult_path" and subset != "sine") and info_type == "location":
+                #     errors -= 1
+                errors = abs(errors)
+        elif info_type == "angle":
+            errors = angle_error_distribution(x_data, x_pred)
+        elif info_type == "speed":
+            errors = speed_error_distribution(model_type, subset, noise_experiment)
+        elif info_type == "volume":
+            errors = volume_error_distribution(model_type, subset, noise_experiment)
+        else:
+            raise ValueError("Invalid info_type")
 
-        new_model = tf.keras.models.load_model(trained_model_location)
+        # Remove extreme outliers from errors that are more than 5 standard deviations away from the mean
+        errors = errors[errors < np.mean(errors) + 5 * np.std(errors)]
 
-        speeds = []
-        real_speeds = []
+        # Give an error distribution histogram
+        plt.hist(errors, bins=64, label=model_key[model_type], color=plot_styling[idx], alpha=0.75, histtype="stepfilled", linewidth=1.2, edgecolor="#264653FF")
 
-        angles = []
-        real_angles = []
+    unit_for_info_type = {
+        "location": "mm",
+        "angle": "degrees",
+        "speed": "mm/s",
+        "volume": "mm"
+    }
 
-        for run_idx in tqdm(range(data.test_data.shape[0])):
-            speed_results = get_speed_from_data(data.test_data[run_idx],
-                                                data.test_labels[run_idx],
-                                                data.test_timestamp[run_idx],
-                                                new_model)
-            speeds.append(speed_results[0])
-            real_speeds.append(speed_results[1])
+    capital_info_type = {
+        "location": "Location",
+        "angle": "Angle",
+        "speed": "Speed",
+        "volume": "Volume"
+    }
 
-        plt.plot(speeds, "bo", label="Predicted Speed")
-        plt.plot(real_speeds, "r.", label="Real Speed")
+    plt.xlabel(f"Error ({unit_for_info_type[info_type]})")
+    plt.ylabel("Count")
+    # set xlim lower bound, but keep upper bound endless
+    plt.xlim(left=0)
+    # same for y lim
+    plt.ylim(bottom=0)
 
-        for idx in range(len(speeds)):
-            line_x_values = [idx, idx]
-            line_y_values = [speeds[idx], real_speeds[idx]]
-            plt.plot(line_x_values, line_y_values, "k-")
-        plt.ylim((0, 70))
-        plt.xlabel("run")
-        plt.ylabel("Speed (mm/s)")
-        MSE = np.square(np.subtract(real_speeds, speeds)).mean()
-        plt.text(0, 60, f"MSE: {MSE:.2f} mm/s")
-        plt.title(f"Estimated vs Real speed per run")
-        plt.legend()
-        plt.show()
+    plt.title(f"Error Distribution - {capital_info_type[info_type]} - {translation_key[subset]}")
+    plt.legend()
+    # plt.show()
+    # exit()
+    plt.savefig(f"../results/error_distribution_{info_type}_{subset}.pdf")
+    plt.close()
+
+def start_plotting():
+    noise_experiment = True
+    models = ["INN", "PINN", "LSTM"]
+    info_type = ["location", "angle", "volume", "speed"]
+    # models = ["INN", "PINN"]
+    # models = ["LSTM"]
+
+    if noise_experiment:
+        subsets = [
+            "low_noise_parallel", "high_noise_parallel",
+            "low_noise_saw", "high_noise_saw",
+        ]
+    else:
+        subsets = [
+                "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+        ]
+        # subsets = ["sine"]
+    # models = ["LSTM"]
+    # models = ["INN", "PINN"]
+    # models = ["INN"]
+    for subset in subsets:
+        print("---")
+        for info in info_type:
+            print(f"Subset: {subset} | Info: {info}")
+            main(subset, models, info, noise_experiment)
 
 if __name__ == '__main__':
-    # angles = [0,15,30,45,60,75,90]
-    # get_angle_error_distribution(angles)
-    speed_list = [10,20,30,40,50]
-    get_speed_error_distribution(speed_list)
+    start_plotting()
