@@ -50,7 +50,7 @@ def main():
         try:
             print("\n\n------")
             print(f"Getting {dt} latex...\n")
-            table_data(dt=dt, noise_experiment=False)
+            table_data(dt=dt, noise_experiment=True)
         except Exception as e:
             print(f"Error for {dt}: {e}")
             continue

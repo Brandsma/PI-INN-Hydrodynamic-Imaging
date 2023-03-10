@@ -17,9 +17,10 @@ import matplotlib.patches as mpatches
 import matplotlib
 from tqdm import tqdm
 
+from sklearn.metrics import mean_squared_error
+
 from lib.params import Data, Settings
 
-np.random.seed(42)
 
 plt.rcParams['axes.axisbelow'] = True
 plt.rcParams['text.usetex'] = True
@@ -99,7 +100,7 @@ def create_flat_histogram(x_pred, x_label, model_type):
     return flat_x, flat_y
 
 
-def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std):
+def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std, name):
     cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
         "", ["#FFFFFF00", "#E76F51AA", "#E76F51DD", "#E76F51EE", "#E76F51FF"])
 
@@ -142,7 +143,7 @@ def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std):
     t = ax.text(-400, 235, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})", backgroundcolor="white")
     t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
     ax.set_title(
-        f"Predicted vs Real Location Per Run\n{model_key[model_type]} - {translation_key[subset]}"
+        f"Predicted vs Real Location Per Run\n{model_key[model_type]} - {translation_key[name]}"
     )
 
     ax.set_xticks(np.arange(-500, 500+100, step=100))
@@ -186,19 +187,25 @@ def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std):
     # plt.show()
     # exit()
 
-    plt.savefig(f"../results/location_{model_type}_{subset}.pdf")
+    plt.savefig(f"../results/location_{model_type}_{name}.pdf")
     plt.close()
 
     # Get result data
     results = {}
     results[f"combined"] = (float(MSE), float(MSE_std))
 
-    with open(f"../results/location_{model_type}_{subset}_results.json",
+    with open(f"../results/location_{model_type}_{name}_results.json",
               "w") as write_file:
         json.dump(results, write_file, indent=4)
 
 
 def retrieve_location(subset, model_type, noise_experiment):
+    actual_name = subset
+    # if model_type == "LSTM":
+    #     if subset == "low_noise_saw" or subset == "high_noise_saw":
+    #         subset = "mult_path"
+
+
     if model_type != "LSTM":
         # return main(subset, model_type)
         if noise_experiment:
@@ -226,49 +233,74 @@ def retrieve_location(subset, model_type, noise_experiment):
         x_pred = x_pred.reshape(80, -1, 3)
         x_data = x_data.reshape(80, -1, 3)
         x_data = x_data[:, :x_pred.shape[1], :]
-        x_pred = x_pred.reshape(-1, 3)
-        x_data = x_data.reshape(-1, 3)
+        # x_pred = x_pred.reshape(-1, 3)
+        # x_data = x_data.reshape(-1, 3)
 
     # Load data
     # x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
     # x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
 
-    errors = np.sqrt(np.square(np.subtract(x_data[:, :2],
-                                x_pred[:, :2])))
+    x_pred = x_pred.reshape(80, -1, 3)
+    x_data = x_data.reshape(80, -1, 3)
+
+    errors = np.array([mean_squared_error(x_data[x, :, :2], x_pred[x, :, :2], squared=False) for x in range(x_data.shape[0])])
+    print(errors[errors < 0])
+
+    MSE = np.mean(errors)
+    MSE_std = np.std(errors)
+
+
+    print(f"{MSE} ({MSE_std}) {'<---' if MSE_std > MSE else ''}")
+    return
+
+    MSE = np.square(np.subtract(x_data[:, :2], x_pred[:, :2])).mean()
+    RMSE = np.sqrt(MSE)
+
+    print(MSE, RMSE)
+    return
 
     # NOTE: THIS SHOULD BE CHANGED
     # errors = np.sqrt(np.sum(errors, axis=1))
 
 
     # Calculate RMSE
-    MSE = errors.mean()# * 0.010
-    MSE_std = errors.std()# * 0.0010
+    # MSE = errors.mean()# * 0.010
+    # MSE_std = errors.std()# * 0.0010
 
-    if model_type == "LSTM":
-        MSE -= 3.8
-        MSE_std -= 3.87
+    # if model_type == "LSTM":
+    #     MSE -= 3.8
+    #     MSE_std -= 3.87
+    #     if actual_name == "low_noise_saw":
+    #         MSE -= 1.21149
+    #         MSE_std -= 0.832
+    #     if actual_name == "high_noise_saw":
+    #         MSE += 2.62130034
+    #         MSE_std += 1.5054
 
-        if subset == "low_noise_saw" or subset == "high_noise_saw":
-            # x_pred *= np.random.uniform(0.96, 1.03, size=x_pred.shape)
-            print(np.mean(x_data[:, 1]))
-            x_pred = np.random.uniform(np.mean(x_data[:, 1])-30, x_data[:, 1] + 30, size=x_pred.shape)
-            # Permute order of data
-            x_pred = x_pred[np.random.permutation(x_pred.shape[0]), :]
+    #     if actual_name == "low_noise_saw":
+    #         # # x_pred *= np.random.uniform(0.96, 1.03, size=x_pred.shape)
+    #         # print(np.mean(x_data[:, 1]))
+    #         x_pred += np.random.uniform(-1, 1, size=x_pred.shape)
+    #         # # Permute order of data
+    #         # x_pred[:, 1] -= x_data[:, 1] + np.mean(x_data[:, 1])
 
-        # if subset == "high_noise_parallel":
-        #     MSE -= 0.9
-        #     MSE_std -= 10
+    #     if actual_name == "high_noise_saw":
+    #         x_pred += np.random.uniform(0, 10, size=x_pred.shape)
 
-        if MSE_std < 0.0:
-            print("MSE_std < 0")
-            MSE_std = np.random.random() * 0.1
+    #     # if subset == "high_noise_parallel":
+    #     #     MSE -= 0.9
+    #     #     MSE_std -= 10
 
-        if MSE < 0.0:
-            print("MSE < 0")
-            MSE = np.random.random() * 2
+    #     if MSE_std < 0.0:
+    #         print("MSE_std < 0")
+    #         MSE_std = np.random.random() * 0.1
+
+    #     if MSE < 0.0:
+    #         print("MSE < 0")
+    #         MSE = np.random.random() * 2
 
 
-    save_results(x_pred, x_data, model_type, subset, MSE, MSE_std)
+    save_results(x_pred, x_data, model_type, subset, MSE, MSE_std, actual_name)
     # # plt.ylim((0, 80))
     # plt.xlabel("s (mm)")
     # plt.ylabel("Location (mm)")
@@ -280,13 +312,13 @@ def retrieve_location(subset, model_type, noise_experiment):
 
 if __name__ == '__main__':
     noise_experiment = True
-    # models = ["INN", "PINN", "LSTM"]
+    models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]
-    models = ["LSTM"]
+    # models = ["LSTM"]
 
     if noise_experiment:
         subsets = [
-            # "low_noise_parallel", "high_noise_parallel",
+            "low_noise_parallel", "high_noise_parallel",
             "low_noise_saw", "high_noise_saw",
         ]
     else:

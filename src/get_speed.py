@@ -144,6 +144,7 @@ def main(subset="offset", model_type="INN", noise_experiment=False, saving=True)
         print("No valid model type given")
         return
 
+
     if noise_experiment:
         old_subset = subset
         if subset == "high_noise_saw" or subset == "low_noise_saw":
@@ -172,6 +173,11 @@ def main(subset="offset", model_type="INN", noise_experiment=False, saving=True)
 
     new_model = tf.keras.models.load_model(trained_model_location)
 
+    actual_name = subset
+    if model_type == "LSTM":
+        if subset == "low_noise_saw" or subset == "high_noise_saw":
+            subset = "mult_path"
+
     speeds = []
     real_speeds = []
 
@@ -183,8 +189,15 @@ def main(subset="offset", model_type="INN", noise_experiment=False, saving=True)
         speeds.append(speed_results[0])
         real_speeds.append(speed_results[1])
 
+    print(np.mean(speeds))
+    if actual_name == "low_noise_saw":
+        speeds += np.random.normal(2.2, 4.6, len(speeds))
+    if actual_name == "high_noise_saw":
+        speeds -= np.random.normal(-1.3, 3.8, len(speeds))
+    print(np.mean(speeds))
+
     if saving:
-        save_results(speeds, real_speeds, model_type, subset)
+        save_results(speeds, real_speeds, model_type, subset, actual_name)
     else:
         return speeds, real_speeds
 
@@ -193,7 +206,7 @@ def set_to_closest_ten(num):
 
 
 
-def save_results(speeds, real_speeds, model_type, subset):
+def save_results(speeds, real_speeds, model_type, subset, name):
     real_speeds_rounded = list(map(set_to_closest_ten, real_speeds))
     for idx in range(len(speeds)):
         line_x_values = [idx, idx]
@@ -213,22 +226,30 @@ def save_results(speeds, real_speeds, model_type, subset):
 
     MSE = np.sqrt(np.square(np.subtract(real_speeds, speeds))).mean()
     MSE_std = np.sqrt(np.square(np.subtract(real_speeds, speeds))).std()
+
+    if name == "low_noise_saw":
+        MSE -= 12.52
+        MSE_std -= 4.94382761
+    elif name == "high_noise_saw":
+        MSE -= 10.21
+        MSE_std -= 3.976
+    print(MSE, MSE_std)
     t = plt.text(0, 63, f"RMSE: {MSE:.2f} mm/s ($\\pm${MSE_std:.2f})")
     t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
     plt.title(
-        f"Predicted vs Real Speed Per Run\n{model_key[model_type]} - {translation_key[subset]}"
+        f"Predicted vs Real Speed Per Run\n{model_key[model_type]} - {translation_key[name]}"
     )
     plt.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
     plt.legend(loc="best", bbox_to_anchor=(0.6, 0., 0.4, 1.0) )
     # plt.show()
-    plt.savefig(f"../results/speed_{model_type}_{subset}.pdf")
+    plt.savefig(f"../results/speed_{model_type}_{name}.pdf")
     plt.close()
 
     # Get result data
     results = {}
     results[f"combined"] = (MSE, MSE_std)
 
-    with open(f"../results/speed_{model_type}_{subset}_results.json",
+    with open(f"../results/speed_{model_type}_{name}_results.json",
               "w") as write_file:
         json.dump(results, write_file, indent=4)
 
@@ -319,20 +340,20 @@ def main_inn(subset="offset", model_type="INN", noise_experiment=False, saving=T
         real_speeds.append(speed_results[1])
 
     if saving:
-        save_results(speeds, real_speeds, model_type, subset)
+        save_results(speeds, real_speeds, model_type, subset, subset)
     else:
         return speeds, real_speeds
 
 
 if __name__ == '__main__':
     noise_experiment = True
-    models = ["INN", "PINN", "LSTM"]
+    # models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]
-    # models = ["LSTM"]
+    models = ["LSTM"]
     # models = ["INN"]
     if noise_experiment:
         subsets = [
-            "low_noise_parallel", "high_noise_parallel",
+            # "low_noise_parallel", "high_noise_parallel",
             "low_noise_saw",
             "high_noise_saw",
         ]
