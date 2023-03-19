@@ -1,5 +1,6 @@
 import math
 
+import os
 import numpy as np
 from lib.logger import setup_logger
 from tqdm import tqdm
@@ -67,6 +68,24 @@ def calculate_angle(start_point, terminal_point):
 
 
 ## Simulation ##
+
+def simulate_single_step(input_sensors,
+                         x,
+                         y,
+                         theta,
+                         a,
+                         norm_w,
+                         add_noise=True,
+                         noise_power=1.5e-5):
+    data = []
+    for input_sensor in input_sensors:
+        # NOTE: the x and y coordinates are different than the array coordinates
+        data.append(v_x(input_sensor, x, y + 1, theta, a, norm_w))
+        data.append(v_y(input_sensor, x, y + 1, theta, a, norm_w))
+    if add_noise:
+        data = np.array(data) + np.random.normal(
+            0, noise_power, size=np.array(data).shape)
+    return data
 
 
 def simulate(theta=0,
@@ -147,6 +166,10 @@ def simulate(theta=0,
     log.debug(all_labels.shape)
     log.debug(all_timestamp.shape)
     log.debug(all_volumes.shape)
+
+    # If folder path does not exist, create it
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path, exist_ok=True)
 
     if save_to_disk:
         np.save(data_path, all_data)

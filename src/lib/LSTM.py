@@ -75,10 +75,10 @@ class LSTM_network:
         model.add(Dropout(dropout))
         # Finally we have a fully connected layer with 2 to 3 nodes - the x and y positions and an angle
         model.add(Dense(n_outputs, activation='linear'))
-        # Compile the model with euclidean error and adam
+        # Compile the model with euclidean error and adace
         optimizer = optimizers.Adagrad(learning_rate=alpha,
-                                       epsilon=None,
-                                       decay=decay,
+                                    #    epsilon=None,
+                                       weight_decay=decay,
                                        clipnorm=1.)
         model.compile(loss=losses.MeanSquaredError(), optimizer=optimizer)
         # model.compile(loss=self.__euclidean_error_loss, optimizer=optimizer)
@@ -142,7 +142,7 @@ class LSTM_network:
     """
     def test(self, data, labels, dirname=None, num_runs=0):
 
-        assert len(labels) >= num_runs, "Not enough runs were provided to the LSTM test function"
+        # assert len(labels) >= num_runs, "Not enough runs were provided to the LSTM test function"
 
 
         # TODO: Check that network is trained
@@ -180,7 +180,7 @@ class LSTM_network:
                 else:
                     dat = np.reshape(dat, (1, win_size, self.data.n_inputs))
 
-                    test_result = self.model.predict(dat, verbose=0)
+                    test_result = self.model.predict(dat, verbose=0)[0]
                     true_label = labels[lab_idx][idx + win_size - 1:idx +
                                                  win_size][0]
 

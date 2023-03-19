@@ -16,10 +16,16 @@ from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib
 from tqdm import tqdm
+import scipy.stats as st
 
 from sklearn.metrics import mean_squared_error
 
 from lib.params import Data, Settings
+
+from matplotlib import rc
+#rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+rc('font',**{'family':'serif','serif':['Times']})
+rc('text', usetex=True)
 
 
 plt.rcParams['axes.axisbelow'] = True
@@ -89,8 +95,8 @@ def create_flat_histogram(x_pred, x_label, model_type):
         end_term = 1020
 
     # Create the histogram y
-    flat_x = x_pred[:, 0].reshape((80, -1))[:, :end_term].reshape((-1,))
-    flat_y = x_pred[:, 1].reshape((80, -1))[:, :end_term]
+    flat_x = x_pred[:, 0].reshape((25, -1))[:, :end_term].reshape((-1,))
+    flat_y = x_pred[:, 1].reshape((25, -1))[:, :end_term]
 
     # Subtract x_label from x_pred over all columns
     flat_y = flat_y - x_label[:end_term, 1]
@@ -125,10 +131,16 @@ def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std, name):
              label="Real",
              linewidth=1,
              alpha=1.)
-    ax.hist2d(x_pred[:, 0],
+
+    # Scatter small points
+    ax.scatter(x_pred[:, 0],
                x_pred[:, 1],
-               bins=(128, 128),
+            #    bins=(128, 128),
                label="Predicted",
+               c='#E76F51FF',
+                s=1,
+
+
                cmap=cmap)
     hist_patch = mpatches.Patch(color='#E76F51FF', label='Predicted')
     ax.tick_params(axis='x', which='major', bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
@@ -187,7 +199,7 @@ def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std, name):
     # plt.show()
     # exit()
 
-    plt.savefig(f"../results/location_{model_type}_{name}.pdf")
+    plt.savefig(f"../results/location_{model_type}_{name}.png", bbox_inches="tight", dpi=600, transparent=True, pad_inches=0.1)
     plt.close()
 
     # Get result data
@@ -230,8 +242,8 @@ def retrieve_location(subset, model_type, noise_experiment):
             x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
                                                                             0:3]
 
-        x_pred = x_pred.reshape(80, -1, 3)
-        x_data = x_data.reshape(80, -1, 3)
+        x_pred = x_pred.reshape(25, -1, 3)
+        x_data = x_data.reshape(25, -1, 3)
         x_data = x_data[:, :x_pred.shape[1], :]
         # x_pred = x_pred.reshape(-1, 3)
         # x_data = x_data.reshape(-1, 3)
@@ -240,24 +252,26 @@ def retrieve_location(subset, model_type, noise_experiment):
     # x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
     # x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
 
-    x_pred = x_pred.reshape(80, -1, 3)
-    x_data = x_data.reshape(80, -1, 3)
+    x_pred = x_pred.reshape(25, -1, 3)
+    x_data = x_data.reshape(25, -1, 3)
 
     errors = np.array([mean_squared_error(x_data[x, :, :2], x_pred[x, :, :2], squared=False) for x in range(x_data.shape[0])])
-    print(errors[errors < 0])
+    # print(errors[errors < 0])
 
     MSE = np.mean(errors)
     MSE_std = np.std(errors)
 
+    x_pred = x_pred.reshape(-1, 3)
+    x_data = x_data.reshape(-1, 3)
+
 
     print(f"{MSE} ({MSE_std}) {'<---' if MSE_std > MSE else ''}")
-    return
 
-    MSE = np.square(np.subtract(x_data[:, :2], x_pred[:, :2])).mean()
-    RMSE = np.sqrt(MSE)
+    # MSE = np.square(np.subtract(x_data[:, :2], x_pred[:, :2])).mean()
+    # RMSE = np.sqrt(MSE)
 
-    print(MSE, RMSE)
-    return
+    # print(MSE, RMSE)
+    # return
 
     # NOTE: THIS SHOULD BE CHANGED
     # errors = np.sqrt(np.sum(errors, axis=1))
@@ -311,7 +325,7 @@ def retrieve_location(subset, model_type, noise_experiment):
 
 
 if __name__ == '__main__':
-    noise_experiment = True
+    noise_experiment = False
     models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]
     # models = ["LSTM"]

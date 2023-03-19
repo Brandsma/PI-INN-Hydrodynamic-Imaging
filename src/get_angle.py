@@ -17,6 +17,13 @@ import matplotlib.patches as mpatches
 import matplotlib
 from tqdm import tqdm
 
+from sklearn.metrics import mean_squared_error
+
+from matplotlib import rc
+#rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+rc('font',**{'family':'serif','serif':['Times']})
+rc('text', usetex=True)
+
 np.random.seed(42)
 
 from lib.params import Data, Settings
@@ -44,8 +51,8 @@ def create_flat_histogram(x_pred, x_label, idxes, model_type):
         end_term = 1020
 
     # Create the histogram y
-    flat_x = x_pred[:, 0].reshape((80, -1))[:, :end_term].reshape((-1,))
-    flat_y = x_pred[:, 1].reshape((80, -1))[:, :end_term]
+    flat_x = x_pred[:, 0].reshape((25, -1))[:, :end_term].reshape((-1,))
+    flat_y = x_pred[:, 1].reshape((25, -1))[:, :end_term]
 
     # Subtract x_label from x_pred over all columns
     flat_y = flat_y - x_label[:end_term, 1]
@@ -54,7 +61,7 @@ def create_flat_histogram(x_pred, x_label, idxes, model_type):
 
     return flat_x, flat_y
 
-def save_results(x_pred, x_data, model_type, subset, name):
+def save_results(x_pred, x_data, model_type, subset, name, MSE, MSE_std):
     cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
         "", ["#FFFFFF00", "#E76F51AA", "#E76F51DD", "#E76F51EE", "#E76F51FF"])
     idxes = np.asarray(x_data[:1000, 2] < 40).nonzero()[0]
@@ -66,23 +73,23 @@ def save_results(x_pred, x_data, model_type, subset, name):
     ax1.set_ylim((-25, 25))
     ax1.set_xlim((-500, 500))
 
-    MSE = np.sqrt(np.square(np.subtract(x_data[:, 2], x_pred[:, 2]))).mean()
-    MSE_std = np.sqrt(np.square(np.subtract(x_data[:, 2], x_pred[:, 2]))).std()
+    # MSE = np.sqrt(np.square(np.subtract(x_data[:, 2], x_pred[:, 2]))).mean()
+    # MSE_std = np.sqrt(np.square(np.subtract(x_data[:, 2], x_pred[:, 2]))).std()
 
-    if model_type=="LSTM":
-        if name == "low_noise_saw":
-            # # x_pred *= np.random.uniform(0.96, 1.03, size=x_pred.shape)
-            # print(np.mean(x_data[:, 1]))
-            x_pred += np.random.uniform(-0.3, 0.3, size=x_pred.shape)
-            # # Permute order of data
-            # x_pred[:, 1] -= x_data[:, 1] + np.mean(x_data[:, 1])
-            MSE -= 0.0185
-            MSE_std -= 0.22
+    # if model_type=="LSTM":
+    #     if name == "low_noise_saw":
+    #         # # x_pred *= np.random.uniform(0.96, 1.03, size=x_pred.shape)
+    #         # print(np.mean(x_data[:, 1]))
+    #         x_pred += np.random.uniform(-0.3, 0.3, size=x_pred.shape)
+    #         # # Permute order of data
+    #         # x_pred[:, 1] -= x_data[:, 1] + np.mean(x_data[:, 1])
+    #         MSE -= 0.0185
+    #         MSE_std -= 0.22
 
-        if name == "high_noise_saw":
-            x_pred += np.random.uniform(-0.6, 0.6, size=x_pred.shape)
-            MSE += 0.0235
-            MSE_std += 0.31
+    #     if name == "high_noise_saw":
+    #         x_pred += np.random.uniform(-0.6, 0.6, size=x_pred.shape)
+    #         MSE += 0.0235
+    #         MSE_std += 0.31
 
     ax.plot(x_data[idxes, 0],
              x_data[idxes, 2],
@@ -93,16 +100,19 @@ def save_results(x_pred, x_data, model_type, subset, name):
              alpha=1)
 
 
-    ax.hist2d(x_pred[:, 0],
+    ax.scatter(x_pred[:, 0],
                x_pred[:, 2],
-               bins=(128, 128),
+            #    bins=(128, 128),
                label="Predicted",
-               cmap=cmap)
+               c='#E76F51FF',
+                s=1,
+            #    cmap=cmap
+               )
 
     ax.set_ylim((-25, 25))
     ax.set_xlim((-500, 500))
 
-    t = ax.text(-400, 22, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+    t = ax.text(-400, 22, f"RMSE: {MSE:.2f} degrees ($\\pm${MSE_std:.2f})")
     t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
     ax.set_title(
         f"Predicted vs Real Angle Per Run\n{model_key[model_type]} - {translation_key[name]}"
@@ -170,7 +180,7 @@ def save_results(x_pred, x_data, model_type, subset, name):
     # plt.show()
     # exit()
 
-    plt.savefig(f"../results/angle_{model_type}_{name}.pdf")
+    plt.savefig(f"../results/angle_{model_type}_{name}.png", bbox_inches="tight", dpi=600, transparent=True, pad_inches=0.1)
     plt.close()
 
     # Get result data
@@ -188,9 +198,9 @@ def find_min_and_max(data):
 
 def retrieve_angle(subset, model_type):
     actual_name = subset
-    if model_type == "LSTM":
-        if subset == "low_noise_saw" or subset == "high_noise_saw":
-            subset = "mult_path"
+    # if model_type == "LSTM":
+    #     if subset == "low_noise_saw" or subset == "high_noise_saw":
+    #         subset = "mult_path"
     if model_type != "LSTM":
         # return main(subset, model_type)
         x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
@@ -203,11 +213,26 @@ def retrieve_angle(subset, model_type):
         x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
                                                                            0:3]
 
-        x_pred = x_pred.reshape(80, -1, 3)
-        x_data = x_data.reshape(80, -1, 3)
+        x_pred = x_pred.reshape(25, -1, 3)
+        x_data = x_data.reshape(25, -1, 3)
         x_data = x_data[:, :x_pred.shape[1], :]
-        x_pred = x_pred.reshape(-1, 3)
-        x_data = x_data.reshape(-1, 3)
+        # x_pred = x_pred.reshape(-1, 3)
+        # x_data = x_data.reshape(-1, 3)
+
+    x_pred = x_pred.reshape(25, -1, 3)
+    x_data = x_data.reshape(25, -1, 3)
+
+    errors = np.array([mean_squared_error(x_data[x, :, 2], x_pred[x, :, 2], squared=False) for x in range(x_data.shape[0])])
+    print(errors[errors < 0])
+
+    MSE = np.mean(errors)
+    MSE_std = np.std(errors)
+
+    x_pred = x_pred.reshape(-1, 3)
+    x_data = x_data.reshape(-1, 3)
+
+
+    print(f"{MSE} ({MSE_std}) {'<---' if MSE_std > MSE else ''}")
 
     # Load data
     # x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
@@ -218,7 +243,7 @@ def retrieve_angle(subset, model_type):
     #         # Add some randomization to x_pred
     #         x_pred[:, 2] = x_pred[:, 2] + np.random.normal(-0.2, 0.3, x_pred.shape[0])
 
-    save_results(x_pred, x_data, model_type, subset, actual_name)
+    save_results(x_pred, x_data, model_type, subset, actual_name, MSE, MSE_std)
     # # plt.ylim((0, 80))
     # plt.xlabel("s (mm)")
     # plt.ylabel("Angle (degrees)")
@@ -229,7 +254,7 @@ def retrieve_angle(subset, model_type):
 
 
 if __name__ == '__main__':
-    noise_experiment = True
+    noise_experiment = False
     # models = ["LSTM"]
     models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]

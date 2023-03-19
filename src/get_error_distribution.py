@@ -6,6 +6,13 @@ from lib.params import Data, Settings
 from get_speed import main as get_speeds
 from get_volume import retrieve_volume
 
+plt.rcParams['axes.axisbelow'] = True
+
+from matplotlib import rc
+#rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+rc('font',**{'family':'serif','serif':['Times']})
+rc('text', usetex=True)
+
 def angle_error_distribution(x_data, x_pred):
     errors = np.sqrt(np.square(np.subtract(x_data[:, 2],
                                 x_pred[:, 2])))
@@ -44,11 +51,11 @@ def volume_error_distribution(model_type, subset, noise_experiment):
 
 def get_data(subset, model_type, noise_experiment):
     if noise_experiment:
+        trained_model_location = "../data/trained_models/noise/LSTM/window_size=16&stride=2&n_nodes=256&alpha=0.05&decay=1e-09&n_epochs=16&shuffle_data=True&data_split=0.8&dropout_ratio=0&ac_fun=tanh&num_sensors=8&seed=None"
         train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
-        trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:8&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh"
     else:
+        trained_model_location = "../data/trained_models/LSTM/window_size=16&stride=2&n_nodes=256&alpha=0.05&decay=1e-09&n_epochs=16&shuffle_data=True&data_split=0.8&dropout_ratio=0&ac_fun=tanh&num_sensors=8&seed=None"
         train_location = f"../data/simulation_data/{subset}/combined.npy"
-        trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:128&alpha:0.05&decay:1e-09&n_epochs:8&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh"
 
     settings = Settings.from_model_location(trained_model_location,
                                             data_location=train_location)
@@ -84,8 +91,8 @@ def get_data(subset, model_type, noise_experiment):
             x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
                                                                             0:3]
 
-        x_pred = x_pred.reshape(80, -1, 3)
-        x_data = x_data.reshape(80, -1, 3)
+        x_pred = x_pred.reshape(25, -1, 3)
+        x_data = x_data.reshape(25, -1, 3)
         x_data = x_data[:, :x_pred.shape[1], :]
         x_pred = x_pred.reshape(-1, 3)
         x_data = x_data.reshape(-1, 3)
@@ -96,6 +103,7 @@ def main(subset, models, info_type, noise_experiment):
 
     plot_styling = ["#2A9D8F", "#E76F51", "#E9C46A"]
 
+    model_error = {model_type: [] for model_type in models}
     for idx, model_type in enumerate(reversed(models)):
 
         data, x_data, x_pred = get_data(subset, model_type, noise_experiment)
@@ -106,11 +114,11 @@ def main(subset, models, info_type, noise_experiment):
 
         if info_type == "location":
             errors = location_error_distribution(x_data, x_pred, model_type, subset)
-            if model_type == "LSTM":
-                errors -= 3.8
-                # if (subset != "mult_path" and subset != "sine") and info_type == "location":
-                #     errors -= 1
-                errors = abs(errors)
+            # if model_type == "LSTM":
+            #     errors -= 3.8
+            #     # if (subset != "mult_path" and subset != "sine") and info_type == "location":
+            #     #     errors -= 1
+            #     errors = abs(errors)
         elif info_type == "angle":
             errors = angle_error_distribution(x_data, x_pred)
         elif info_type == "speed":
@@ -123,8 +131,21 @@ def main(subset, models, info_type, noise_experiment):
         # Remove extreme outliers from errors that are more than 5 standard deviations away from the mean
         errors = errors[errors < np.mean(errors) + 5 * np.std(errors)]
 
+        # Add errors to dictionary
+        model_error[model_type] = errors
+
         # Give an error distribution histogram
-        plt.hist(errors, bins=64, label=model_key[model_type], color=plot_styling[idx], alpha=0.75, histtype="stepfilled", linewidth=1.2, edgecolor="#264653FF")
+        # plt.hist(errors, bins=64, label=model_key[model_type], color=plot_styling[idx], alpha=0.75, histtype="stepfilled", linewidth=1.2, edgecolor="#264653FF")
+
+    x,y,z = [model_error[x] for x in model_error]
+    x_w = np.empty(x.shape)
+    x_w.fill(1/x.shape[0])
+    y_w = np.empty(y.shape)
+    y_w.fill(1/y.shape[0])
+    z_w = np.empty(z.shape)
+    z_w.fill(1/z.shape[0])
+
+    plt.hist([x,y,z], bins=64, weights=[x_w, y_w, z_w], label=[x for x in model_error], color=plot_styling, linewidth=0.2, edgecolor="#264653FF", density=True)
 
     unit_for_info_type = {
         "location": "mm",
@@ -141,7 +162,7 @@ def main(subset, models, info_type, noise_experiment):
     }
 
     plt.xlabel(f"Error ({unit_for_info_type[info_type]})")
-    plt.ylabel("Count")
+    plt.ylabel("Probability Density")
     # set xlim lower bound, but keep upper bound endless
     plt.xlim(left=0)
     # same for y lim
@@ -151,13 +172,16 @@ def main(subset, models, info_type, noise_experiment):
     plt.legend()
     # plt.show()
     # exit()
-    plt.savefig(f"../results/error_distribution_{info_type}_{subset}.pdf")
+    # plt.savefig(f"../results/error_distribution_{info_type}_{subset}.p")
+
+    plt.savefig(f"../results/error_distribution_{info_type}_{subset}.png", bbox_inches="tight", dpi=600, transparent=True, pad_inches=0.1)
     plt.close()
 
 def start_plotting():
-    noise_experiment = True
+    noise_experiment = False
     models = ["INN", "PINN", "LSTM"]
-    info_type = ["location", "angle", "volume", "speed"]
+    # info_type = ["location", "angle", "volume", "speed"]
+    info_type = ["location"]
     # models = ["INN", "PINN"]
     # models = ["LSTM"]
 

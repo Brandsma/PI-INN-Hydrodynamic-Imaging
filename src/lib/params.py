@@ -76,7 +76,7 @@ class Settings:
     @classmethod
     def from_model_location(cls, folder_path, data_location=None):
         settings_folder = os.path.basename(os.path.normpath(folder_path))
-        setting_elements = [x.split(':') for x in settings_folder.split('&')]
+        setting_elements = [x.split('=') for x in settings_folder.split('&')]
         for elem in setting_elements:
             if is_int(elem[1]):
                 elem[1] = int(float(elem[1]))
@@ -103,7 +103,7 @@ class Settings:
         if 'len_data' in setting_values:
             del setting_values['len_data']
         settings_name = "&".join(
-            [f"{k}:{setting_values[k]}" for k in setting_values])
+            [f"{k}={setting_values[k]}" for k in setting_values])
         return settings_name
 
     def __printSettings(self):

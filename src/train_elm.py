@@ -59,7 +59,7 @@ def load_data(file_location, train_test_ratio):
 def load_data_csv(file_location, train_test_ratio):
     # Load data in shape data[sensor][position (1d indexed)]
     print(file_location)
-    data = params.Data(params.Settings(), file_location)
+    data = params.Data(params.Settings(train_location=file_location), file_location)
     # vx_data = data.train_data[0][:, ::2]
     # vy_data = data.train_data[0][:, 1::2]
 
@@ -150,7 +150,10 @@ def main(n_nodes, window_size, stride, model_type="ELM"):
     # ===========================================
 
     # load dataset
-    x_train, y_train, x_test, y_test = load_data_csv("../data/simulation_data/combined.npy", 0.8)
+    x_train, y_train, x_test, y_test = load_data_csv("../data/simulation_data/combined_groups/combined.npy", 0.8)
+    # Get the 8 middle sensors of the 128 sensors of x_train
+    print(x_train.shape)
+    x_train = x_train[:, 60:68]
     n_sensor_readings = len(x_train[0])
 
     # divide data into windows
@@ -186,6 +189,7 @@ def main(n_nodes, window_size, stride, model_type="ELM"):
     x_train_init = x_train[:border]
     y_train_init = y_train[:border]
 
+
     x_train_seq = x_train[border:]
     y_train_seq = y_train[border:]
 
@@ -212,6 +216,7 @@ def main(n_nodes, window_size, stride, model_type="ELM"):
         pbar = tqdm.tqdm(total=len(x_train), desc='initial training phase')
         model.init_train(x_train_init, y_train_init)
         pbar.update(n=len(x_train_init))
+
 
         # the sequential training phase
         pbar.set_description('sequential training phase')

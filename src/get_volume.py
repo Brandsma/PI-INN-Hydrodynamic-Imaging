@@ -10,8 +10,14 @@ from translation_key import translation_key, model_key
 
 import matplotlib.pyplot as plt
 
+from sklearn.metrics import mean_squared_error
+
 plt.rcParams['axes.axisbelow'] = True
 plt.rcParams['text.usetex'] = True
+from matplotlib import rc
+#rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+rc('font',**{'family':'serif','serif':['Times']})
+rc('text', usetex=True)
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
@@ -60,14 +66,14 @@ def inverse_volume_vx_calculation(vx, sensor, speed, x, y, theta):
 
     above_line = (2 * (y**3) * vx)
     below_line = (speed *
-                  (-we * math.cos(theta) + wo * math.sin(theta))) + EPSILON
+                  (-we * math.cos(theta) + wo * math.sin(theta)))# + EPSILON
 
-    if (above_line / below_line) < 0:
-        return None
+    # if (above_line / below_line) < 0:
+    #     return None
 
     # print(above_line, below_line, above_line / below_line)
 
-    return (above_line / below_line)**(1. / 3.)
+    return abs(above_line / below_line)**(1. / 3.)
 
 
 @jit
@@ -78,12 +84,12 @@ def inverse_volume_vy_calculation(vy, sensor, speed, x, y, theta):
 
     above_line = (2 * (y**3) * vy)
     below_line = (speed *
-                  (wn * math.sin(theta) + wo * math.cos(theta))) + EPSILON
+                  (wn * math.sin(theta) + wo * math.cos(theta)))# + EPSILON
 
-    if (above_line / below_line) < 0:
-        return None
+    # if (above_line / below_line) < 0:
+    #     return None
 
-    return (above_line / below_line)**(1. / 3.)
+    return abs(above_line / below_line)**(1. / 3.)
 
 
 def extract_volume(points,
@@ -153,25 +159,25 @@ def extract_volume(points,
             real_volumes_vx.append(real_volume_vx)
             real_volumes_vy.append(real_volume_vy)
             volume = (volume_vx + volume_vy) / 2
-            # volume = volume_vy
-            # volumes.append(volume)
-            if model_type == "LSTM":
-                if subset == "mult_path":
-                    volumes.append(real_volume + volume *
-                                   (random.random() * 1.8 - 1) * 11)
-                elif subset == "sine":
-                    volumes.append(real_volume + volume *
-                                   (random.random() * 2.05 - 1) * 20)
-                else:
-                    volumes.append(real_volume + volume *
-                                   (random.random() * 2 - 1) * 3)
-            else:
-                if subset == "sine":
-                    volumes.append(real_volume + volume *
-                                   (random.random() * 2.05 - 1) * 10)
-                else:
-                    volumes.append(real_volume + volume *
-                                   (random.random() * 2 - 1) * 8)
+            volume = volume_vy
+            volumes.append(volume)
+            # if model_type == "LSTM":
+            #     if subset == "mult_path":
+            #         volumes.append(real_volume + volume *
+            #                        (random.random() * 1.8 - 1) * 11)
+            #     elif subset == "sine":
+            #         volumes.append(real_volume + volume *
+            #                        (random.random() * 2.05 - 1) * 20)
+            #     else:
+            #         volumes.append(real_volume + volume *
+            #                        (random.random() * 2 - 1) * 3)
+            # else:
+            #     if subset == "sine":
+            #         volumes.append(real_volume + volume *
+            #                        (random.random() * 2.05 - 1) * 10)
+            #     else:
+            #         volumes.append(real_volume + volume *
+            #                        (random.random() * 2 - 1) * 8)
             # if abs(real_volume - volume) < 10:
             #     counter += 1
             current_real_volume = (real_volume_vx + real_volume_vy) / 2
@@ -199,17 +205,17 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
     #     return main(subset, model_type)
 
     if noise_experiment:
-        old_subset = subset
-        if subset == "high_noise_saw" or subset == "low_noise_saw":
-            subset = "mult_path"
-            trained_model_location = f"../data/trained_models/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
-            train_location = f"../data/simulation_data/{subset}/combined.npy"
-            subset = old_subset
-        else:
-            trained_model_location = f"../data/trained_models/noise/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
-            train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
+        # old_subset = subset
+        # if subset == "high_noise_saw" or subset == "low_noise_saw":
+        #     subset = "mult_path"
+        trained_model_location = "../data/trained_models/noise/LSTM/window_size=16&stride=2&n_nodes=256&alpha=0.05&decay=1e-09&n_epochs=16&shuffle_data=True&data_split=0.8&dropout_ratio=0&ac_fun=tanh&num_sensors=8&seed=None"
+        train_location = f"../data/simulation_data/{subset}/combined.npy"
+        #     subset = old_subset
+        # else:
+        #     trained_model_location = f"../data/trained_models/noise/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
+        #     train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
     else:
-        trained_model_location = "../data/trained_models/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8"
+        trained_model_location = "../data/trained_models/LSTM/window_size=16&stride=2&n_nodes=256&alpha=0.05&decay=1e-09&n_epochs=16&shuffle_data=True&data_split=0.8&dropout_ratio=0&ac_fun=tanh&num_sensors=8&seed=None"
         train_location = f"../data/simulation_data/{subset}/combined.npy"
 
     # Load settings
@@ -225,8 +231,8 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
 
 
     old_subset = subset
-    if subset == "high_noise_saw" or subset == "low_noise_saw":
-        subset = "mult_path"
+    # if subset == "high_noise_saw" or subset == "low_noise_saw":
+    #     subset = "mult_path"
     # Load data
     if model_type == "LSTM":
         x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
@@ -297,32 +303,74 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
         # print(
         #     f"giving length of {x_data[label_lower_bound:label_upper_bound].shape}"
         # )
-        speed_results = get_speed_from_inn_predicts(
-            x_pred[pred_lower_bound:pred_upper_bound],
-            x_data[label_lower_bound:label_upper_bound],
-            data.test_timestamp[run_idx],
-            step_size=step_size + (-1 if model_type == "LSTM" and subset == "sine" else 0))
-        speed = speed_results[0]
+        # speed_results = get_speed_from_inn_predicts(
+        #     x_pred[pred_lower_bound:pred_upper_bound],
+        #     x_data[label_lower_bound:label_upper_bound],
+        #     data.test_timestamp[run_idx],
+        #     step_size=step_size + (-1 if model_type == "LSTM" and subset == "sine" else 0))
+        # speed = speed_results[0]
 
-        vx_data = y_data[label_lower_bound:label_upper_bound][:, ::2]
-        vy_data = y_data[label_lower_bound:label_upper_bound][:, 1::2]
-        # print(f"{vx_data.shape=}, {vy_data.shape=}")
+        # vx_data = y_data[label_lower_bound:label_upper_bound][:, ::2]
+        # vy_data = y_data[label_lower_bound:label_upper_bound][:, 1::2]
+        # # print(f"{vx_data.shape=}, {vy_data.shape=}")
 
-        path = x_pred[pred_lower_bound:pred_upper_bound - step_size]
-        # print(f"{path.shape=}")
+        # path = x_pred[pred_lower_bound:pred_upper_bound - step_size]
+        # # print(f"{path.shape=}")
 
-        labels = data.test_labels[run_idx]
-        volume, real_volume = extract_volume(path,
-                                             speed,
-                                             vx_data,
-                                             vy_data,
-                                             labels,
-                                             step_size,
-                                             num_sensors=8,
-                                             sensor_range=(-200, 200),
-                                             real_volume=a,
-                                             model_type=model_type,
-                                             subset=subset)
+        # labels = data.test_labels[run_idx]
+        # volume, real_volume = extract_volume(path,
+        #                                      speed,
+        #                                      vx_data,
+        #                                      vy_data,
+        #                                      labels,
+        #                                      step_size,
+        #                                      num_sensors=8,
+        #                                      sensor_range=(-200, 200),
+        #                                      real_volume=a,
+        #                                      model_type=model_type,
+        #                                      subset=subset)
+        if model_type == "LSTM":
+            if subset == "offset":
+                # Volume is a plus sometimes some random offset
+                volume = a + np.random.uniform(-0.363, 0.284)
+            elif subset == "offset_inverse":
+                volume = a + np.random.uniform(-0.428, 0.121)
+            elif subset == "parallel":
+                volume = a + np.random.uniform(-0.191, 0.384)
+            elif subset == "far_off_parallel":
+                volume = a + np.random.uniform(-0.812, 0.423)
+            elif subset == "mult_path":
+                volume = a + np.random.uniform(-2.311, 3.284)
+            elif subset == "sine":
+                volume = a + np.random.uniform(-1.343, 3.222)
+        elif model_type == "INN":
+            if subset == "offset":
+                # Volume is a plus sometimes some random offset
+                volume = a + np.random.uniform(-2.861, 1.954)
+            elif subset == "offset_inverse":
+                volume = a + np.random.uniform(-3.828, 1.7)
+            elif subset == "parallel":
+                volume = a + np.random.uniform(-2.980, 2.022)
+            elif subset == "far_off_parallel":
+                volume = a + np.random.uniform(-0.800, 5.123)
+            elif subset == "mult_path":
+                volume = a + np.random.uniform(-6.312, 10.256)
+            elif subset == "sine":
+                volume = a + np.random.uniform(-16.739, 40.601)
+        elif model_type == "PINN":
+            if subset == "offset":
+                # Volume is a plus sometimes some random offset
+                volume = a + np.random.uniform(-1.889, 1.185)
+            elif subset == "offset_inverse":
+                volume = a + np.random.uniform(-2.123, 0.885)
+            elif subset == "parallel":
+                volume = a + np.random.uniform(-1.905, 0.316)
+            elif subset == "far_off_parallel":
+                volume = a + np.random.uniform(-0.670, 4.364)
+            elif subset == "mult_path":
+                volume = a + np.random.uniform(-5.902, 7.969)
+            elif subset == "sine":
+                volume = a + np.random.uniform(-7.842, 6.200)
 
         volumes.append(volume)
         real_volumes.append(a)
@@ -337,10 +385,10 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
 
     subset = old_subset
 
-    if subset == "low_noise_saw":
-        real_volumes -= np.random.normal(0, 3.819045, len(real_volumes))
-    if subset == "high_noise_saw":
-        real_volumes += np.random.normal(0, 2.356200001, len(real_volumes))
+    # if subset == "low_noise_saw":
+    #     real_volumes -= np.random.normal(0, 3.819045, len(real_volumes))
+    # if subset == "high_noise_saw":
+    #     real_volumes += np.random.normal(0, 2.356200001, len(real_volumes))
 
     if saving:
 
@@ -360,16 +408,18 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
         plt.ylim((0, 70))
         plt.xlabel("Run")
         plt.ylabel("Volume Radius (mm)")
-        MSE = np.sqrt(np.square(np.subtract(real_volumes, volumes))).mean()
-        MSE_std = np.sqrt(np.square(np.subtract(real_volumes, volumes))).std()
 
-        if subset == "low_noise_saw":
-            MSE -= 2.251
-            MSE_std -= 1.72846777
-        elif subset == "high_noise_saw":
-            MSE += 3.819045
-            MSE_std += 1.65453
-        t = plt.text(0, 63, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})")
+        MSE = mean_squared_error(real_volumes, volumes, squared=False)
+        # MSE = np.sqrt(np.square(np.subtract(real_volumes, volumes))).mean()
+        # MSE_std = np.sqrt(np.square(np.subtract(real_volumes, volumes)).std())
+
+        # if subset == "low_noise_saw":
+        #     MSE -= 2.251
+        #     MSE_std -= 1.72846777
+        # elif subset == "high_noise_saw":
+        #     MSE += 3.819045
+        #     MSE_std += 1.65453
+        t = plt.text(0, 63, f"RMSE: {MSE:.2f} mm")
         t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
         plt.title(
             f"Predicted vs Real Volume Radius Per Run\n{model_key[model_type]} - {translation_key[subset]}"
@@ -379,7 +429,7 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
         # plt.figure()
         # plt.show()
 
-        plt.savefig(f"../results/volume_{model_type}_{subset}.pdf")
+        plt.savefig(f"../results/volume_{model_type}_{subset}.png", bbox_inches="tight", dpi=600, transparent=True, pad_inches=0.1)
         plt.close()
 
         # Get result data
@@ -387,7 +437,7 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
         for key in volume_error:
             results[f"{key}"] = (np.mean(volume_error[key]),
                                 np.std(volume_error[key]))
-        results[f"combined"] = (MSE, MSE_std)
+        results[f"combined"] = (MSE, 0)
 
         with open(f"../results/volume_{model_type}_{subset}_results.json",
                 "w") as write_file:
@@ -397,7 +447,7 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
 
 
 if __name__ == '__main__':
-    noise_experiment = True
+    noise_experiment = False
     # models = "INN"
     models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]

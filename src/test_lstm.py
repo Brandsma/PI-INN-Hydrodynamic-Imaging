@@ -8,13 +8,12 @@ import INN.hydro as hydro
 
 
 def test_lstm():
-    noise_experiment = True
+    noise_experiment = False
 
-    # subsets = ["offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel"]
     if noise_experiment:
         sensor_options = [8]
     else:
-        sensor_options = [1,3,8,64]
+        sensor_options = [8]
 
 
     if noise_experiment:
@@ -23,13 +22,14 @@ def test_lstm():
             "low_noise_saw", "medium_noise_saw", "high_noise_saw",
         ]
     else:
-        subsets = ["sine"]
+        # subsets = ["offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"]
+        subsets = ["parallel", "far_off_parallel"]
 
     # sensor_options = [64]
     for num_sensors in sensor_options:
         # TODO: Load model based on num_sensors
         # model_location = "window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0.0&ac_fun:tanh"
-        model_location = f"window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:{num_sensors}&seed:None"
+        model_location = f"window_size=16&stride=2&n_nodes=256&alpha=0.05&decay=1e-09&n_epochs=16&shuffle_data=True&data_split=0.8&dropout_ratio=0&ac_fun=tanh&num_sensors={num_sensors}&seed=None"
         model = tf.keras.models.load_model(
             f"../data/trained_models/LSTM/{model_location}" if not noise_experiment else f"../data/trained_models/noise/LSTM/{model_location}"
         )
@@ -56,7 +56,9 @@ def test_lstm():
             data.normalize()
 
             # Select a subset of sensors
-            test_data = data.test_data[0:80]
+            print(data.test_data.shape)
+            test_data = data.test_data[0:25]
+            print(test_data.shape)
 
 
             network = LSTM.LSTM_network(data, settings)
@@ -65,7 +67,7 @@ def test_lstm():
             network.test(test_data,
                          data.test_labels,
                          dirname=f"../results/LSTM/{subset}/",
-                         num_runs=80)
+                         num_runs=25)
 
 
             results_folder = f"../results/LSTM/{subset}/"
