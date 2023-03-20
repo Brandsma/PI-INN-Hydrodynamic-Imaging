@@ -9,11 +9,11 @@ def train_pinn():
     config = INNConfig(4, 4, 64, 0, 0, 32, None)
 
 
-    noise_experiment = False
-    if noise_experiment: 
+    noise_experiment = True
+    if noise_experiment:
         subsets = [
-            "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
-            "low_noise_saw", "medium_noise_saw", "high_noise_saw",
+            "low_noise_parallel", "high_noise_parallel",
+            "low_noise_saw", "high_noise_saw",
         ]
     else:
         subsets = ["offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"]

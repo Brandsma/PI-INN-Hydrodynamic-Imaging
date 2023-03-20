@@ -14,12 +14,12 @@ def train_inn_with_config(config, use_pde=False):
 def train_inn():
     config = INNConfig(4, 4, 64, 0, 0, 32, None)
 
-    noise_experiment = False
+    noise_experiment = True
 
     if noise_experiment:
         subsets = [
-            "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
-            "low_noise_saw", "medium_noise_saw", "high_noise_saw",
+            "low_noise_parallel", "high_noise_parallel",
+            "low_noise_saw", "high_noise_saw",
         ]
     else:
         subsets = [
@@ -28,6 +28,7 @@ def train_inn():
 
     # subsets = ["sine"]
     sensor_options = [8]
+
 
     for subset in subsets:
         for num_sensors in sensor_options:

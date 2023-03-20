@@ -254,7 +254,7 @@ def retrieve_angle(subset, model_type):
 
 
 if __name__ == '__main__':
-    noise_experiment = False
+    noise_experiment = True
     # models = ["LSTM"]
     models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]

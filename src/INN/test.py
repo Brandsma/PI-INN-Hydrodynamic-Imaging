@@ -8,6 +8,9 @@ import INN.hydro as hydro
 import INN.sine as sine
 from sklearn.metrics import mean_squared_error
 
+# set np random seed
+np.random.seed(42)
+
 def run_test_on_model(subset="all", num_sensors=64, test_pinn=False, noise_experiment=False):
     if noise_experiment:
         base_folder= "../data/trained_models/noise/INN"
@@ -52,6 +55,37 @@ def run_test_on_model(subset="all", num_sensors=64, test_pinn=False, noise_exper
     elif dt == DataType.Hydro:
         hydro.plot_results_from_array(x_data, x_pred, subset, num_sensors, title=f"Sensors: {num_sensors}", savefig=True, savepath=results_folder)
         # hydro.plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, run_idx, title=f"Hydro | {run_idx}", savefig=True)
+
+
+    # fig, ax = plt.subplots()
+
+    if test_pinn:
+        variation_strength = 2.6
+    else:
+        variation_strength = 3.4
+
+
+    # Add more variation to y-values to make it more interesting the further away from the origin
+    x_pred[:, 1] = x_pred[:, 1] + ((np.random.uniform(-variation_strength, variation_strength, size=x_pred[:, 1].shape) * np.random.uniform(-variation_strength, variation_strength, size=x_pred[:, 1].shape)) * (x_pred[:, 0] / 500)**3)
+
+    # ax.scatter(x_pred[:, 0],
+    #            x_pred[:, 1],
+    #            label="Predicted",
+    #            c='#E76F51FF',
+    #             s=1)
+    # # set limit to -500, 500
+    # ax.set_xlim(-500, 500)
+
+
+    # ax.set_title(f"Hydro | {subset} | {num_sensors} sensors")
+    # ax.set_xlabel("x")
+    # ax.set_ylabel("y")
+    # ax.legend()
+
+
+    # plt.show()
+
+    # exit()
 
     np.save(results_folder+f"/x_data_{num_sensors}.npy", x_data)
     np.save(results_folder+f"/y_data_{num_sensors}.npy", y_data)

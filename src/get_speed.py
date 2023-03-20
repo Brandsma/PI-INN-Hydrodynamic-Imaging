@@ -354,7 +354,7 @@ def main_inn(subset="offset", model_type="INN", noise_experiment=False, saving=T
 
 
 if __name__ == '__main__':
-    noise_experiment = False
+    noise_experiment = True
     models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]
     # models = ["LSTM"]

@@ -38,7 +38,7 @@ def train_lstm(settings=None,
 
 
 if __name__ == "__main__":
-    noise_experiment = False
+    noise_experiment = True
 
     (n_nodes, n_epochs, window_size, stride, alpha, decay, \
      shuffle_data, data_split, dropout_ratio, train_location, ac_fun) =  \

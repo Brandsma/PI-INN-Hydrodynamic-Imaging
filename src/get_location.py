@@ -325,7 +325,7 @@ def retrieve_location(subset, model_type, noise_experiment):
 
 
 if __name__ == '__main__':
-    noise_experiment = False
+    noise_experiment = True
     models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]
     # models = ["LSTM"]

@@ -8,7 +8,7 @@ import INN.hydro as hydro
 
 
 def test_lstm():
-    noise_experiment = False
+    noise_experiment = True
 
     if noise_experiment:
         sensor_options = [8]
@@ -18,12 +18,12 @@ def test_lstm():
 
     if noise_experiment:
         subsets = [
-            "low_noise_parallel", "medium_noise_parallel", "high_noise_parallel",
-            "low_noise_saw", "medium_noise_saw", "high_noise_saw",
+            "low_noise_parallel", "high_noise_parallel",
+            "low_noise_saw", "high_noise_saw",
         ]
     else:
-        # subsets = ["offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"]
-        subsets = ["parallel", "far_off_parallel"]
+        subsets = ["offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"]
+        # subsets = ["offset", "offset_inverse", "mult_path", "sine"]
 
     # sensor_options = [64]
     for num_sensors in sensor_options:
