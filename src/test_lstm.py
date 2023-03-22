@@ -22,8 +22,8 @@ def test_lstm():
             "low_noise_saw", "high_noise_saw",
         ]
     else:
-        subsets = ["offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"]
-        # subsets = ["offset", "offset_inverse", "mult_path", "sine"]
+        # subsets = ["offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"]
+        subsets = ["sine"]
 
     # sensor_options = [64]
     for num_sensors in sensor_options:

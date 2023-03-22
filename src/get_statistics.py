@@ -6,6 +6,8 @@ from lib.params import Data, Settings
 from get_speed import main as get_speeds
 from get_volume import retrieve_volume
 
+from scipy.stats import kruskal, mannwhitneyu
+
 np.random.seed(42)
 
 plt.rcParams['axes.axisbelow'] = True
@@ -162,53 +164,24 @@ def main(subset, models, info_type, noise_experiment):
         # Add errors to dictionary
         model_error[model_type] = errors
 
-        # Give an error distribution histogram
-        # plt.hist(errors, bins=64, label=model_key[model_type], color=plot_styling[idx], alpha=0.75, histtype="stepfilled", linewidth=1.2, edgecolor="#264653FF")
 
-    x,y,z = [model_error[x] for x in model_error]
-    x_w = np.empty(x.shape)
-    x_w.fill(1/x.shape[0])
-    y_w = np.empty(y.shape)
-    y_w.fill(1/y.shape[0])
-    z_w = np.empty(z.shape)
-    z_w.fill(1/z.shape[0])
+    krus_result = kruskal(*model_error.values())
+    print(krus_result)
 
-    plt.hist([x,y,z], bins=64, weights=[x_w, y_w, z_w], label=[x for x in model_error], color=plot_styling, linewidth=0.2, edgecolor="#264653FF", density=True)
-
-    unit_for_info_type = {
-        "location": "mm",
-        "angle": "degrees",
-        "speed": "mm/s",
-        "volume": "mm"
-    }
-
-    capital_info_type = {
-        "location": "Location",
-        "angle": "Angle",
-        "speed": "Speed",
-        "volume": "Volume"
-    }
-
-    plt.xlabel(f"Error ({unit_for_info_type[info_type]})")
-    plt.ylabel("Probability Density")
-    # set xlim lower bound, but keep upper bound endless
-    plt.xlim(left=0)
-    # same for y lim
-    plt.ylim(bottom=0)
-
-    plt.title(f"Error Distribution - {capital_info_type[info_type]} - {translation_key[subset]}")
-    plt.legend()
-    # plt.show()
-    # exit()
-    # plt.savefig(f"../results/error_distribution_{info_type}_{subset}.p")
-
-    plt.savefig(f"../results/error_distribution_{info_type}_{subset}.png", bbox_inches="tight", dpi=600, transparent=True, pad_inches=0.1)
-    plt.close()
+    if krus_result.pvalue < 0.05:
+        print("Significant difference")
+        pinn_lstm_result = mannwhitneyu(model_error["LSTM"], model_error["PINN"])
+        inn_lstm_result = mannwhitneyu(model_error["LSTM"], model_error["INN"])
+        inn_pinn_result = mannwhitneyu(model_error["PINN"], model_error["INN"])
+        print(f"LSTM vs PINN: {pinn_lstm_result}")
+        print(f"LSTM vs INN: {inn_lstm_result}")
+        print(f"PINN vs INN: {inn_pinn_result}")
+    
 
 def start_plotting(noise_experiment):
     models = ["INN", "PINN", "LSTM"]
     info_type = ["location", "angle", "volume", "speed"]
-    # info_type = ["location"]
+    info_type = ["location"]
     # models = ["INN", "PINN"]
     # models = ["LSTM"]
 
@@ -234,4 +207,3 @@ def start_plotting(noise_experiment):
 if __name__ == '__main__':
     start_plotting(False)
     start_plotting(True)
-

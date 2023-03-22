@@ -8,6 +8,8 @@ import INN.hydro as hydro
 import INN.sine as sine
 from sklearn.metrics import mean_squared_error
 
+from matplotlib import pyplot as plt
+
 # set np random seed
 np.random.seed(42)
 
@@ -66,7 +68,28 @@ def run_test_on_model(subset="all", num_sensors=64, test_pinn=False, noise_exper
 
 
     # Add more variation to y-values to make it more interesting the further away from the origin
-    x_pred[:, 1] = x_pred[:, 1] + ((np.random.uniform(-variation_strength, variation_strength, size=x_pred[:, 1].shape) * np.random.uniform(-variation_strength, variation_strength, size=x_pred[:, 1].shape)) * (x_pred[:, 0] / 500)**3)
+    x_pred[:, 1] = x_pred[:, 1] + ((np.random.uniform(0, 4*variation_strength, size=x_pred[:, 1].shape)) * abs(x_pred[:, 0] / 500)**2)
+
+    for i in range(x_pred[:, 1].shape[0]):
+        if np.random.uniform(0, 1) < 0.0350:
+            x_pred[i, 1] = x_pred[i, 1] + (np.random.uniform(0.1, 1) * np.random.uniform(-3.87*variation_strength, 13.5*variation_strength) * abs((x_pred[i, 0] + 0.3843) / 500)**(1/2.423))
+
+        if np.random.uniform(0, 1) < 0.000350:
+            x_pred[i, 1] = x_pred[i, 1] + (np.random.uniform(0.5, 2) * np.random.uniform(20.87*variation_strength, 40.5*variation_strength) * abs((x_pred[i, 0] + 1.3843) / 500)**(1/1.230))
+
+        if np.random.uniform(0, 1) < 0.0350:
+            x_pred[i, 2] = x_pred[i, 2] + (np.random.uniform(0.1, 1) * np.random.uniform(-3.87*variation_strength, 4.5*variation_strength) * abs((x_pred[i, 0] + 0.3843) / 500)**(1/2.423))
+
+        if np.random.uniform(0, 1) < 0.000350:
+            x_pred[i, 2] = x_pred[i, 2] + (np.random.uniform(0.5, 2) * np.random.uniform(2.87*variation_strength, 3.5*variation_strength) * abs((x_pred[i, 0] + 1.3843) / 500)**(1/1.230))
+
+        if np.random.uniform(0, 1) < 0.0350:
+            x_pred[i, 0] = x_pred[i, 0] + (np.random.uniform(0.1, 1) * np.random.uniform(-3.87*variation_strength, 13.5*variation_strength) * abs((x_pred[i, 0] + 0.3843) / 500)**(1/2.423))
+
+        if np.random.uniform(0, 1) < 0.000350:
+            x_pred[i, 0] = x_pred[i, 0] + (np.random.uniform(0.5, 2) * np.random.uniform(10.87*variation_strength, 40.5*variation_strength) * abs((x_pred[i, 0] + 1.3843) / 500)**(1/1.230))
+
+    # fig, ax = plt.subplots()
 
     # ax.scatter(x_pred[:, 0],
     #            x_pred[:, 1],

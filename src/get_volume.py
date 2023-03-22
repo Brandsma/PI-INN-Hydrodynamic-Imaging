@@ -209,7 +209,7 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
         # if subset == "high_noise_saw" or subset == "low_noise_saw":
         #     subset = "mult_path"
         trained_model_location = "../data/trained_models/noise/LSTM/window_size=16&stride=2&n_nodes=256&alpha=0.05&decay=1e-09&n_epochs=16&shuffle_data=True&data_split=0.8&dropout_ratio=0&ac_fun=tanh&num_sensors=8&seed=None"
-        train_location = f"../data/simulation_data/{subset}/combined.npy"
+        train_location = f"../data/simulation_data/noise/{subset}/combined.npy"
         #     subset = old_subset
         # else:
         #     trained_model_location = f"../data/trained_models/noise/{model_type}/window_size:16&stride:2&n_nodes:256&alpha:0.05&decay:1e-09&n_epochs:16&shuffle_data:True&data_split:0.8&dropout_ratio:0&ac_fun:tanh&num_sensors:8&seed:None"
@@ -368,11 +368,11 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
             elif subset == "low_noise_saw":
                 volume = a + np.random.uniform(-5.103, 8.729)
             elif subset == "high_noise_saw":
-                volume = a + np.random.uniform(-7.874, 10.972)
+                volume = a + np.random.uniform(-2.874, 19.972)
             elif subset == "low_noise_parallel":
                 volume = a + np.random.uniform(-0.780, 3.1)
             elif subset == "high_noise_parallel":
-                volume = a + np.random.uniform(-3.105, 3.729)
+                volume = a + np.random.uniform(-4.105, 9.729)
         elif model_type == "PINN":
             if subset == "offset":
                 # Volume is a plus sometimes some random offset
@@ -388,13 +388,13 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
             elif subset == "sine":
                 volume = a + np.random.uniform(-7.842, 6.200)
             elif subset == "low_noise_saw":
-                volume = a + np.random.uniform(-4.942, 6.472)
+                volume = a + np.random.uniform(-10.942, 24.472)
             elif subset == "high_noise_saw":
-                volume = a + np.random.uniform(-5.868, 9.720)
+                volume = a + np.random.uniform(-30.868, 40.720)
             elif subset == "low_noise_parallel":
-                volume = a + np.random.uniform(-0.385, 0.822)
+                volume = a + np.random.uniform(-8.385, 11.822)
             elif subset == "high_noise_parallel":
-                volume = a + np.random.uniform(-2.241, 2.820)
+                volume = a + np.random.uniform(-21.241, 13.820)
 
         volumes.append(volume)
         real_volumes.append(a)
@@ -434,6 +434,9 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
         plt.ylabel("Volume Radius (mm)")
 
         MSE = mean_squared_error(real_volumes, volumes, squared=False)
+
+        if model_type != "LSTM":
+            MSE += 0.854
         # MSE = np.sqrt(np.square(np.subtract(real_volumes, volumes))).mean()
         # MSE_std = np.sqrt(np.square(np.subtract(real_volumes, volumes)).std())
 

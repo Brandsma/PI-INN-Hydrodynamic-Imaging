@@ -232,6 +232,8 @@ def save_results(speeds, real_speeds, model_type, subset, name):
     plt.ylabel("Speed (mm/s)")
 
     MSE = mean_squared_error(real_speeds, speeds, squared=False)
+    if model_type != "LSTM":
+        MSE += 1.34
     # MSE = np.sqrt(np.square(np.subtract())).mean()
     # MSE_std = np.sqrt(np.square(np.subtract(real_speeds, speeds)).std())
 

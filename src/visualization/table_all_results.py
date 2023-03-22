@@ -36,10 +36,10 @@ def table_data(dt="speed", noise_experiment=False):
                 best_value = results['combined'][0]
                 best_model = idx
         if best_model != None:
-            best_model_idx[f"{model}_{subset}"] = best_model
+            best_model_idx[f"{subset}"] = best_model
         else:
             print("Something might have gone wrong")
-            best_model_idx[f"{model}_{subset}"] = 0
+            best_model_idx[f"{subset}"] = 0
 
 
     df = pd.DataFrame()
@@ -51,14 +51,24 @@ def table_data(dt="speed", noise_experiment=False):
                 results = json.load(f)
 
             # Add element to Series
-            if f"{model}_{subset}" in best_model_idx and best_model_idx[f"{model}_{subset}"] == idx:
-                s.append(
-                    "\\textbf{"+ f"{results['combined'][0]:.2f}" + "(±" + f"{results['combined'][1]:.2f}" + ")}"
-                )
+            if f"{subset}" in best_model_idx and best_model_idx[f"{subset}"] == idx:
+                if dt != "volume" and dt != "speed":
+                    s.append(
+                        "\\textbf{"+ f"{results['combined'][0]:.2f}" + " (±" + f"{results['combined'][1]:.2f}" + ")}"
+                    )
+                else:
+                    s.append(
+                        "\\textbf{"+ f"{results['combined'][0]:.2f}" + "}"
+                    )
             else:
-                s.append(
-                    f"{results['combined'][0]:.2f} (±{results['combined'][1]:.2f})"
-                )
+                if dt != "volume" and dt != "speed":
+                    s.append(
+                        f"{results['combined'][0]:.2f} (±{results['combined'][1]:.2f})"
+                    )
+                else:
+                    s.append(
+                        f"{results['combined'][0]:.2f}"
+                    )
         df = pd.concat([df, pd.Series(s, name=model)], axis=1)
     df.rename({x: translation_key[subsets[x]]
                for x in range(len(subsets))},
