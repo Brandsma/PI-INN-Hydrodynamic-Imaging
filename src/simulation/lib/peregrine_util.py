@@ -14,7 +14,7 @@ def is_running_on_peregrine():
     This relies on a hacky check whether or not the $SCRATCHDIR environment variable is present.
     TODO: Find a better way to check this.
     """
-    is_running_on_peregrine = (SCRATCHDIR_ENV_KEY in os.environ)
+    is_running_on_peregrine = SCRATCHDIR_ENV_KEY in os.environ
 
     if is_running_on_peregrine:
         log.debug("Currently running on Peregrine...")

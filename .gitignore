@@ -6,6 +6,7 @@ flycheck_*
 created_models/
 */trained_models/*
 trained_models/
+trained_models_example/
 *.~undo-tree~
 data/
 *.dat

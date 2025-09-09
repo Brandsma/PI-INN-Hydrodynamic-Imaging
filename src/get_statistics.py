@@ -10,16 +10,17 @@ from scipy.stats import kruskal, mannwhitneyu
 
 np.random.seed(42)
 
-plt.rcParams['axes.axisbelow'] = True
+plt.rcParams["axes.axisbelow"] = True
 
 from matplotlib import rc
-#rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
-rc('font',**{'family':'serif','serif':['Times']})
-rc('text', usetex=True)
+
+# rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+rc("font", **{"family": "serif", "serif": ["Times"]})
+rc("text", usetex=True)
+
 
 def location_error_distribution(x_data, x_pred, model_type, subset):
-    errors = np.sqrt(np.square(np.subtract(x_data[:, :2],
-                                x_pred[:, :2])))
+    errors = np.sqrt(np.square(np.subtract(x_data[:, :2], x_pred[:, :2])))
     # errors = np.sqrt(np.sum(errors, axis=1))
     if model_type != "LSTM":
         errors += 4
@@ -30,9 +31,9 @@ def location_error_distribution(x_data, x_pred, model_type, subset):
 
     return errors
 
+
 def angle_error_distribution(x_data, x_pred, model_type):
-    errors = np.sqrt(np.square(np.subtract(x_data[:, 2],
-                                x_pred[:, 2])))
+    errors = np.sqrt(np.square(np.subtract(x_data[:, 2], x_pred[:, 2])))
     # errors = np.sqrt(np.sum(errors, axis=1))
 
     if model_type != "LSTM":
@@ -79,6 +80,7 @@ def volume_error_distribution(model_type, subset, noise_experiment):
 
     return errors
 
+
 def get_data(subset, model_type, noise_experiment):
     if noise_experiment:
         trained_model_location = "../data/trained_models/noise/LSTM/window_size=16&stride=2&n_nodes=256&alpha=0.05&decay=1e-09&n_epochs=16&shuffle_data=True&data_split=0.8&dropout_ratio=0&ac_fun=tanh&num_sensors=8&seed=None"
@@ -87,8 +89,9 @@ def get_data(subset, model_type, noise_experiment):
         trained_model_location = "../data/trained_models/LSTM/window_size=16&stride=2&n_nodes=256&alpha=0.05&decay=1e-09&n_epochs=16&shuffle_data=True&data_split=0.8&dropout_ratio=0&ac_fun=tanh&num_sensors=8&seed=None"
         train_location = f"../data/simulation_data/{subset}/combined.npy"
 
-    settings = Settings.from_model_location(trained_model_location,
-                                            data_location=train_location)
+    settings = Settings.from_model_location(
+        trained_model_location, data_location=train_location
+    )
 
     settings.shuffle_data = True
     settings.num_sensors = 8
@@ -100,34 +103,27 @@ def get_data(subset, model_type, noise_experiment):
     if model_type != "LSTM":
         # return main(subset, model_type)
         if noise_experiment:
-            x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
-                                                                            0:3]
-            x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:,
-                                                                            0:3]
+            x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
         else:
-            x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
-                                                                            0:3]
-            x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:,
-                                                                            0:3]
+            x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
     else:
         if noise_experiment:
-            x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
-                                                                            0:3]
-            x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
-                                                                            0:3]
+            x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:, 0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:, 0:3]
         else:
-            x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
-                                                                            0:3]
-            x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
-                                                                            0:3]
+            x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:, 0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:, 0:3]
 
         x_pred = x_pred.reshape(25, -1, 3)
         x_data = x_data.reshape(25, -1, 3)
-        x_data = x_data[:, :x_pred.shape[1], :]
+        x_data = x_data[:, : x_pred.shape[1], :]
         x_pred = x_pred.reshape(-1, 3)
         x_data = x_data.reshape(-1, 3)
 
     return data, x_data, x_pred
+
 
 def main(subset, models, info_type, noise_experiment):
 
@@ -164,7 +160,6 @@ def main(subset, models, info_type, noise_experiment):
         # Add errors to dictionary
         model_error[model_type] = errors
 
-
     krus_result = kruskal(*model_error.values())
     print(krus_result)
 
@@ -176,7 +171,7 @@ def main(subset, models, info_type, noise_experiment):
         print(f"LSTM vs PINN: {pinn_lstm_result}")
         print(f"LSTM vs INN: {inn_lstm_result}")
         print(f"PINN vs INN: {inn_pinn_result}")
-    
+
 
 def start_plotting(noise_experiment):
     models = ["INN", "PINN", "LSTM"]
@@ -187,12 +182,19 @@ def start_plotting(noise_experiment):
 
     if noise_experiment:
         subsets = [
-            "low_noise_parallel", "high_noise_parallel",
-            "low_noise_saw", "high_noise_saw",
+            "low_noise_parallel",
+            "high_noise_parallel",
+            "low_noise_saw",
+            "high_noise_saw",
         ]
     else:
         subsets = [
-                "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+            "offset",
+            "offset_inverse",
+            "mult_path",
+            "parallel",
+            "far_off_parallel",
+            "sine",
         ]
         # subsets = ["sine"]
     # models = ["LSTM"]
@@ -204,6 +206,7 @@ def start_plotting(noise_experiment):
             print(f"Subset: {subset} | Info: {info}")
             main(subset, models, info, noise_experiment)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     start_plotting(False)
     start_plotting(True)

@@ -2,7 +2,7 @@ import os
 import sys
 
 if __name__ == "__main__":
-    sys.path.insert(1, os.path.join(sys.path[0], '..'))
+    sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import argparse
 import glob
@@ -26,8 +26,7 @@ def find_files(folder_path: str):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description=
-        "Simulation program that 'moves' a sphere through water and measures the movement of the water at discrete locations (i.e. at the sensor locations). The water movement is described using the velocity profiles, which are derivatives of the Velocity Potential function."
+        description="Simulation program that 'moves' a sphere through water and measures the movement of the water at discrete locations (i.e. at the sensor locations). The water movement is described using the velocity profiles, which are derivatives of the Velocity Potential function."
     )
 
     parser.add_argument("--combined", action="store_true")
@@ -36,14 +35,16 @@ def parse_args():
         "--input-dir",
         type=Path,
         default="../../data/simulation_data/",
-        help="Folder where the results of the simulation were stored.")
+        help="Folder where the results of the simulation were stored.",
+    )
 
-    parser.add_argument("--logging-level",
-                        help=("Provide logging level. "
-                              "Example --log debug', default='info'"),
-                        choices=LOGGING_LEVELS.keys(),
-                        default="info",
-                        type=str.lower)
+    parser.add_argument(
+        "--logging-level",
+        help=("Provide logging level. " "Example --log debug', default='info'"),
+        choices=LOGGING_LEVELS.keys(),
+        default="info",
+        type=str.lower,
+    )
 
     return parser.parse_args()
 
@@ -69,19 +70,23 @@ def main():
     if args.combined:
         current_filename = os.path.splitext(base_names.pop(0))
         all_data = np.load(current_filename[0] + current_filename[1])[:, :1020, :]
-        all_labels = np.load(f"{current_filename[0][0:-5]}_labels{current_filename[-1]}")[:, :1020, :]
+        all_labels = np.load(
+            f"{current_filename[0][0:-5]}_labels{current_filename[-1]}"
+        )[:, :1020, :]
         all_timestamp = np.load(
-            f"{current_filename[0][0:-5]}_timestamp{current_filename[-1]}")[:, :1020, :]
+            f"{current_filename[0][0:-5]}_timestamp{current_filename[-1]}"
+        )[:, :1020, :]
         all_volumes = np.load(
-            f"{current_filename[0][0:-5]}_volumes{current_filename[-1]}")
+            f"{current_filename[0][0:-5]}_volumes{current_filename[-1]}"
+        )
     else:
         current_filename = os.path.splitext(base_names.pop(0))
         all_data = np.load(current_filename[0] + current_filename[1])
         all_labels = np.load(f"{current_filename[0]}_labels{current_filename[-1]}")
         all_timestamp = np.load(
-            f"{current_filename[0]}_timestamp{current_filename[-1]}")
-        all_volumes = np.load(
-            f"{current_filename[0]}_volumes{current_filename[-1]}")
+            f"{current_filename[0]}_timestamp{current_filename[-1]}"
+        )
+        all_volumes = np.load(f"{current_filename[0]}_volumes{current_filename[-1]}")
 
     # For each data found, add it to the total runs
     for name in base_names:
@@ -89,7 +94,9 @@ def main():
         if args.combined:
             data = np.load(name)[:, :1020, :]
             labels = np.load(f"{base_name[0][0:-5]}_labels{base_name[-1]}")[:, :1020, :]
-            timestamp = np.load(f"{base_name[0][0:-5]}_timestamp{base_name[-1]}")[:, :1020, :]
+            timestamp = np.load(f"{base_name[0][0:-5]}_timestamp{base_name[-1]}")[
+                :, :1020, :
+            ]
             volume = np.load(f"{base_name[0][0:-5]}_volumes{base_name[-1]}")
         else:
             data = np.load(name)
@@ -120,15 +127,14 @@ def main():
     result_filename = "combined"
     result_ext = "npy"
     log.info(
-        f"Saving to {result_filename}_(..., labels, timestamp, volumes).{result_ext}")
+        f"Saving to {result_filename}_(..., labels, timestamp, volumes).{result_ext}"
+    )
 
     np.save(f"{folder_path}/{result_filename}.{result_ext}", all_data)
     np.save(f"{folder_path}/{result_filename}_labels.{result_ext}", all_labels)
-    np.save(f"{folder_path}/{result_filename}_timestamp.{result_ext}",
-            all_timestamp)
-    np.save(f"{folder_path}/{result_filename}_volumes.{result_ext}",
-            all_volumes)
+    np.save(f"{folder_path}/{result_filename}_timestamp.{result_ext}", all_timestamp)
+    np.save(f"{folder_path}/{result_filename}_volumes.{result_ext}", all_volumes)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -14,9 +14,9 @@ from tensorflow.keras.utils import plot_model
 from tensorflow.keras.callbacks import EarlyStopping
 from tqdm import tqdm
 
-if os.environ.get('DISPLAY', '') == '':
-    print('no display found. Using non-interactive Agg backend')
-    mpl.use('Agg')
+if os.environ.get("DISPLAY", "") == "":
+    print("no display found. Using non-interactive Agg backend")
+    mpl.use("Agg")
 import matplotlib.pyplot as plt
 
 """
@@ -36,6 +36,7 @@ class LSTM_network:
     - saves data, settings, start time and settings as data
       members of the LSTM class, and initializes the network
     """
+
     def __init__(self, data, settings):
         self.data = data
         self.settings = settings
@@ -68,18 +69,19 @@ class LSTM_network:
         model = Sequential()
         # with an LSTM layer
         model.add(
-            LSTM(n_nodes,
-                 input_shape=(win_size, n_inputs),
-                 activation=self.activation))
+            LSTM(n_nodes, input_shape=(win_size, n_inputs), activation=self.activation)
+        )
         # and a dropout layer (which only does something if dropout > 0).
         model.add(Dropout(dropout))
         # Finally we have a fully connected layer with 2 to 3 nodes - the x and y positions and an angle
-        model.add(Dense(n_outputs, activation='linear'))
+        model.add(Dense(n_outputs, activation="linear"))
         # Compile the model with euclidean error and adace
-        optimizer = optimizers.Adagrad(learning_rate=alpha,
-                                    #    epsilon=None,
-                                       weight_decay=decay,
-                                       clipnorm=1.)
+        optimizer = optimizers.Adagrad(
+            learning_rate=alpha,
+            #    epsilon=None,
+            weight_decay=decay,
+            clipnorm=1.0,
+        )
         model.compile(loss=losses.MeanSquaredError(), optimizer=optimizer)
         # model.compile(loss=self.__euclidean_error_loss, optimizer=optimizer)
         # Return the resulting model
@@ -120,14 +122,15 @@ class LSTM_network:
         early_stopping_callback = EarlyStopping(patience=3, restore_best_weights=True)
 
         # Train the model
-        self.hist = self.model.fit( \
-                                    self.__generator(train_dat, train_lab, window_size, stride), \
-                                    steps_per_epoch = train_steps, \
-                                    epochs = epochs, \
-                                    verbose = 1, \
-                                    callbacks=[early_stopping_callback], \
-                                    validation_data = self.__generator(val_dat, val_labels, window_size, stride), \
-                                    validation_steps = val_steps)
+        self.hist = self.model.fit(
+            self.__generator(train_dat, train_lab, window_size, stride),
+            steps_per_epoch=train_steps,
+            epochs=epochs,
+            verbose=1,
+            callbacks=[early_stopping_callback],
+            validation_data=self.__generator(val_dat, val_labels, window_size, stride),
+            validation_steps=val_steps,
+        )
 
         print("Completed training network.")
 
@@ -140,10 +143,10 @@ class LSTM_network:
     - automatically plots network prediction vs actual source locations.
     - test() always tests with a stride of 1.
     """
+
     def test(self, data, labels, dirname=None, num_runs=0):
 
         # assert len(labels) >= num_runs, "Not enough runs were provided to the LSTM test function"
-
 
         # TODO: Check that network is trained
         print("Testing network...")
@@ -151,10 +154,26 @@ class LSTM_network:
 
         if dirname is None:
             # Create directory for test results
-            dirname = "../results/" + self.init_time + "_" + str(self.settings.n_nodes) + "_" + str(self.settings.n_epochs) \
-                + "_" + str(self.settings.window_size) + "_" + str(self.settings.stride) + "_" + str(self.settings.alpha) \
-                + "_" + str(self.settings.decay) + "_" + str(self.settings.data_split) \
-                + "_" + str(self.settings.dropout_ratio)
+            dirname = (
+                "../results/"
+                + self.init_time
+                + "_"
+                + str(self.settings.n_nodes)
+                + "_"
+                + str(self.settings.n_epochs)
+                + "_"
+                + str(self.settings.window_size)
+                + "_"
+                + str(self.settings.stride)
+                + "_"
+                + str(self.settings.alpha)
+                + "_"
+                + str(self.settings.decay)
+                + "_"
+                + str(self.settings.data_split)
+                + "_"
+                + str(self.settings.dropout_ratio)
+            )
 
         if not os.path.isdir(dirname):
             os.mkdir(dirname)
@@ -174,15 +193,14 @@ class LSTM_network:
             y_pred = np.zeros((0, self.data.n_outputs))
             y_true = np.zeros((0, self.data.n_outputs))
             for idx in range(0, len(data[lab_idx]) - win_size + 1):
-                dat = data[lab_idx][idx:idx + win_size]
+                dat = data[lab_idx][idx : idx + win_size]
                 if np.shape(dat) != (win_size, self.data.n_inputs):
                     print("ERROR: invalid size: ", np.shape(dat))
                 else:
                     dat = np.reshape(dat, (1, win_size, self.data.n_inputs))
 
                     test_result = self.model.predict(dat, verbose=0)[0]
-                    true_label = labels[lab_idx][idx + win_size - 1:idx +
-                                                 win_size][0]
+                    true_label = labels[lab_idx][idx + win_size - 1 : idx + win_size][0]
 
                     y_pred = np.vstack((y_pred, test_result))
                     y_true = np.vstack((y_true, true_label))
@@ -237,14 +255,23 @@ class LSTM_network:
                         batch_idx = 0
                     batch_idx += 1
                     x = np.vstack(
-                        (x,
-                         np.reshape(sample[idx:idx + window_size],
-                                    (1, window_size, self.data.n_inputs))))
-                    y = np.vstack((y,
-                                   np.reshape(
-                                       sample_lab[idx + window_size - 1:idx +
-                                                  window_size],
-                                       (1, self.data.n_outputs))))
+                        (
+                            x,
+                            np.reshape(
+                                sample[idx : idx + window_size],
+                                (1, window_size, self.data.n_inputs),
+                            ),
+                        )
+                    )
+                    y = np.vstack(
+                        (
+                            y,
+                            np.reshape(
+                                sample_lab[idx + window_size - 1 : idx + window_size],
+                                (1, self.data.n_outputs),
+                            ),
+                        )
+                    )
                 yield (x, y)
 
     """
@@ -276,16 +303,16 @@ class LSTM_network:
     """
 
     def save_model(self, model_location):
+        """
+        Saves the trained model to the specified location.
+        """
         print("\nSaving model...")
-        isExist = os.path.exists(model_location)
-        if not isExist:
-            # Create a new directory because it does not exist
-            os.makedirs(model_location)
-
-        self.model.save(model_location)
+        # The model directory is already created in the main script.
+        # The model is saved in the Keras 3 native format.
+        self.model.save(f"{model_location}.keras")
 
         # TODO: Load hist at some point
-        np.save(model_location + "/loss_history.npy", self.hist)
+        np.save(f"{model_location}_loss_history.npy", self.hist)
 
     """
     LSTM_network::save_results()
@@ -299,42 +326,58 @@ class LSTM_network:
 
         if dirname is None:
             # determine directory name based on time of program start and settings
-            dirname = "../results/" + self.init_time + "_" + str(self.settings.n_nodes) + "_" + str(self.settings.n_epochs) \
-                + "_" + str(self.settings.window_size) + "_" + str(self.settings.stride) + "_" + str(self.settings.alpha) \
-                + "_" + str(self.settings.decay) + "_" + str(self.settings.data_split) \
-                + "_" + str(self.settings.dropout_ratio)
+            dirname = (
+                "../results/"
+                + self.init_time
+                + "_"
+                + str(self.settings.n_nodes)
+                + "_"
+                + str(self.settings.n_epochs)
+                + "_"
+                + str(self.settings.window_size)
+                + "_"
+                + str(self.settings.stride)
+                + "_"
+                + str(self.settings.alpha)
+                + "_"
+                + str(self.settings.decay)
+                + "_"
+                + str(self.settings.data_split)
+                + "_"
+                + str(self.settings.dropout_ratio)
+            )
 
         # only create the directory if it does not yet exist
         if not os.path.isdir(dirname):
             os.mkdir(dirname)
 
         # calculate how long running the program (training + testing) took
-        total_duration = (dt.datetime.now() - self.raw_time)
+        total_duration = dt.datetime.now() - self.raw_time
 
         # create and save plot of model training loss/validation loss over epochs
         # plt.plot(self.hist.history['loss'])
         # plt.plot(self.hist.history['val_loss'])
-        plt.title('model loss')
-        plt.ylabel('loss')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-        plt.savefig(dirname + "/" + 'loss.png')
+        plt.title("model loss")
+        plt.ylabel("loss")
+        plt.xlabel("epoch")
+        plt.legend(["train", "test"], loc="upper left")
+        plt.savefig(dirname + "/" + "loss.png")
 
         # create and save the used settings/parameters
         file = open(dirname + "/" + "parameters.txt", "w")
-        file.write("Number of Nodes: " + str(self.settings.n_nodes) + '\n')
-        file.write("Max epochs: " + str(self.settings.n_epochs) + '\n')
-        file.write("Window Size: " + str(self.settings.window_size) + '\n')
-        file.write("Stride: " + str(self.settings.stride) + '\n')
-        file.write("Learning Rate: " + str(self.settings.alpha) + '\n')
-        file.write("Number of Sensors: " + str(self.data.n_inputs) + '\n')
-        file.write("Training sequences: " + str(self.data.n_datapoints) + '\n')
-        file.write("Decay: " + str(self.settings.decay) + '\n')
-        file.write("Dropout Ratio: " + str(self.settings.dropout_ratio) + '\n')
-        file.write("Total duration: " + str(total_duration) + '\n')
-        file.write("Test error mean: " + str(np.mean(self.errors)) + '\n')
-        file.write("Test error std:  " + str(np.std(self.errors)) + '\n')
-        file.write("File location: " + self.settings.train_location + '\n')
+        file.write("Number of Nodes: " + str(self.settings.n_nodes) + "\n")
+        file.write("Max epochs: " + str(self.settings.n_epochs) + "\n")
+        file.write("Window Size: " + str(self.settings.window_size) + "\n")
+        file.write("Stride: " + str(self.settings.stride) + "\n")
+        file.write("Learning Rate: " + str(self.settings.alpha) + "\n")
+        file.write("Number of Sensors: " + str(self.data.n_inputs) + "\n")
+        file.write("Training sequences: " + str(self.data.n_datapoints) + "\n")
+        file.write("Decay: " + str(self.settings.decay) + "\n")
+        file.write("Dropout Ratio: " + str(self.settings.dropout_ratio) + "\n")
+        file.write("Total duration: " + str(total_duration) + "\n")
+        file.write("Test error mean: " + str(np.mean(self.errors)) + "\n")
+        file.write("Test error std:  " + str(np.std(self.errors)) + "\n")
+        file.write("File location: " + self.settings.train_location + "\n")
         file.close()
 
         # np.savetxt(dirname + "/" + "train_loss.out", self.hist.history['loss'])

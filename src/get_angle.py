@@ -1,5 +1,6 @@
 if __name__ == "__main__":
     import sys
+
     sys.path.append("..")
 
 import os
@@ -8,7 +9,7 @@ import json
 import sys
 
 if __name__ == "__main__":
-    sys.path.insert(1, os.path.join(sys.path[0], '..'))
+    sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import numpy as np
 import tensorflow as tf
@@ -20,9 +21,10 @@ from tqdm import tqdm
 from sklearn.metrics import mean_squared_error
 
 from matplotlib import rc
-#rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
-rc('font',**{'family':'serif','serif':['Times']})
-rc('text', usetex=True)
+
+# rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+rc("font", **{"family": "serif", "serif": ["Times"]})
+rc("text", usetex=True)
 
 np.random.seed(42)
 
@@ -33,7 +35,7 @@ def get_angle_from_data(data, labels, model, window_size=16, num_sensors=8):
     angles = []
     real_angles = []
     for idx in range(0, 1024, window_size * 8):
-        input_data = data[idx:idx + window_size]
+        input_data = data[idx : idx + window_size]
         input_data = np.reshape(input_data, (1, window_size, num_sensors * 2))
         y_pred = model.predict(input_data, verbose=0)
         x_label = labels[idx][2]
@@ -42,6 +44,7 @@ def get_angle_from_data(data, labels, model, window_size=16, num_sensors=8):
         real_angles.append(x_label)
 
     return np.mean(angles), np.mean(real_angles)
+
 
 def create_flat_histogram(x_pred, x_label, idxes, model_type):
     # if the model type is LSTM, then we can only go to 1000
@@ -61,12 +64,16 @@ def create_flat_histogram(x_pred, x_label, idxes, model_type):
 
     return flat_x, flat_y
 
+
 def save_results(x_pred, x_data, model_type, subset, name, MSE, MSE_std):
     cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
-        "", ["#FFFFFF00", "#E76F51AA", "#E76F51DD", "#E76F51EE", "#E76F51FF"])
+        "", ["#FFFFFF00", "#E76F51AA", "#E76F51DD", "#E76F51EE", "#E76F51FF"]
+    )
     idxes = np.asarray(x_data[:1000, 2] < 40).nonzero()[0]
 
-    fig, (ax, ax1) = plt.subplots(2, 1, figsize=(8, 8), gridspec_kw={'height_ratios': [3, 1]})
+    fig, (ax, ax1) = plt.subplots(
+        2, 1, figsize=(8, 8), gridspec_kw={"height_ratios": [3, 1]}
+    )
 
     ax.set_ylim((-25, 25))
     ax.set_xlim((-500, 500))
@@ -91,23 +98,25 @@ def save_results(x_pred, x_data, model_type, subset, name, MSE, MSE_std):
     #         MSE += 0.0235
     #         MSE_std += 0.31
 
-    ax.plot(x_data[idxes, 0],
-             x_data[idxes, 2],
-             color='#2A9D8F',
-             linestyle='solid',
-             label="Real",
-             linewidth=1,
-             alpha=1)
+    ax.plot(
+        x_data[idxes, 0],
+        x_data[idxes, 2],
+        color="#2A9D8F",
+        linestyle="solid",
+        label="Real",
+        linewidth=1,
+        alpha=1,
+    )
 
-
-    ax.scatter(x_pred[:, 0],
-               x_pred[:, 2],
-            #    bins=(128, 128),
-               label="Predicted",
-               c='#E76F51FF',
-                s=1,
-            #    cmap=cmap
-               )
+    ax.scatter(
+        x_pred[:, 0],
+        x_pred[:, 2],
+        #    bins=(128, 128),
+        label="Predicted",
+        c="#E76F51FF",
+        s=1,
+        #    cmap=cmap
+    )
 
     ax.set_ylim((-25, 25))
     ax.set_xlim((-500, 500))
@@ -119,30 +128,37 @@ def save_results(x_pred, x_data, model_type, subset, name, MSE, MSE_std):
     )
     # plt.grid(axis='y', linestyle='--', color="#2646533F", linewidth=0.4)
 
-    ax.tick_params(axis='x', which='major', bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
+    ax.tick_params(
+        axis="x",
+        which="major",
+        bottom=False,
+        top=False,
+        left=False,
+        right=False,
+        labelbottom=False,
+        labelleft=False,
+    )
     ax.set_ylabel("Angle (degrees)")
-    ax.set_xticks(np.arange(-500, 500+100, step=100))
-    ax.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
-    ax.grid(axis='x', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
+    ax.set_xticks(np.arange(-500, 500 + 100, step=100))
+    ax.grid(axis="y", linestyle="-", color="#AAAAAA", linewidth=1.0, alpha=0.5)
+    ax.grid(axis="x", linestyle="-", color="#AAAAAA", linewidth=1.0, alpha=0.5)
     # MSE = np.square(np.subtract(real_angles, angles)).mean()
     # plt.text(0, 60, f"MSE: {MSE:.2f} degrees")
 
-    ax.legend(loc="best", bbox_to_anchor=(0.6, 0., 0.4, 1.0) )
+    ax.legend(loc="best", bbox_to_anchor=(0.6, 0.0, 0.4, 1.0))
     # plt.show()
 
-    ax1.plot(np.linspace(-500, 500, num=1024),
-             np.zeros((1024,)),
-             color='#2A9D8F',
-             linestyle='solid',
-             label="Real",
-             linewidth=1,
-             alpha=1.)
-    flat_x, flat_y = create_flat_histogram(x_pred,x_data,idxes, model_type)
-    ax1.hist2d(flat_x,
-               flat_y,
-               bins=(128, 128),
-               label="Predicted",
-               cmap=cmap)
+    ax1.plot(
+        np.linspace(-500, 500, num=1024),
+        np.zeros((1024,)),
+        color="#2A9D8F",
+        linestyle="solid",
+        label="Real",
+        linewidth=1,
+        alpha=1.0,
+    )
+    flat_x, flat_y = create_flat_histogram(x_pred, x_data, idxes, model_type)
+    ax1.hist2d(flat_x, flat_y, bins=(128, 128), label="Predicted", cmap=cmap)
 
     mean_y = np.mean(flat_y)
     std_y = np.std(flat_y)
@@ -158,7 +174,6 @@ def save_results(x_pred, x_data, model_type, subset, name, MSE, MSE_std):
     #          linewidth=1,
     #          alpha=1)
 
-
     # ax1.hist2d(x_pred[:, 0],
     #            x_pred[:, 2],
     #            bins=(128, 128),
@@ -169,28 +184,44 @@ def save_results(x_pred, x_data, model_type, subset, name, MSE, MSE_std):
     # ax1.set_ylim((min_real - 1, max_real + 1))
     ax1.set_xlim((-500, 500))
     ax1.set_xlabel("s (mm)")
-    ax1.tick_params(axis='both', which='both', bottom=False, top=False, left=True, right=False, labelbottom=True, labelleft=True)
-    ax1.set_xticks(np.arange(-500, 500+100, step=100))
-    ax1.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
-    ax1.grid(axis='x', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
+    ax1.tick_params(
+        axis="both",
+        which="both",
+        bottom=False,
+        top=False,
+        left=True,
+        right=False,
+        labelbottom=True,
+        labelleft=True,
+    )
+    ax1.set_xticks(np.arange(-500, 500 + 100, step=100))
+    ax1.grid(axis="y", linestyle="-", color="#AAAAAA", linewidth=1.0, alpha=0.5)
+    ax1.grid(axis="x", linestyle="-", color="#AAAAAA", linewidth=1.0, alpha=0.5)
     # plt.show()
     # exit()
 
-    plt.savefig(f"../results/angle_{model_type}_{name}.png", bbox_inches="tight", dpi=600, transparent=True, pad_inches=0.1)
+    plt.savefig(
+        f"../results/angle_{model_type}_{name}.png",
+        bbox_inches="tight",
+        dpi=600,
+        transparent=True,
+        pad_inches=0.1,
+    )
     plt.close()
 
     # Get result data
     results = {}
     results[f"combined"] = (float(MSE), float(MSE_std))
 
-    with open(f"../results/angle_{model_type}_{name}_results.json",
-              "w") as write_file:
+    with open(f"../results/angle_{model_type}_{name}_results.json", "w") as write_file:
         json.dump(results, write_file, indent=4)
+
 
 def find_min_and_max(data):
     min_value = np.min(data)
     max_value = np.max(data)
     return min_value, max_value
+
 
 def retrieve_angle(subset, model_type):
     actual_name = subset
@@ -199,26 +230,27 @@ def retrieve_angle(subset, model_type):
     #         subset = "mult_path"
     if model_type != "LSTM":
         # return main(subset, model_type)
-        x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
-                                                                           0:3]
-        x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:,
-                                                                           0:3]
+        x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
+        x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
     else:
-        x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
-                                                                           0:3]
-        x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
-                                                                           0:3]
+        x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:, 0:3]
+        x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:, 0:3]
 
         x_pred = x_pred.reshape(25, -1, 3)
         x_data = x_data.reshape(25, -1, 3)
-        x_data = x_data[:, :x_pred.shape[1], :]
+        x_data = x_data[:, : x_pred.shape[1], :]
         # x_pred = x_pred.reshape(-1, 3)
         # x_data = x_data.reshape(-1, 3)
 
     x_pred = x_pred.reshape(25, -1, 3)
     x_data = x_data.reshape(25, -1, 3)
 
-    errors = np.array([mean_squared_error(x_data[x, :, 2], x_pred[x, :, 2], squared=False) for x in range(x_data.shape[0])])
+    errors = np.array(
+        [
+            mean_squared_error(x_data[x, :, 2], x_pred[x, :, 2], squared=False)
+            for x in range(x_data.shape[0])
+        ]
+    )
     print(errors[errors < 0])
 
     MSE = np.mean(errors)
@@ -230,7 +262,6 @@ def retrieve_angle(subset, model_type):
     if model_type != "LSTM":
         MSE += 2
         MSE_std += 1.5948 + np.random.normal(-0.5, 0.8)
-
 
     print(f"{MSE} ({MSE_std}) {'<---' if MSE_std > MSE else ''}")
 
@@ -253,19 +284,26 @@ def retrieve_angle(subset, model_type):
     # plt.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     noise_experiment = False
     # models = ["LSTM"]
     models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]
     if noise_experiment:
         subsets = [
-            "low_noise_parallel", "high_noise_parallel",
-            "low_noise_saw", "high_noise_saw",
+            "low_noise_parallel",
+            "high_noise_parallel",
+            "low_noise_saw",
+            "high_noise_saw",
         ]
     else:
         subsets = [
-                "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+            "offset",
+            "offset_inverse",
+            "mult_path",
+            "parallel",
+            "far_off_parallel",
+            "sine",
         ]
         # subsets = ["mult_path"]
     for model in models:

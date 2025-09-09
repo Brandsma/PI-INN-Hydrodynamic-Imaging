@@ -1,5 +1,6 @@
-if __name__=="__main__":
+if __name__ == "__main__":
     import sys
+
     sys.path.append("..")
 
 # Use modules to keep code organized
@@ -30,8 +31,7 @@ def main(a, w, new_model):
     train_location = train_loc
 
     # Load settings
-    settings = params.Settings.from_model_location(model_location,
-                                                   train_location)
+    settings = params.Settings.from_model_location(model_location, train_location)
     # Load data
     data = params.Data(settings, train_location)
 
@@ -41,9 +41,7 @@ def main(a, w, new_model):
     network.model = new_model
 
     # Test the network
-    network.test(data.test_data,
-                 data.test_labels,
-                 dirname=f"../results/a{a}_w{w}")
+    network.test(data.test_data, data.test_labels, dirname=f"../results/a{a}_w{w}")
     # Save results
     network.save_results(dirname=f"../results/a{a}_w{w}")
 

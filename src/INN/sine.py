@@ -5,24 +5,27 @@ from matplotlib import pyplot as plt
 
 from sklearn.model_selection import train_test_split
 
+
 def solution(x):
     return np.sin(np.pi * x)
 
+
 def solution_derivative(x):
     return np.cos(np.pi * x)
+
 
 def setup_data(shuffle_data=True):
     ## SETUP DATA ##
     data = np.linspace(-1, 1, num=2048).reshape((-1, 1))
     # labels = np.linspace(1, -1, num=2048).reshape((-1, 1))
-    labels = solution(data).reshape((-1,1))
-    polarity = np.array([1] * 1024 + [-1] * 1024).reshape((-1,1))
-    delta_labels = solution_derivative(data).reshape((-1,1))
-    labels = np.hstack((labels,polarity,delta_labels))
+    labels = solution(data).reshape((-1, 1))
+    polarity = np.array([1] * 1024 + [-1] * 1024).reshape((-1, 1))
+    delta_labels = solution_derivative(data).reshape((-1, 1))
+    labels = np.hstack((labels, polarity, delta_labels))
     # labels = np.hstack((labels,delta_labels))
 
-    data_noise = np.random.normal(0, .005, data.shape)
-    labels_noise = np.random.normal(0, .005, labels.shape)
+    data_noise = np.random.normal(0, 0.005, data.shape)
+    labels_noise = np.random.normal(0, 0.005, labels.shape)
 
     data = data + data_noise
     labels = labels + labels_noise
@@ -30,13 +33,16 @@ def setup_data(shuffle_data=True):
     labels = data
     data = labels
 
-    train_data, test_data, train_labels, test_labels = train_test_split(data, labels, test_size=0.2, shuffle=shuffle_data, random_state=42)
-
+    train_data, test_data, train_labels, test_labels = train_test_split(
+        data, labels, test_size=0.2, shuffle=shuffle_data, random_state=42
+    )
 
     return train_data, train_labels, test_data, test_labels
 
+
 def pde(s_xx, x):
-    return -s_xx - np.pi ** 2 * tf.sin(np.pi * x)
+    return -s_xx - np.pi**2 * tf.sin(np.pi * x)
+
 
 def interior_loss(model, x_data, x_dim, y_dim):
     # Physics informed loss
@@ -52,7 +58,7 @@ def interior_loss(model, x_data, x_dim, y_dim):
     # Jacobian calculation
     # NOTE: requires independence between batches (so no Batch Normalization can be applied)
     j = t2.batch_jacobian(grad, x_data)
-    s_xx = tf.reshape(j[:, :x_dim, :y_dim][:, 0, 0], (-1,1))
+    s_xx = tf.reshape(j[:, :x_dim, :y_dim][:, 0, 0], (-1, 1))
 
     # print(f"{vx_x.shape=} {vy_y.shape=}")
     # print(f"{x_data.shape=}")
@@ -64,6 +70,7 @@ def interior_loss(model, x_data, x_dim, y_dim):
     # Use the residuals of the PDE (anything other than zero is an error)
     return tf.math.reduce_mean(tf.math.square(pde_loss_output))
 
+
 def plot_results(x_data, x_pred, y_data, y_pred, title="IMAGE TITLE"):
     print("Showing figures...")
 
@@ -71,7 +78,9 @@ def plot_results(x_data, x_pred, y_data, y_pred, title="IMAGE TITLE"):
     plt.title(f"Backward Process - {title}")
     plt.plot(x_pred[:, 0], label="predicted")
     plt.plot(x_data[:, 0], label="label")
-    plt.xticks(np.linspace(0,2048, num=8), map(round, np.linspace(-1,1,num=8), [2] * 8))
+    plt.xticks(
+        np.linspace(0, 2048, num=8), map(round, np.linspace(-1, 1, num=8), [2] * 8)
+    )
     plt.xlabel("x")
     plt.ylabel("y")
     plt.legend()
@@ -87,7 +96,9 @@ def plot_results(x_data, x_pred, y_data, y_pred, title="IMAGE TITLE"):
     plt.plot(y_data[:, -2], label="label polarity")
     plt.plot(y_pred[:, -3], label="predicted value")
     plt.plot(y_data[:, -3], label="label value")
-    plt.xticks(np.linspace(0,2048, num=8), map(round, np.linspace(-1,1,num=8), [2] * 8))
+    plt.xticks(
+        np.linspace(0, 2048, num=8), map(round, np.linspace(-1, 1, num=8), [2] * 8)
+    )
     plt.xlabel("x")
     plt.ylabel("y")
     plt.legend()

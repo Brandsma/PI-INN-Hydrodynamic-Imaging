@@ -14,27 +14,38 @@ Settings class.
 
 
 class Settings:
-    def __init__(self, window_size, stride, n_nodes, alpha, decay, n_epochs,
-                 shuffle_data, data_split, dropout_ratio, train_location,
-                 ac_fun):
+    def __init__(
+        self,
+        window_size,
+        stride,
+        n_nodes,
+        alpha,
+        decay,
+        n_epochs,
+        shuffle_data,
+        data_split,
+        dropout_ratio,
+        train_location,
+        ac_fun,
+    ):
         # Window size
         self.window_size = window_size
         # Stride
         self.stride = min(stride, window_size)
         # # Number of hidden units in the LSTM layer
-        self.n_nodes = n_nodes  #50
+        self.n_nodes = n_nodes  # 50
         # Learning rate
-        self.alpha = alpha  #1e-4
+        self.alpha = alpha  # 1e-4
         # Learning rate decay per update
-        self.decay = decay  #0#1e-6
+        self.decay = decay  # 0#1e-6
         # Number of Epochs (total iterations over all data)
-        self.n_epochs = n_epochs  #30
+        self.n_epochs = n_epochs  # 30
         # Whether or not to shuffle the data
         self.shuffle_data = shuffle_data
         # Train-test split
-        self.data_split = data_split  #0.80
+        self.data_split = data_split  # 0.80
         # Dropout layer ratio
-        self.dropout_ratio = dropout_ratio  #0.20
+        self.dropout_ratio = dropout_ratio  # 0.20
         # Training file train_location
         self.train_location = train_location
         # Activation function used by LSTM.
@@ -60,7 +71,7 @@ class Settings:
     @classmethod
     def from_model_location(cls, folder_path, data_location=None):
         settings_folder = os.path.basename(os.path.normpath(folder_path))
-        setting_elements = [x.split(':') for x in settings_folder.split('&')]
+        setting_elements = [x.split(":") for x in settings_folder.split("&")]
         for elem in setting_elements:
             if is_int(elem[1]):
                 elem[1] = int(elem[1])
@@ -69,22 +80,28 @@ class Settings:
             elif is_boolean(elem[1]):
                 elem[1] = bool(elem[1])
 
-        return cls(setting_elements[0][1], setting_elements[1][1],
-                   setting_elements[2][1], setting_elements[3][1],
-                   setting_elements[4][1], setting_elements[5][1],
-                   setting_elements[6][1], setting_elements[7][1],
-                   setting_elements[8][1], data_location,
-                   setting_elements[9][1])
+        return cls(
+            setting_elements[0][1],
+            setting_elements[1][1],
+            setting_elements[2][1],
+            setting_elements[3][1],
+            setting_elements[4][1],
+            setting_elements[5][1],
+            setting_elements[6][1],
+            setting_elements[7][1],
+            setting_elements[8][1],
+            data_location,
+            setting_elements[9][1],
+        )
 
     @property
     def name(self):
         setting_values = self.__dict__
-        if 'train_location' in setting_values:
-            del setting_values['train_location']
-        if 'len_data' in setting_values:
-            del setting_values['len_data']
-        settings_name = "&".join(
-            [f"{k}:{setting_values[k]}" for k in setting_values])
+        if "train_location" in setting_values:
+            del setting_values["train_location"]
+        if "len_data" in setting_values:
+            del setting_values["len_data"]
+        settings_name = "&".join([f"{k}:{setting_values[k]}" for k in setting_values])
         return settings_name
 
     def __printSettings(self):
@@ -117,14 +134,16 @@ class Data:
     - extracts number of sensors and number of samples from data.
     - splits data in train and test split. ratio depends on the settings.
     """
+
     def __init__(self, settings, location):
         print("Loading dataset from " + location + "...")
 
         self.settings = settings
         # load data
         if os.path.splitext(location)[-1] == ".npy":
-            d_1, l_1, d_2, l_2, d_3, l_3, t_1, t_2, t_3, v_1, v_2, v_3 = self.__load_data_numpy(
-                location, settings.data_split)
+            d_1, l_1, d_2, l_2, d_3, l_3, t_1, t_2, t_3, v_1, v_2, v_3 = (
+                self.__load_data_numpy(location, settings.data_split)
+            )
         else:
             print(
                 f"Error, file extension {os.path.splitext(location[-1])} is unknown and cannot be loaded for data"
@@ -146,7 +165,6 @@ class Data:
         self.test_volumes = v_1
         self.val_volumes = v_2
         self.test_volumes = v_3
-
 
         # extract dimensionality and length of data.
         self.n_inputs = np.shape(self.train_data[0])[1]
@@ -172,10 +190,35 @@ class Data:
         volumes = np.load(f"{base_name[0]}_volumes{base_name[-1]}")
 
         # Split data into train, test and validation sets.
-        train_d, train_l, test_d, test_l, val_d, val_l, train_t, val_t, test_t, train_v, val_v, test_v = \
-            self.__split_data(data, labels, timestamp, volumes, split_ratio)
+        (
+            train_d,
+            train_l,
+            test_d,
+            test_l,
+            val_d,
+            val_l,
+            train_t,
+            val_t,
+            test_t,
+            train_v,
+            val_v,
+            test_v,
+        ) = self.__split_data(data, labels, timestamp, volumes, split_ratio)
 
-        return train_d, train_l, test_d, test_l, val_d, val_l, train_t, val_t, test_t, train_v, val_v, test_v
+        return (
+            train_d,
+            train_l,
+            test_d,
+            test_l,
+            val_d,
+            val_l,
+            train_t,
+            val_t,
+            test_t,
+            train_v,
+            val_v,
+            test_v,
+        )
 
     """
     Data::__split_data(data, labels, train_test_ratio):
@@ -216,16 +259,25 @@ class Data:
         val_volumes = volumes[perm[train_idx:val_idx]]
         test_volumes = volumes[perm[val_idx:test_idx]]
 
-        return (train_data, train_labels, test_data, test_labels, val_data,
-                val_labels, train_timestamp, val_timestamp, test_timestamp, train_volumes, val_volumes, test_volumes)
+        return (
+            train_data,
+            train_labels,
+            test_data,
+            test_labels,
+            val_data,
+            val_labels,
+            train_timestamp,
+            val_timestamp,
+            test_timestamp,
+            train_volumes,
+            val_volumes,
+            test_volumes,
+        )
 
     def normalize(self):
         for run_idx in range(self.train_data.shape[0]):
-            self.train_data[run_idx, :, :] = normalize(
-                self.train_data[run_idx, :, :])
+            self.train_data[run_idx, :, :] = normalize(self.train_data[run_idx, :, :])
         for run_idx in range(self.test_data.shape[0]):
-            self.test_data[run_idx, :, :] = normalize(
-                self.test_data[run_idx, :, :])
+            self.test_data[run_idx, :, :] = normalize(self.test_data[run_idx, :, :])
         for run_idx in range(self.val_data.shape[0]):
-            self.val_data[run_idx, :, :] = normalize(
-                self.val_data[run_idx, :, :])
+            self.val_data[run_idx, :, :] = normalize(self.val_data[run_idx, :, :])
