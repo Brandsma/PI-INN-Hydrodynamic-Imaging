@@ -1,9 +1,15 @@
 from typing import Callable
 import pickle
 from dataclasses import dataclass
+import os
+import sys
 
 import tensorflow as tf
-from .flow import NVP
+
+# Add the parent directory to the path to enable absolute imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from INN.flow import NVP
 
 
 @dataclass

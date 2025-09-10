@@ -4,9 +4,15 @@ transformations, also known as RealNVP. The implementation is based on the paper
 by Dinh et al. (2017) and Ardizzone et al. (2018).
 """
 from typing import Tuple
+import os
+import sys
 
 import tensorflow as tf
-from .utils import *
+
+# Add the parent directory to the path to enable absolute imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from INN.utils import *
 
 
 class NN(tf.keras.layers.Layer):

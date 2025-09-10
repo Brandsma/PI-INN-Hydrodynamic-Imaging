@@ -1,9 +1,14 @@
 import tensorflow as tf
 import numpy as np
+import os
+import sys
 from typing import Callable, Dict
 
-from .flow import *
-from .utils import *
+# Add the parent directory to the path to enable absolute imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from INN.flow import *
+from INN.utils import *
 
 from matplotlib import pyplot as plt
 

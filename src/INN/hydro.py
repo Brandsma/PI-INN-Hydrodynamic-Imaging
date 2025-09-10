@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import os
+import sys
 
 from matplotlib import pyplot as plt
 import matplotlib.tri as tri
@@ -8,7 +9,10 @@ from matplotlib.colors import LinearSegmentedColormap
 
 from sklearn.model_selection import train_test_split
 
-from ..lib import params
+# Add the parent directory to the path to enable absolute imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from lib import params
 
 
 def add_noise(train_data, train_labels, test_data, test_labels, run, use_pde=False):

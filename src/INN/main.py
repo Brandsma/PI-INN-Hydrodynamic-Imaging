@@ -1,19 +1,18 @@
-import matplotlib.pyplot as plt
+import os
+import sys
+
 import numpy as np
 import tensorflow as tf
-from .data import get_data, DataType
 
-from .inn import create_model, INNConfig
+# Add the parent directory to the path to enable absolute imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from . import sine
-from . import hydro
-
-from .flow import *
-from .utils import *
-from .trainer import Trainer
-
-
-import os
+from INN import hydro
+from INN.data import DataType, get_data
+from INN.flow import *
+from INN.inn import INNConfig, create_model
+from INN.trainer import Trainer
+from INN.utils import *
 
 
 def run_inn(
@@ -25,13 +24,13 @@ def run_inn(
     datatype: DataType = DataType.Hydro,
     subset: str = "offset",
     num_sensors: int = 8,
-            noise_experiment: bool = False,
-            model_dir: str = "trained_models",
+    noise_experiment: bool = False,
+    model_dir: str = "trained_models",
 ):
-    """
-    Runs the training and evaluation of the INN/PINN model.
+    """Runs the training and evaluation of the INN/PINN model.
 
     Args:
+    ----
         given_data: The input data for the model.
         given_labels: The labels for the model.
         config: The configuration object for the INN.
@@ -41,6 +40,7 @@ def run_inn(
         subset: The subset of the data to use.
         num_sensors: The number of sensors used in the data.
         noise_experiment: A flag to indicate if this is a noise experiment.
+
     """
     n_couple_layer = config.n_couple_layer
     n_hid_layer = config.n_hid_layer
@@ -155,7 +155,9 @@ def run_inn(
     # Make the folder if it does not exist
     model_type = "INNPINN" if pde_loss_func else "INN"
     noise_str = "noise/" if noise_experiment else ""
-    save_model_path = f"{model_dir}/{noise_str}{model_type}/{subset}_sensors{num_sensors}"
+    save_model_path = (
+        f"{model_dir}/{noise_str}{model_type}/{subset}_sensors{num_sensors}"
+    )
 
     os.makedirs(save_model_path, exist_ok=True)
 
@@ -225,7 +227,8 @@ def simple_run(
 
 
 if __name__ == "__main__":
+    print("Starting INN run...")
     # gridsearch_z_dim()
     # gridsearch_nn_architecture()
-    simple_run(DataType.Hydro, use_pde=False)
+    simple_run(DataType.Sine, use_pde=False)
     # simple_run_repeated()

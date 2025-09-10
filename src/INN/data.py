@@ -1,9 +1,14 @@
 import numpy as np
 from typing import Tuple
 from enum import Enum
+import os
+import sys
 
-from . import sine
-from . import hydro
+# Add the parent directory to the path to enable absolute imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from INN import sine
+from INN import hydro
 
 
 class DataType(Enum):
