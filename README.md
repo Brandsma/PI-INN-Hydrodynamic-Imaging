@@ -95,7 +95,7 @@ If you encounter `ImportError` messages, make sure to:
 The `run_example.py` script uses synthetic data and should work without additional data files. For full functionality with real simulation data, you'll need to provide the appropriate `.npy` data files in the expected locations.
 
 ### Python Version Compatibility
-This project was developed and tested on Python 3.11.9. While it may work with other Python 3.x versions, I recommend using Python 3.11 for best compatibility.
+This project was developed on Python 3.7. This project was later tested again on Python 3.11.9. While it may work with other Python 3.x versions, I recommend using Python 3.11 for best compatibility.
 
 ## Repository Structure
 
