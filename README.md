@@ -128,8 +128,25 @@ This project was developed and tested on Python 3.11.9. While it may work with o
 └── README.md           # This file
 ```
 
+## Data Source and Sensor Design
+
+This research is based on hydrodynamic imaging using fiber optic sensors that detect fluid deflections caused by moving objects. The sensor system employs Fibre Bragg Gratings (FBGs) placed at various locations to capture deflection data as objects move through the fluid environment. For a more detailed explanation of the sensor design and data generation, please refer to the [project description and original thesis paper](https://abebrandsma.com/project/master-thesis-hydrodynamic-imaging-physics).
+
+### Sensor Design
+
+![Sensor Design Schematic](Thesis/images/sensor_design_schematic.pdf)
+
+The sensor array uses Fibre Bragg Gratings to measure fluid deflections at multiple spatial positions. These sensors provide high-precision measurements of the hydrodynamic disturbances created by objects moving through the fluid.
+
+### Wavelet Response Profiles
+
+![Wavelet Profile Family](Thesis/images/wavelet_profile_family.pdf)
+
+The wavelet profile family demonstrates how the sensors respond to a sphere moving past the sensor array at different positions. Each profile shows the characteristic signature that different object trajectories create in the sensor readings, which forms the basis for the inverse problem solved by the neural networks in this project.
+
 ## Scientific Context
 
 For a detailed description of the research, including the mathematical formulations and the physics behind the model, please refer to the project description at:
 [https://abebrandsma.com/project/master-thesis-hydrodynamic-imaging-physics](https://abebrandsma.com/project/master-thesis-hydrodynamic-imaging-physics)
-*(Note: This link was not accessible at the time of this code review, so the implementation of the PDE was based solely on the source code.)*
+
+This link contains a comprehensive blog post and reference to the original thesis paper with proper attribution for all images and research content.
