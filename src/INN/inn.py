@@ -1,23 +1,18 @@
-from typing import Callable
 import pickle
 from dataclasses import dataclass
-import os
-import sys
+from typing import Callable
 
 import tensorflow as tf
 
-# Add the parent directory to the path to enable absolute imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from INN.flow import NVP
+from .flow import NVP
 
 
 @dataclass
 class INNConfig:
-    """
-    Configuration for the Invertible Neural Network.
+    """Configuration for the Invertible Neural Network.
 
-    Attributes:
+    Attributes
+    ----------
         n_couple_layer: The number of coupling layers in the NVP.
         n_hid_layer: The number of hidden layers in the subnetworks.
         n_hid_dim: The number of hidden units in the subnetworks.
@@ -25,6 +20,7 @@ class INNConfig:
         y_dim: The dimension of the output data.
         z_dim: The dimension of the latent space.
         pde_loss_func: The PDE loss function (optional).
+
     """
 
     n_couple_layer: int
@@ -51,19 +47,24 @@ class INNConfig:
 
 
 def create_model(
-    tot_dim: int, n_couple_layer: int, n_hid_layer: int, n_hid_dim: int
+    tot_dim: int,
+    n_couple_layer: int,
+    n_hid_layer: int,
+    n_hid_dim: int,
 ) -> tf.keras.Model:
-    """
-    Creates the NVP model.
+    """Creates the NVP model.
 
     Args:
+    ----
         tot_dim: The total dimension of the model's input.
         n_couple_layer: The number of coupling layers.
         n_hid_layer: The number of hidden layers in the subnetworks.
         n_hid_dim: The number of hidden units in the subnetworks.
 
     Returns:
+    -------
         The created NVP model.
+
     """
     model = NVP(tot_dim, n_couple_layer, n_hid_layer, n_hid_dim, name="NVP")
     x = tf.keras.Input((tot_dim,))

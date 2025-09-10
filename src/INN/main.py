@@ -1,18 +1,14 @@
 import os
-import sys
 
 import numpy as np
 import tensorflow as tf
 
-# Add the parent directory to the path to enable absolute imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from INN import hydro
-from INN.data import DataType, get_data
-from INN.flow import *
-from INN.inn import INNConfig, create_model
-from INN.trainer import Trainer
-from INN.utils import *
+from . import hydro
+from .data import DataType, get_data
+from .flow import *
+from .inn import INNConfig, create_model
+from .trainer import Trainer
+from .utils import *
 
 
 def run_inn(

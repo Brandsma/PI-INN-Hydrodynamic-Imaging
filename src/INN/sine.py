@@ -1,8 +1,6 @@
 import numpy as np
 import tensorflow as tf
-
 from matplotlib import pyplot as plt
-
 from sklearn.model_selection import train_test_split
 
 
@@ -34,7 +32,11 @@ def setup_data(shuffle_data=True):
     data = labels
 
     train_data, test_data, train_labels, test_labels = train_test_split(
-        data, labels, test_size=0.2, shuffle=shuffle_data, random_state=42
+        data,
+        labels,
+        test_size=0.2,
+        shuffle=shuffle_data,
+        random_state=42,
     )
 
     return train_data, train_labels, test_data, test_labels
@@ -79,7 +81,8 @@ def plot_results(x_data, x_pred, y_data, y_pred, title="IMAGE TITLE"):
     plt.plot(x_pred[:, 0], label="predicted")
     plt.plot(x_data[:, 0], label="label")
     plt.xticks(
-        np.linspace(0, 2048, num=8), map(round, np.linspace(-1, 1, num=8), [2] * 8)
+        np.linspace(0, 2048, num=8),
+        map(round, np.linspace(-1, 1, num=8), [2] * 8),
     )
     plt.xlabel("x")
     plt.ylabel("y")
@@ -97,7 +100,8 @@ def plot_results(x_data, x_pred, y_data, y_pred, title="IMAGE TITLE"):
     plt.plot(y_pred[:, -3], label="predicted value")
     plt.plot(y_data[:, -3], label="label value")
     plt.xticks(
-        np.linspace(0, 2048, num=8), map(round, np.linspace(-1, 1, num=8), [2] * 8)
+        np.linspace(0, 2048, num=8),
+        map(round, np.linspace(-1, 1, num=8), [2] * 8),
     )
     plt.xlabel("x")
     plt.ylabel("y")

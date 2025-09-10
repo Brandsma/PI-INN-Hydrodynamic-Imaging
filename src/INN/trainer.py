@@ -1,21 +1,13 @@
-import tensorflow as tf
-import numpy as np
-import os
-import sys
 from typing import Callable, Dict
 
-# Add the parent directory to the path to enable absolute imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import tensorflow as tf
 
-from INN.flow import *
-from INN.utils import *
-
-from matplotlib import pyplot as plt
+from .flow import *
+from .utils import *
 
 
 class Trainer(tf.keras.Model):
-    """
-    A custom Keras model trainer for the INN/PINN.
+    """A custom Keras model trainer for the INN/PINN.
 
     This trainer handles the custom loss function and training loop for the
     Invertible Neural Network. The loss is composed of three main parts:
@@ -33,7 +25,7 @@ class Trainer(tf.keras.Model):
         z_dim: int,
         pde_loss_func: Callable = None,
         pde_applied_forward: bool = True,
-        **kwargs
+        **kwargs,
     ):
         super(Trainer, self).__init__(**kwargs)
         self.model = model
@@ -75,7 +67,10 @@ class Trainer(tf.keras.Model):
             pde_loss = 0.0
             if self.pde_loss_func:
                 pde_loss = self.w_pde * self.pde_loss_func(
-                    self.model, x_data, self.x_dim, self.y_dim
+                    self.model,
+                    x_data,
+                    self.x_dim,
+                    self.y_dim,
                 )
 
             total_loss = forward_loss + latent_loss + reverse_loss + pde_loss
@@ -116,7 +111,10 @@ class Trainer(tf.keras.Model):
         pde_loss = 0.0
         if self.pde_loss_func:
             pde_loss = self.w_pde * self.pde_loss_func(
-                self.model, x_data, self.x_dim, self.y_dim
+                self.model,
+                x_data,
+                self.x_dim,
+                self.y_dim,
             )
 
         total_loss = forward_loss + latent_loss + reverse_loss + pde_loss

@@ -1,23 +1,17 @@
-"""
-This module implements flow-based models, specifically Non-Volume Preserving (NVP)
+"""This module implements flow-based models, specifically Non-Volume Preserving (NVP)
 transformations, also known as RealNVP. The implementation is based on the papers
 by Dinh et al. (2017) and Ardizzone et al. (2018).
 """
+
 from typing import Tuple
-import os
-import sys
 
 import tensorflow as tf
 
-# Add the parent directory to the path to enable absolute imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from INN.utils import *
+from .utils import *
 
 
 class NN(tf.keras.layers.Layer):
-    """
-    A simple feed-forward neural network used as the subnetwork for the coupling layers.
+    """A simple feed-forward neural network used as the subnetwork for the coupling layers.
     This implementation is reused from https://github.com/MokkeMeguru/glow-realnvp-tutorial
     """
 
@@ -37,10 +31,14 @@ class NN(tf.keras.layers.Layer):
             tf.keras.layers.Dense(n_hid, activation=activation) for _ in range(n_layer)
         ]
         self.log_s_layer = tf.keras.layers.Dense(
-            n_dim // 2, activation="tanh", name="log_s_layer"
+            n_dim // 2,
+            activation="tanh",
+            name="log_s_layer",
         )
         self.t_layer = tf.keras.layers.Dense(
-            n_dim // 2, activation="linear", name="t_layer"
+            n_dim // 2,
+            activation="linear",
+            name="t_layer",
         )
 
     def call(self, x: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
@@ -52,8 +50,7 @@ class NN(tf.keras.layers.Layer):
 
 
 class NVPCouplingLayer(tf.keras.layers.Layer):
-    """
-    Implementation of a single coupling layer from Dinh et al. (2017).
+    """Implementation of a single coupling layer from Dinh et al. (2017).
 
     The forward and inverse transformations are defined as:
     Forward:
@@ -65,7 +62,12 @@ class NVPCouplingLayer(tf.keras.layers.Layer):
     """
 
     def __init__(
-        self, inp_dim: int, n_hid_layer: int, n_hid_dim: int, name: str, shuffle_type: str
+        self,
+        inp_dim: int,
+        n_hid_layer: int,
+        n_hid_dim: int,
+        name: str,
+        shuffle_type: str,
     ):
         super(NVPCouplingLayer, self).__init__(name=name)
         self.inp_dim = inp_dim
@@ -126,8 +128,7 @@ class NVPCouplingLayer(tf.keras.layers.Layer):
 
 
 class TwoNVPCouplingLayers(tf.keras.layers.Layer):
-    """
-    Implementation of a two-way coupling layer from Ardizzone et al. (2018).
+    """Implementation of a two-way coupling layer from Ardizzone et al. (2018).
 
     The forward and inverse transformations are defined as:
     Forward:
@@ -139,7 +140,12 @@ class TwoNVPCouplingLayers(tf.keras.layers.Layer):
     """
 
     def __init__(
-        self, inp_dim: int, n_hid_layer: int, n_hid_dim: int, name: str, shuffle_type: str
+        self,
+        inp_dim: int,
+        n_hid_layer: int,
+        n_hid_dim: int,
+        name: str,
+        shuffle_type: str,
     ):
         super(TwoNVPCouplingLayers, self).__init__(name=name)
         self.inp_dim = inp_dim
@@ -203,9 +209,7 @@ class TwoNVPCouplingLayers(tf.keras.layers.Layer):
 
 
 class NVP(tf.keras.Model):
-    """
-    Non-Volume Preserving (NVP) model, composed of a stack of coupling layers.
-    """
+    """Non-Volume Preserving (NVP) model, composed of a stack of coupling layers."""
 
     def __init__(
         self,
@@ -255,8 +259,7 @@ def MSE(y_true: tf.Tensor, y_pred: tf.Tensor) -> tf.Tensor:
 
 
 def MMD_multiscale(x: tf.Tensor, y: tf.Tensor) -> tf.Tensor:
-    """
-    Calculates the Maximum Mean Discrepancy (MMD) between two samples, x and y.
+    """Calculates the Maximum Mean Discrepancy (MMD) between two samples, x and y.
 
     MMD is a non-parametric distance measure between distributions. This
     implementation uses a multiscale radial basis function (RBF) kernel.
@@ -277,9 +280,9 @@ def MMD_multiscale(x: tf.Tensor, y: tf.Tensor) -> tf.Tensor:
     XY = tf.zeros(xx.shape, dtype="float32")
 
     for a in [0.05, 0.2, 0.9]:
-        XX += a ** 2 * 1 / (a ** 2 + dxx)
-        YY += a ** 2 * 1 / (a ** 2 + dyy)
-        XY += a ** 2 * 1 / (a ** 2 + dxy)
+        XX += a**2 * 1 / (a**2 + dxx)
+        YY += a**2 * 1 / (a**2 + dyy)
+        XY += a**2 * 1 / (a**2 + dxy)
 
     return tf.reduce_mean(XX + YY - 2.0 * XY)
 

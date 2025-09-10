@@ -1,14 +1,9 @@
-import numpy as np
-from typing import Tuple
 from enum import Enum
-import os
-import sys
+from typing import Tuple
 
-# Add the parent directory to the path to enable absolute imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import numpy as np
 
-from INN import sine
-from INN import hydro
+from . import hydro, sine
 
 
 class DataType(Enum):
@@ -27,10 +22,10 @@ def get_data(
     use_pde: bool = False,
     noise_experiment: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Loads and returns the specified dataset.
+    """Loads and returns the specified dataset.
 
     Args:
+    ----
         dt: The type of data to load (Sine or Hydro).
         subset: The subset of the data to use.
         num_sensors: The number of sensors used in the data.
@@ -40,7 +35,9 @@ def get_data(
         noise_experiment: A flag to indicate if this is a noise experiment.
 
     Returns:
+    -------
         A tuple containing the training data, training labels, test data, and test labels.
+
     """
     if dt == DataType.Sine:
         return sine.setup_data(shuffle_data)

@@ -1,18 +1,15 @@
-import argparse
 import sys
 
 sys.path.append("src")
 
-from src.INN.data import get_data, DataType
-from src.INN.main import run_inn
+from src.INN import sine
+from src.INN.data import DataType, get_data
 from src.INN.inn import INNConfig
-from src.INN import hydro, sine
+from src.INN.main import run_inn
 
 
 def run_inn_example():
-    """
-    Runs a minimal example of the Invertible Neural Network (INN) on synthetic sine wave data.
-    """
+    """Runs a minimal example of the Invertible Neural Network (INN) on synthetic sine wave data."""
     print("--- Running INN Example ---")
     data, labels, _, _ = get_data(DataType.Sine, shuffle_data=True)
 
@@ -39,8 +36,7 @@ def run_inn_example():
 
 
 def run_pinn_example():
-    """
-    Runs a minimal example of the Physics-Informed Invertible Neural Network (PINN)
+    """Runs a minimal example of the Physics-Informed Invertible Neural Network (PINN)
     on synthetic sine wave data.
     """
     print("\n--- Running PINN Example ---")

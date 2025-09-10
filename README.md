@@ -15,6 +15,12 @@ The repository includes implementations for:
 -   **Invertible Neural Network (INN):** The core model for solving the inverse problem.
 -   **Physics-Informed INN (PINN):** The INN enhanced with a physics-based loss function.
 
+## Requirements
+
+- **Python Version:** This project has been tested on Python 3.11.9
+- **Operating System:** Developed and tested on macOS
+- **Dependencies:** Listed in `requirements.txt`
+
 ## Installation
 
 1.  Clone the repository:
@@ -23,27 +29,48 @@ The repository includes implementations for:
     cd master-thesis-hydrodynamic-imaging
     ```
 
-2.  Install the required dependencies:
+2.  Create and activate a virtual environment:
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    ```
+
+3.  Install the required dependencies:
     ```bash
     pip install -r requirements.txt
     ```
 
+## Quick Start
+
+After setting up the virtual environment, the easiest way to run the project is using the provided example script:
+
+```bash
+python run_example.py
+```
+
+This script will:
+- Run a minimal INN example on synthetic sine wave data
+- Run a Physics-Informed INN (PINN) example with PDE constraints
+- Use a small number of epochs for quick demonstration
+- Save trained models to `./trained_models_example/`
+
 ## Usage
 
-The main scripts for training the models are located in the `src` directory.
+### For Advanced Users
+
+The main scripts for training the models are located in the `src` directory and should be run as Python modules from the project root.
 
 ### Training the INN/PINN Model
 
-The `src/INN/main.py` script is used to train the Invertible Neural Network.
-
 **To train the standard INN:**
 ```bash
-python src/INN/main.py
+python -m src.INN.main
 ```
 
 **To train the Physics-Informed INN (PINN):**
 ```bash
-python src/INN/main.py --use_pde
+# Edit src/INN/main.py to set use_pde=True in the simple_run() call
+python -m src.INN.main
 ```
 
 ### Training the LSTM Model
@@ -51,28 +78,53 @@ python src/INN/main.py --use_pde
 The `src/LSTM/train_lstm.py` script is used to train the baseline LSTM model. You can specify the training data location and the output directory for the trained model.
 
 ```bash
-python src/LSTM/train_lstm.py --train_loc /path/to/your/data.npy --model_dir /path/to/save/model/
+python -m src.LSTM.train_lstm --train_loc /path/to/your/data.npy --model_dir /path/to/save/model/
 ```
+
+**Note:** The advanced usage requires proper simulation data files. These are not provided. For a quick demonstration without data dependencies, use the `run_example.py` script instead.
+
+## Troubleshooting
+
+### Import Errors
+If you encounter `ImportError` messages, make sure to:
+1. Activate your virtual environment: `source venv/bin/activate`
+2. Run scripts from the project root directory
+3. Use the module execution format: `python -m src.INN.main` instead of `python src/INN/main.py`
+
+### Missing Data Files
+The `run_example.py` script uses synthetic data and should work without additional data files. For full functionality with real simulation data, you'll need to provide the appropriate `.npy` data files in the expected locations.
+
+### Python Version Compatibility
+This project was developed and tested on Python 3.11.9. While it may work with other Python 3.x versions, I recommend using Python 3.11 for best compatibility.
 
 ## Repository Structure
 
 ```
 .
 ├── src/
+│   ├── __init__.py     # Package initialization
 │   ├── INN/            # Source code for the INN and PINN models
+│   │   ├── __init__.py # Package initialization
 │   │   ├── main.py     # Main script to train the INN/PINN
 │   │   ├── inn.py      # INN model definition
 │   │   ├── hydro.py    # Hydrodynamic data loading and PDE loss
 │   │   ├── trainer.py  # Custom Keras trainer
-│   │   └── ...
+│   │   ├── data.py     # Data loading utilities
+│   │   ├── flow.py     # Flow model implementations
+│   │   ├── utils.py    # Utility functions
+│   │   └── sine.py     # Sine wave data generation
 │   ├── LSTM/           # Source code for the LSTM model
 │   │   ├── train_lstm.py # Main script to train the LSTM
 │   │   └── ...
-│   ├── lib/            # Shared library code
-│   └── ...
+│   └── lib/            # Shared library code
+│       ├── __init__.py # Package initialization
+│       └── params.py   # Parameter definitions
+├── run_example.py      # Quick start example script
+├── requirements.txt    # Python dependencies
+├── RUNNING_INN.md      # Detailed running instructions
+├── venv/               # Virtual environment (created after setup)
 ├── data/               # (Not included) Placeholder for simulation data
 ├── trained_models/     # (Not included) Placeholder for trained models
-├── requirements.txt    # Python dependencies
 └── README.md           # This file
 ```
 
