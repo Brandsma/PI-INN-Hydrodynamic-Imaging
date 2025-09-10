@@ -27,7 +27,7 @@ def is_boolean(n):
 def coords(s):
     """coords type for use in argparse. takes x,y as input and returns tuple"""
     try:
-        x, y = map(int, s.split(' , '))
+        x, y = map(int, s.split(" , "))
         return x, y
     except:
         raise argparse.ArgumentTypeError("Coordinates must be 'x,y' and int")

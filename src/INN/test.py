@@ -13,21 +13,26 @@ from matplotlib import pyplot as plt
 # set np random seed
 np.random.seed(42)
 
-def run_test_on_model(subset="all", num_sensors=64, test_pinn=False, noise_experiment=False):
+
+def run_test_on_model(
+    subset="all", num_sensors=64, test_pinn=False, noise_experiment=False
+):
     if noise_experiment:
-        base_folder= "../data/trained_models/noise/INN"
+        base_folder = "../data/trained_models/noise/INN"
         if test_pinn:
-            base_folder= "../data/trained_models/noise/INNPINN"
+            base_folder = "../data/trained_models/noise/INNPINN"
     else:
-        base_folder= "../data/trained_models/INN"
+        base_folder = "../data/trained_models/INN"
         if test_pinn:
-            base_folder= "../data/trained_models/INNPINN"
+            base_folder = "../data/trained_models/INNPINN"
 
     results_folder = f"../results/{'PINN' if test_pinn else 'INN'}/{subset}"
     print(f"using {base_folder} now...")
 
     # Config
-    config: INNConfig = INNConfig.from_file(f"{base_folder}/{subset}_sensors{num_sensors}/INNConfig.pkl")
+    config: INNConfig = INNConfig.from_file(
+        f"{base_folder}/{subset}_sensors{num_sensors}/INNConfig.pkl"
+    )
     dt = DataType.Hydro
 
     x_dim = config.x_dim
@@ -35,29 +40,47 @@ def run_test_on_model(subset="all", num_sensors=64, test_pinn=False, noise_exper
     z_dim = config.z_dim
     tot_dim = y_dim + config.z_dim
 
-
     # Get Model
-    model = create_model(tot_dim, config.n_couple_layer, config.n_hid_layer, config.n_hid_dim)
-    latest_model_path = f"{base_folder}/{subset}_sensors{num_sensors}/trained_model_weights.tf"
+    model = create_model(
+        tot_dim, config.n_couple_layer, config.n_hid_layer, config.n_hid_dim
+    )
+    latest_model_path = (
+        f"{base_folder}/{subset}_sensors{num_sensors}/trained_model_weights.tf"
+    )
     model.load_weights(latest_model_path)
 
     # forward_mse_errors = []
     # backward_mse_errors = []
 
     # Get dataset
-    _, _, data, labels = get_data(dt, subset=subset, num_sensors=num_sensors, shuffle_data=True, noise_experiment=noise_experiment)
+    _, _, data, labels = get_data(
+        dt,
+        subset=subset,
+        num_sensors=num_sensors,
+        shuffle_data=True,
+        noise_experiment=noise_experiment,
+    )
 
     # data = np.concatenate([train_data, data], axis=0).astype('float32')
     # labels = np.concatenate([train_labels, labels], axis=0).astype('float32')
 
-    x_data, x_pred, y_data, y_pred = test_model(model, data, labels, x_dim, y_dim, z_dim)
+    x_data, x_pred, y_data, y_pred = test_model(
+        model, data, labels, x_dim, y_dim, z_dim
+    )
 
     if dt == DataType.Sine:
         sine.plot_results(x_data, x_pred, y_data, y_pred, title="Sine")
     elif dt == DataType.Hydro:
-        hydro.plot_results_from_array(x_data, x_pred, subset, num_sensors, title=f"Sensors: {num_sensors}", savefig=True, savepath=results_folder)
+        hydro.plot_results_from_array(
+            x_data,
+            x_pred,
+            subset,
+            num_sensors,
+            title=f"Sensors: {num_sensors}",
+            savefig=True,
+            savepath=results_folder,
+        )
         # hydro.plot_results(x_data, x_pred, y_data, y_pred, x_dim, y_dim, run_idx, title=f"Hydro | {run_idx}", savefig=True)
-
 
     # fig, ax = plt.subplots()
 
@@ -66,28 +89,64 @@ def run_test_on_model(subset="all", num_sensors=64, test_pinn=False, noise_exper
     else:
         variation_strength = 3.4
 
-
     # Add more variation to y-values to make it more interesting the further away from the origin
-    x_pred[:, 1] = x_pred[:, 1] + ((np.random.uniform(0, 4*variation_strength, size=x_pred[:, 1].shape)) * abs(x_pred[:, 0] / 500)**2)
+    x_pred[:, 1] = x_pred[:, 1] + (
+        (np.random.uniform(0, 4 * variation_strength, size=x_pred[:, 1].shape))
+        * abs(x_pred[:, 0] / 500) ** 2
+    )
 
     for i in range(x_pred[:, 1].shape[0]):
         if np.random.uniform(0, 1) < 0.0350:
-            x_pred[i, 1] = x_pred[i, 1] + (np.random.uniform(0.1, 1) * np.random.uniform(-3.87*variation_strength, 13.5*variation_strength) * abs((x_pred[i, 0] + 0.3843) / 500)**(1/2.423))
+            x_pred[i, 1] = x_pred[i, 1] + (
+                np.random.uniform(0.1, 1)
+                * np.random.uniform(
+                    -3.87 * variation_strength, 13.5 * variation_strength
+                )
+                * abs((x_pred[i, 0] + 0.3843) / 500) ** (1 / 2.423)
+            )
 
         if np.random.uniform(0, 1) < 0.000350:
-            x_pred[i, 1] = x_pred[i, 1] + (np.random.uniform(0.5, 2) * np.random.uniform(20.87*variation_strength, 40.5*variation_strength) * abs((x_pred[i, 0] + 1.3843) / 500)**(1/1.230))
+            x_pred[i, 1] = x_pred[i, 1] + (
+                np.random.uniform(0.5, 2)
+                * np.random.uniform(
+                    20.87 * variation_strength, 40.5 * variation_strength
+                )
+                * abs((x_pred[i, 0] + 1.3843) / 500) ** (1 / 1.230)
+            )
 
         if np.random.uniform(0, 1) < 0.0350:
-            x_pred[i, 2] = x_pred[i, 2] + (np.random.uniform(0.1, 1) * np.random.uniform(-3.87*variation_strength, 4.5*variation_strength) * abs((x_pred[i, 0] + 0.3843) / 500)**(1/2.423))
+            x_pred[i, 2] = x_pred[i, 2] + (
+                np.random.uniform(0.1, 1)
+                * np.random.uniform(
+                    -3.87 * variation_strength, 4.5 * variation_strength
+                )
+                * abs((x_pred[i, 0] + 0.3843) / 500) ** (1 / 2.423)
+            )
 
         if np.random.uniform(0, 1) < 0.000350:
-            x_pred[i, 2] = x_pred[i, 2] + (np.random.uniform(0.5, 2) * np.random.uniform(2.87*variation_strength, 3.5*variation_strength) * abs((x_pred[i, 0] + 1.3843) / 500)**(1/1.230))
+            x_pred[i, 2] = x_pred[i, 2] + (
+                np.random.uniform(0.5, 2)
+                * np.random.uniform(2.87 * variation_strength, 3.5 * variation_strength)
+                * abs((x_pred[i, 0] + 1.3843) / 500) ** (1 / 1.230)
+            )
 
         if np.random.uniform(0, 1) < 0.0350:
-            x_pred[i, 0] = x_pred[i, 0] + (np.random.uniform(0.1, 1) * np.random.uniform(-3.87*variation_strength, 13.5*variation_strength) * abs((x_pred[i, 0] + 0.3843) / 500)**(1/2.423))
+            x_pred[i, 0] = x_pred[i, 0] + (
+                np.random.uniform(0.1, 1)
+                * np.random.uniform(
+                    -3.87 * variation_strength, 13.5 * variation_strength
+                )
+                * abs((x_pred[i, 0] + 0.3843) / 500) ** (1 / 2.423)
+            )
 
         if np.random.uniform(0, 1) < 0.000350:
-            x_pred[i, 0] = x_pred[i, 0] + (np.random.uniform(0.5, 2) * np.random.uniform(10.87*variation_strength, 40.5*variation_strength) * abs((x_pred[i, 0] + 1.3843) / 500)**(1/1.230))
+            x_pred[i, 0] = x_pred[i, 0] + (
+                np.random.uniform(0.5, 2)
+                * np.random.uniform(
+                    10.87 * variation_strength, 40.5 * variation_strength
+                )
+                * abs((x_pred[i, 0] + 1.3843) / 500) ** (1 / 1.230)
+            )
 
     # fig, ax = plt.subplots()
 
@@ -99,22 +158,19 @@ def run_test_on_model(subset="all", num_sensors=64, test_pinn=False, noise_exper
     # # set limit to -500, 500
     # ax.set_xlim(-500, 500)
 
-
     # ax.set_title(f"Hydro | {subset} | {num_sensors} sensors")
     # ax.set_xlabel("x")
     # ax.set_ylabel("y")
     # ax.legend()
 
-
     # plt.show()
 
     # exit()
 
-    np.save(results_folder+f"/x_data_{num_sensors}.npy", x_data)
-    np.save(results_folder+f"/y_data_{num_sensors}.npy", y_data)
-    np.save(results_folder+f"/x_pred_{num_sensors}.npy", x_pred)
-    np.save(results_folder+f"/y_pred_{num_sensors}.npy", y_pred)
-
+    np.save(results_folder + f"/x_data_{num_sensors}.npy", x_data)
+    np.save(results_folder + f"/y_data_{num_sensors}.npy", y_data)
+    np.save(results_folder + f"/x_pred_{num_sensors}.npy", x_pred)
+    np.save(results_folder + f"/y_pred_{num_sensors}.npy", y_pred)
 
     #     forward_mse_errors.append(mean_squared_error(y_data[:, :y_dim], y_pred[:, :y_dim]))
     #     backward_mse_errors.append(mean_squared_error(x_data[:, :x_dim], x_pred[:, :x_dim]))
@@ -135,18 +191,18 @@ def test_model(model, data, labels, x_dim, y_dim, z_dim):
 
     # Test model
     pad_x = np.zeros((data.shape[0], pad_dim))
-    pad_x = np.random.multivariate_normal([0.] * pad_dim, np.eye(pad_dim),
-                                          data.shape[0])
+    pad_x = np.random.multivariate_normal(
+        [0.0] * pad_dim, np.eye(pad_dim), data.shape[0]
+    )
 
-    z = np.random.multivariate_normal([1.] * z_dim, np.eye(z_dim), labels.shape[0])
-    y_data = np.concatenate([labels, z], axis=-1).astype('float32')
+    z = np.random.multivariate_normal([1.0] * z_dim, np.eye(z_dim), labels.shape[0])
+    y_data = np.concatenate([labels, z], axis=-1).astype("float32")
     x_pred = model.inverse(y_data).numpy()
-    x_data = np.concatenate([data, pad_x], axis=-1).astype('float32')
+    x_data = np.concatenate([data, pad_x], axis=-1).astype("float32")
     y_pred = model(x_data).numpy()
 
     return x_data, x_pred, y_data, y_pred
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     run_test_on_model()

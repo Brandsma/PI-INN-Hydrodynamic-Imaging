@@ -1,4 +1,3 @@
-
 translation_key = {
     "offset": "Offset",
     "parallel": "Parallel",

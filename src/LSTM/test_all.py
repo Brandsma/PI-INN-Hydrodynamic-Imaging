@@ -1,6 +1,7 @@
 from pathlib import Path
 import pandas
 
+
 def estimation_accuracy():
     ## TODO: Cross-validation training
 
@@ -15,7 +16,9 @@ def estimation_accuracy():
     for model in models:
         result: pandas.DataFrame = model.predict_data()
 
-        result_filename = Path(f"../results/inverse_sine/{model.__class__.__name__}_experimentI.csv")
+        result_filename = Path(
+            f"../results/inverse_sine/{model.__class__.__name__}_experimentI.csv"
+        )
         result_filename.parent.mkdir(parents=True, exist_ok=True)
 
         result.to_csv(result_filename)
@@ -29,7 +32,9 @@ def estimation_accuracy():
     for model in models:
         result: pandas.DataFrame = model.predict_data()
 
-        result_filename = Path(f"../results/ALL_vp/{model.__class__.__name__}_experimentI.csv")
+        result_filename = Path(
+            f"../results/ALL_vp/{model.__class__.__name__}_experimentI.csv"
+        )
         result_filename.parent.mkdir(parents=True, exist_ok=True)
 
         result.to_csv(result_filename)
@@ -39,17 +44,19 @@ def estimation_accuracy():
 
         # Get localization calculations
 
-
     ## ALL Stream Function Sphere
     # LSTM, INN, INN+PINN, (INN+PINN+LSTM)
     pass
 
+
 def sensitivity_analysis():
     pass
+
 
 def main():
     estimation_accuracy()
     sensitivity_analysis()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

@@ -1,5 +1,6 @@
 if __name__ == "__main__":
     import sys
+
     sys.path.append("..")
 
 import os
@@ -8,7 +9,7 @@ import json
 import sys
 
 if __name__ == "__main__":
-    sys.path.insert(1, os.path.join(sys.path[0], '..'))
+    sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import numpy as np
 import tensorflow as tf
@@ -23,20 +24,21 @@ from sklearn.metrics import mean_squared_error
 from lib.params import Data, Settings
 
 from matplotlib import rc
-#rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
-rc('font',**{'family':'serif','serif':['Times']})
-rc('text', usetex=True)
+
+# rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+rc("font", **{"family": "serif", "serif": ["Times"]})
+rc("text", usetex=True)
 
 
-plt.rcParams['axes.axisbelow'] = True
-plt.rcParams['text.usetex'] = True
+plt.rcParams["axes.axisbelow"] = True
+plt.rcParams["text.usetex"] = True
 
 
 def get_location_from_data(data, labels, model, window_size=16, num_sensors=8):
     locations = []
     real_locations = []
     for idx in range(0, 1024, window_size * 8):
-        input_data = data[idx:idx + window_size]
+        input_data = data[idx : idx + window_size]
         input_data = np.reshape(input_data, (1, window_size, num_sensors * 2))
         y_pred = model.predict(input_data, verbose=0)
         x_label = labels[idx][2]
@@ -46,46 +48,50 @@ def get_location_from_data(data, labels, model, window_size=16, num_sensors=8):
 
     return np.mean(locations), np.mean(real_locations)
 
+
 def crop(image, x1, x2, y1, y2):
     """
     Return the cropped image at the x1, x2, y1, y2 coordinates
     """
     if x2 == -1:
-        x2=image.shape[1]-1
+        x2 = image.shape[1] - 1
     if y2 == -1:
-        y2=image.shape[0]-1
+        y2 = image.shape[0] - 1
 
     mask = np.zeros(image.shape)
-    mask[y1:y2+1, x1:x2+1]=1
-    m = mask>0
+    mask[y1 : y2 + 1, x1 : x2 + 1] = 1
+    m = mask > 0
 
-    return image[m].reshape((y2+1-y1, x2+1-x1))
+    return image[m].reshape((y2 + 1 - y1, x2 + 1 - x1))
 
-def add_subplot_axes(ax,rect,facecolor='w'):
+
+def add_subplot_axes(ax, rect, facecolor="w"):
     fig = plt.gcf()
     box = ax.get_position()
     width = box.width
     height = box.height
-    inax_position  = ax.transAxes.transform(rect[0:2])
+    inax_position = ax.transAxes.transform(rect[0:2])
     transFigure = fig.transFigure.inverted()
     infig_position = transFigure.transform(inax_position)
     x = infig_position[0]
     y = infig_position[1]
     width *= rect[2]
     height *= rect[3]
-    subax = fig.add_axes([x,y,width,height],facecolor=facecolor)
+    subax = fig.add_axes([x, y, width, height], facecolor=facecolor)
     x_labelsize = subax.get_xticklabels()[0].get_size()
     y_labelsize = subax.get_yticklabels()[0].get_size()
-    x_labelsize *= rect[2]**0.5
-    y_labelsize *= rect[3]**0.5
+    x_labelsize *= rect[2] ** 0.5
+    y_labelsize *= rect[3] ** 0.5
     subax.xaxis.set_tick_params(labelsize=x_labelsize)
     subax.yaxis.set_tick_params(labelsize=y_labelsize)
     return subax
+
 
 def find_min_and_max(data):
     min_value = np.min(data)
     max_value = np.max(data)
     return min_value, max_value
+
 
 def create_flat_histogram(x_pred, x_label, model_type):
     # if the model type is LSTM, then we can only go to 1000
@@ -108,15 +114,17 @@ def create_flat_histogram(x_pred, x_label, model_type):
 
 def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std, name):
     cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
-        "", ["#FFFFFF00", "#E76F51AA", "#E76F51DD", "#E76F51EE", "#E76F51FF"])
+        "", ["#FFFFFF00", "#E76F51AA", "#E76F51DD", "#E76F51EE", "#E76F51FF"]
+    )
 
-    fig, (ax, ax1) = plt.subplots(2, 1, figsize=(8, 8), gridspec_kw={'height_ratios': [3, 1]})
+    fig, (ax, ax1) = plt.subplots(
+        2, 1, figsize=(8, 8), gridspec_kw={"height_ratios": [3, 1]}
+    )
 
     # fig.tick_params(axis='both', which='major', bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
 
     # rect = [0.0,0.2,1.0,1.0]
     # ax = add_subplot_axes(ax_fig,rect)
-
 
     ax.set_ylim((0, 250))
     ax.set_xlim((-500, 500))
@@ -124,26 +132,37 @@ def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std, name):
     ax1.set_ylim((0, 250))
     ax1.set_xlim((-500, 500))
 
-    ax.plot(x_data[:1000 if model_type == "LSTM" else 1020, 0],
-             x_data[:1000 if model_type == "LSTM" else 1020, 1],
-             color='#2A9D8F',
-             linestyle='solid',
-             label="Real",
-             linewidth=1,
-             alpha=1.)
+    ax.plot(
+        x_data[: 1000 if model_type == "LSTM" else 1020, 0],
+        x_data[: 1000 if model_type == "LSTM" else 1020, 1],
+        color="#2A9D8F",
+        linestyle="solid",
+        label="Real",
+        linewidth=1,
+        alpha=1.0,
+    )
 
     # Scatter small points
-    ax.scatter(x_pred[:, 0],
-               x_pred[:, 1],
-            #    bins=(128, 128),
-               label="Predicted",
-               c='#E76F51FF',
-                s=1,
-
-
-               cmap=cmap)
-    hist_patch = mpatches.Patch(color='#E76F51FF', label='Predicted')
-    ax.tick_params(axis='x', which='major', bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
+    ax.scatter(
+        x_pred[:, 0],
+        x_pred[:, 1],
+        #    bins=(128, 128),
+        label="Predicted",
+        c="#E76F51FF",
+        s=1,
+        cmap=cmap,
+    )
+    hist_patch = mpatches.Patch(color="#E76F51FF", label="Predicted")
+    ax.tick_params(
+        axis="x",
+        which="major",
+        bottom=False,
+        top=False,
+        left=False,
+        right=False,
+        labelbottom=False,
+        labelleft=False,
+    )
 
     ax.set_ylim((0, 250))
     ax.set_xlim((-500, 500))
@@ -152,34 +171,34 @@ def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std, name):
     # plt.boxplot(x_pred[:, 1])
 
     ax.set_ylabel("d (mm)")
-    t = ax.text(-400, 235, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})", backgroundcolor="white")
+    t = ax.text(
+        -400, 235, f"RMSE: {MSE:.2f} mm ($\\pm${MSE_std:.2f})", backgroundcolor="white"
+    )
     t.set_bbox(dict(facecolor="white", alpha=0.8, edgecolor="white"))
     ax.set_title(
         f"Predicted vs Real Location Per Run\n{model_key[model_type]} - {translation_key[name]}"
     )
 
-    ax.set_xticks(np.arange(-500, 500+100, step=100))
-    ax.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
-    ax.grid(axis='x', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
+    ax.set_xticks(np.arange(-500, 500 + 100, step=100))
+    ax.grid(axis="y", linestyle="-", color="#AAAAAA", linewidth=1.0, alpha=0.5)
+    ax.grid(axis="x", linestyle="-", color="#AAAAAA", linewidth=1.0, alpha=0.5)
 
     # handles, labels = ax.get_legend_handles_labels()
     # handles.extend([hist_patch])
 
-    ax.legend(loc="best", bbox_to_anchor=(0.6, 0., 0.4, 1.0) )
+    ax.legend(loc="best", bbox_to_anchor=(0.6, 0.0, 0.4, 1.0))
 
-    ax1.plot(np.linspace(-500, 500, num=1024),
-             np.zeros((1024,)),
-             color='#2A9D8F',
-             linestyle='solid',
-             label="Real",
-             linewidth=1,
-             alpha=1.)
-    flat_x, flat_y = create_flat_histogram(x_pred,x_data,model_type)
-    ax1.hist2d(flat_x,
-               flat_y,
-               bins=(128, 128),
-               label="Predicted",
-               cmap=cmap)
+    ax1.plot(
+        np.linspace(-500, 500, num=1024),
+        np.zeros((1024,)),
+        color="#2A9D8F",
+        linestyle="solid",
+        label="Real",
+        linewidth=1,
+        alpha=1.0,
+    )
+    flat_x, flat_y = create_flat_histogram(x_pred, x_data, model_type)
+    ax1.hist2d(flat_x, flat_y, bins=(128, 128), label="Predicted", cmap=cmap)
 
     mean_y = np.mean(flat_y)
     std_y = np.std(flat_y)
@@ -189,25 +208,41 @@ def save_results(x_pred, x_data, model_type, subset, MSE, MSE_std, name):
 
     # ax1.set_ylim((mean_y - 3 * std_y, mean_y + 3 * std_y))
 
-    ax1.tick_params(axis='both', which='both', bottom=False, top=False, left=True, right=False, labelbottom=True, labelleft=True)
+    ax1.tick_params(
+        axis="both",
+        which="both",
+        bottom=False,
+        top=False,
+        left=True,
+        right=False,
+        labelbottom=True,
+        labelleft=True,
+    )
     ax1.set_xlim((-500, 500))
     ax1.set_xlabel("s (mm)")
 
-    ax1.set_xticks(np.arange(-500, 500+100, step=100))
-    ax1.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
-    ax1.grid(axis='x', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
+    ax1.set_xticks(np.arange(-500, 500 + 100, step=100))
+    ax1.grid(axis="y", linestyle="-", color="#AAAAAA", linewidth=1.0, alpha=0.5)
+    ax1.grid(axis="x", linestyle="-", color="#AAAAAA", linewidth=1.0, alpha=0.5)
     # plt.show()
     # exit()
 
-    plt.savefig(f"../results/location_{model_type}_{name}.png", bbox_inches="tight", dpi=600, transparent=True, pad_inches=0.1)
+    plt.savefig(
+        f"../results/location_{model_type}_{name}.png",
+        bbox_inches="tight",
+        dpi=600,
+        transparent=True,
+        pad_inches=0.1,
+    )
     plt.close()
 
     # Get result data
     results = {}
     results[f"combined"] = (float(MSE), float(MSE_std))
 
-    with open(f"../results/location_{model_type}_{name}_results.json",
-              "w") as write_file:
+    with open(
+        f"../results/location_{model_type}_{name}_results.json", "w"
+    ) as write_file:
         json.dump(results, write_file, indent=4)
 
 
@@ -217,34 +252,25 @@ def retrieve_location(subset, model_type, noise_experiment):
     #     if subset == "low_noise_saw" or subset == "high_noise_saw":
     #         subset = "mult_path"
 
-
     if model_type != "LSTM":
         # return main(subset, model_type)
         if noise_experiment:
-            x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
-                                                                            0:3]
-            x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:,
-                                                                            0:3]
+            x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
         else:
-            x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
-                                                                            0:3]
-            x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:,
-                                                                            0:3]
+            x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
     else:
         if noise_experiment:
-            x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
-                                                                            0:3]
-            x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
-                                                                            0:3]
+            x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:, 0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:, 0:3]
         else:
-            x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
-                                                                            0:3]
-            x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
-                                                                            0:3]
+            x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:, 0:3]
+            x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:, 0:3]
 
         x_pred = x_pred.reshape(25, -1, 3)
         x_data = x_data.reshape(25, -1, 3)
-        x_data = x_data[:, :x_pred.shape[1], :]
+        x_data = x_data[:, : x_pred.shape[1], :]
         # x_pred = x_pred.reshape(-1, 3)
         # x_data = x_data.reshape(-1, 3)
 
@@ -255,7 +281,12 @@ def retrieve_location(subset, model_type, noise_experiment):
     x_pred = x_pred.reshape(25, -1, 3)
     x_data = x_data.reshape(25, -1, 3)
 
-    errors = np.array([mean_squared_error(x_data[x, :, :2], x_pred[x, :, :2], squared=False) for x in range(x_data.shape[0])])
+    errors = np.array(
+        [
+            mean_squared_error(x_data[x, :, :2], x_pred[x, :, :2], squared=False)
+            for x in range(x_data.shape[0])
+        ]
+    )
     # print(errors[errors < 0])
 
     # plt.plot(errors)
@@ -271,7 +302,6 @@ def retrieve_location(subset, model_type, noise_experiment):
     x_pred = x_pred.reshape(-1, 3)
     x_data = x_data.reshape(-1, 3)
 
-
     print(f"{MSE} ({MSE_std}) {'<---' if MSE_std > MSE else ''}")
 
     # MSE = np.square(np.subtract(x_data[:, :2], x_pred[:, :2])).mean()
@@ -282,7 +312,6 @@ def retrieve_location(subset, model_type, noise_experiment):
 
     # NOTE: THIS SHOULD BE CHANGED
     # errors = np.sqrt(np.sum(errors, axis=1))
-
 
     # Calculate RMSE
     # MSE = errors.mean()# * 0.010
@@ -320,7 +349,6 @@ def retrieve_location(subset, model_type, noise_experiment):
     #         print("MSE < 0")
     #         MSE = np.random.random() * 2
 
-
     save_results(x_pred, x_data, model_type, subset, MSE, MSE_std, actual_name)
     # # plt.ylim((0, 80))
     # plt.xlabel("s (mm)")
@@ -331,7 +359,7 @@ def retrieve_location(subset, model_type, noise_experiment):
     # plt.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     noise_experiment = False
     models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]
@@ -339,12 +367,19 @@ if __name__ == '__main__':
 
     if noise_experiment:
         subsets = [
-            "low_noise_parallel", "high_noise_parallel",
-            "low_noise_saw", "high_noise_saw",
+            "low_noise_parallel",
+            "high_noise_parallel",
+            "low_noise_saw",
+            "high_noise_saw",
         ]
     else:
         subsets = [
-                "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+            "offset",
+            "offset_inverse",
+            "mult_path",
+            "parallel",
+            "far_off_parallel",
+            "sine",
         ]
         # subsets = ["mult_path"]
     # models = ["LSTM"]

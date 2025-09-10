@@ -27,8 +27,7 @@ def run_tests() -> None:
     a_list = [10, 20, 30, 40, 50]
     w_list = [10, 20, 30, 40, 50]
     a_w_meshgrid = cartesian_coord(a_list, w_list)
-    subsets = ["offset", "inverse_offset",
-               "parallel", "mult_path", "far_off_parallel"]
+    subsets = ["offset", "inverse_offset", "parallel", "mult_path", "far_off_parallel"]
 
     for tester in testers:
         print(f"Currently running with tester '{tester.__class__.__name__}'")
@@ -40,51 +39,141 @@ def run_tests() -> None:
 
                 tester.save_result_data()
 
+
 def write_pinn_config(config_score_dict):
-    with open("./pinn_score.csv", 'w') as f:
+    with open("./pinn_score.csv", "w") as f:
         w = csv.writer(f)
-        w.writerow(["n_couple_layer", "n_hid_layer", "n_hid_dim", "z_dim",
-                    "weighted_score", "MSE_forward", "MSE_backward", "speed_error", "volume_error",
-                    "weighted_score_std", "MSE_forward_std", "MSE_backward_std", "speed_error_std", "volume_error_std",
-                    "train_time", "test_time"])
+        w.writerow(
+            [
+                "n_couple_layer",
+                "n_hid_layer",
+                "n_hid_dim",
+                "z_dim",
+                "weighted_score",
+                "MSE_forward",
+                "MSE_backward",
+                "speed_error",
+                "volume_error",
+                "weighted_score_std",
+                "MSE_forward_std",
+                "MSE_backward_std",
+                "speed_error_std",
+                "volume_error_std",
+                "train_time",
+                "test_time",
+            ]
+        )
 
         for config in config_score_dict:
             scores = config_score_dict[config]
-            line = [config.n_couple_layer, config.n_hid_layer, config.n_hid_dim, config.z_dim,
-                    scores["weighted_score"], scores["MSE_forward"], scores["MSE_backward"], scores["volume_error"], scores["speed_error"],
-                    scores["weighted_score_std"], scores["MSE_forward_std"], scores["MSE_backward_std"], scores["volume_error_std"], scores["speed_error_std"], scores["train_time"], scores["test_time"]]
+            line = [
+                config.n_couple_layer,
+                config.n_hid_layer,
+                config.n_hid_dim,
+                config.z_dim,
+                scores["weighted_score"],
+                scores["MSE_forward"],
+                scores["MSE_backward"],
+                scores["volume_error"],
+                scores["speed_error"],
+                scores["weighted_score_std"],
+                scores["MSE_forward_std"],
+                scores["MSE_backward_std"],
+                scores["volume_error_std"],
+                scores["speed_error_std"],
+                scores["train_time"],
+                scores["test_time"],
+            ]
             w.writerow(line)
+
 
 def write_inn_config(config_score_dict):
-    with open("./inn_score.csv", 'w') as f:
+    with open("./inn_score.csv", "w") as f:
         w = csv.writer(f)
-        w.writerow(["n_couple_layer", "n_hid_layer", "n_hid_dim", "z_dim",
-                    "weighted_score", "MSE_forward", "MSE_backward", "speed_error", "volume_error",
-                    "weighted_score_std", "MSE_forward_std", "MSE_backward_std", "speed_error_std", "volume_error_std",
-                    "train_time", "test_time"])
+        w.writerow(
+            [
+                "n_couple_layer",
+                "n_hid_layer",
+                "n_hid_dim",
+                "z_dim",
+                "weighted_score",
+                "MSE_forward",
+                "MSE_backward",
+                "speed_error",
+                "volume_error",
+                "weighted_score_std",
+                "MSE_forward_std",
+                "MSE_backward_std",
+                "speed_error_std",
+                "volume_error_std",
+                "train_time",
+                "test_time",
+            ]
+        )
 
         for config in config_score_dict:
             scores = config_score_dict[config]
-            line = [config.n_couple_layer, config.n_hid_layer, config.n_hid_dim, config.z_dim,
-                    scores["weighted_score"], scores["MSE_forward"], scores["MSE_backward"], scores["volume_error"], scores["speed_error"],
-                    scores["weighted_score_std"], scores["MSE_forward_std"], scores["MSE_backward_std"], scores["volume_error_std"], scores["speed_error_std"], scores["train_time"], scores["test_time"]]
+            line = [
+                config.n_couple_layer,
+                config.n_hid_layer,
+                config.n_hid_dim,
+                config.z_dim,
+                scores["weighted_score"],
+                scores["MSE_forward"],
+                scores["MSE_backward"],
+                scores["volume_error"],
+                scores["speed_error"],
+                scores["weighted_score_std"],
+                scores["MSE_forward_std"],
+                scores["MSE_backward_std"],
+                scores["volume_error_std"],
+                scores["speed_error_std"],
+                scores["train_time"],
+                scores["test_time"],
+            ]
             w.writerow(line)
+
 
 def write_lstm_config(config_score_dict):
-    with open("./lstm_score.csv", 'w') as f:
+    with open("./lstm_score.csv", "w") as f:
         w = csv.writer(f)
-        w.writerow(["n_nodes", "ac_fun", "dropout",
-                    "weighted_score", "localization_error", "speed_error", "volume_error",
-                    "weighted_score_std", "localization_error_std", "speed_error_std", "volume_error_std",
-                    "train_time", "test_time"])
+        w.writerow(
+            [
+                "n_nodes",
+                "ac_fun",
+                "dropout",
+                "weighted_score",
+                "localization_error",
+                "speed_error",
+                "volume_error",
+                "weighted_score_std",
+                "localization_error_std",
+                "speed_error_std",
+                "volume_error_std",
+                "train_time",
+                "test_time",
+            ]
+        )
 
         for config in config_score_dict:
             scores = config_score_dict[config]
-            line = [config.n_nodes, config.ac_fun, config.dropout_ratio, scores["weighted_score"],
-                    scores["localization_error"], scores["speed_error"], scores["volume_error"],
-                    scores["weighted_score_std"], scores["localization_error_std"], scores["speed_error_std"], scores["volume_error_std"],
-                    scores["train_time"], scores["test_time"]]
+            line = [
+                config.n_nodes,
+                config.ac_fun,
+                config.dropout_ratio,
+                scores["weighted_score"],
+                scores["localization_error"],
+                scores["speed_error"],
+                scores["volume_error"],
+                scores["weighted_score_std"],
+                scores["localization_error_std"],
+                scores["speed_error_std"],
+                scores["volume_error_std"],
+                scores["train_time"],
+                scores["test_time"],
+            ]
             w.writerow(line)
+
 
 def grid_search(test_inn=True, test_pinn=True, test_lstm=True):
 
@@ -98,9 +187,10 @@ def grid_search(test_inn=True, test_pinn=True, test_lstm=True):
 
         config_score_dict = {}
         # Try out various hyperparameter combinations
-        for (n_couple_layer, n_hid_layer, n_hid_dim, z_dim) in tqdm(inn_options):
-            config = INNConfig(n_couple_layer, n_hid_layer,
-                            n_hid_dim, 0, 0, z_dim, None)
+        for n_couple_layer, n_hid_layer, n_hid_dim, z_dim in tqdm(inn_options):
+            config = INNConfig(
+                n_couple_layer, n_hid_layer, n_hid_dim, 0, 0, z_dim, None
+            )
             train_time_start = perf_counter()
             train_inn_with_config(config, use_pde=False)
             train_time_end = perf_counter()
@@ -123,8 +213,12 @@ def grid_search(test_inn=True, test_pinn=True, test_lstm=True):
                 result_data = tester.result_data
                 test_time_end = perf_counter()
 
-                new_score = mean(result_data[:, 2]) * 0.1 + mean(result_data[:, 3]) * 0.5 + abs(mean(
-                    volume - result_data[:, 4])) * 0.2 + abs(mean(speed - result_data[:, 5])) * 0.2
+                new_score = (
+                    mean(result_data[:, 2]) * 0.1
+                    + mean(result_data[:, 3]) * 0.5
+                    + abs(mean(volume - result_data[:, 4])) * 0.2
+                    + abs(mean(speed - result_data[:, 5])) * 0.2
+                )
                 weighted_score.append(new_score)
                 mse_forward.append(mean(result_data[:, 2]))
                 mse_backward.append(mean(result_data[:, 3]))
@@ -153,9 +247,10 @@ def grid_search(test_inn=True, test_pinn=True, test_lstm=True):
         print("Trying INNPINN...")
         config_score_dict = {}
         # Try out various hyperparameter combinations
-        for (n_couple_layer, n_hid_layer, n_hid_dim, z_dim) in tqdm(inn_options):
-            config = INNConfig(n_couple_layer, n_hid_layer,
-                            n_hid_dim, 0, 0, z_dim, None)
+        for n_couple_layer, n_hid_layer, n_hid_dim, z_dim in tqdm(inn_options):
+            config = INNConfig(
+                n_couple_layer, n_hid_layer, n_hid_dim, 0, 0, z_dim, None
+            )
 
             train_time_start = perf_counter()
             train_inn_with_config(config, use_pde=True)
@@ -179,8 +274,12 @@ def grid_search(test_inn=True, test_pinn=True, test_lstm=True):
                 result_data = tester.result_data
                 test_time_end = perf_counter()
 
-                new_score = mean(result_data[:, 2]) * 0.1 + mean(result_data[:, 3]) * 0.5 + abs(mean(
-                    volume - result_data[:, 4])) * 0.2 + abs(mean(speed - result_data[:, 5])) * 0.2
+                new_score = (
+                    mean(result_data[:, 2]) * 0.1
+                    + mean(result_data[:, 3]) * 0.5
+                    + abs(mean(volume - result_data[:, 4])) * 0.2
+                    + abs(mean(speed - result_data[:, 5])) * 0.2
+                )
                 weighted_score.append(new_score)
                 mse_forward.append(mean(result_data[:, 2]))
                 mse_backward.append(mean(result_data[:, 3]))
@@ -205,15 +304,26 @@ def grid_search(test_inn=True, test_pinn=True, test_lstm=True):
 
         write_pinn_config(config_score_dict)
 
-
     if test_lstm:
         print("Trying LSTM...")
         LSTM_options = generate_lstm_options()
 
         config_score_dict = {}
         # Try out various hyperparameter combinations
-        for (n_nodes, ac_fun, dropout) in tqdm(LSTM_options):
-            settings = params.Settings(16, 2, int(n_nodes), 0.05, 1e-9, 16, True, 0.8, float(dropout), "../data/simulation_data/tiny/combined.npy", ac_fun)
+        for n_nodes, ac_fun, dropout in tqdm(LSTM_options):
+            settings = params.Settings(
+                16,
+                2,
+                int(n_nodes),
+                0.05,
+                1e-9,
+                16,
+                True,
+                0.8,
+                float(dropout),
+                "../data/simulation_data/tiny/combined.npy",
+                ac_fun,
+            )
             train_time_start = perf_counter()
             train_lstm(settings)
             train_time_end = perf_counter()
@@ -236,7 +346,11 @@ def grid_search(test_inn=True, test_pinn=True, test_lstm=True):
                 result_data = tester.result_data
                 test_time_end = perf_counter()
 
-                new_score = mean(result_data[:, 1]) * 0.6 + abs(mean(volume - result_data[:, 2])) * 0.2 + abs(mean(speed - result_data[:,3])) * 0.2
+                new_score = (
+                    mean(result_data[:, 1]) * 0.6
+                    + abs(mean(volume - result_data[:, 2])) * 0.2
+                    + abs(mean(speed - result_data[:, 3])) * 0.2
+                )
 
                 weighted_score.append(new_score)
                 mse_localization.append(mean(result_data[:, 1]))

@@ -2,16 +2,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
+
 def get_sine_path():
     x = np.linspace(-500, 500, num=1024)
     amp = 30
     freq = 25
 
     y = amp * np.sin(x / (freq * math.pi)) + amp
-    return x,y
+    return x, y
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     x, y = get_sine_path()
 
     for idx in range(len(x)):

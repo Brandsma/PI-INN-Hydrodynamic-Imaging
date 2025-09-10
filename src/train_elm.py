@@ -30,7 +30,7 @@ def load_data(file_location, train_test_ratio):
 
     # Split into labels and data
     # if first name is not label, switch them
-    if loaded_file.dtype.names[0].find('lab') == -1:
+    if loaded_file.dtype.names[0].find("lab") == -1:
         data_name, label_name = loaded_file.dtype.names
     else:
         label_name, data_name = loaded_file.dtype.names
@@ -79,7 +79,6 @@ def load_data_csv(file_location, train_test_ratio):
     #                         vy_data.iloc[v_idx].tolist())), 0, None)))
     #     all_labels.append([(v_idx % WIDTH) + 1, (v_idx // WIDTH) + 1])
 
-
     run_idx = 0
     train_data = data.train_data[run_idx][:, :]
     train_labels = data.train_labels[run_idx][:, 0:2]
@@ -112,11 +111,13 @@ def turn_into_windows(data, labels, window_size=30, stride=30):
     y = np.zeros((n_win, n_outputs))
     tot_idx = 0
     for sample_idx in range(0, len(data) - window_size + 1, stride):
-        x[tot_idx, :] = np.reshape(data[sample_idx:sample_idx + window_size],
-                                   (1, window_size, n_inputs))
+        x[tot_idx, :] = np.reshape(
+            data[sample_idx : sample_idx + window_size], (1, window_size, n_inputs)
+        )
         y[tot_idx, :] = np.reshape(
-            labels[sample_idx + window_size - 1:sample_idx + window_size],
-            (1, n_outputs))
+            labels[sample_idx + window_size - 1 : sample_idx + window_size],
+            (1, n_outputs),
+        )
         tot_idx += 1
     return x, y
 
@@ -130,15 +131,14 @@ def build_lstm(n_input_nodes, n_hidden_nodes):
     model = Sequential()
     # with an LSTM layer
     # TODO: Fix the input shape in some way: https://wandb.ai/ayush-thakur/dl-question-bank/reports/Keras-Layer-Input-Explanation-With-Code-Samples--VmlldzoyMDIzMDU
-    model.add(
-        LSTM(n_hidden_nodes, input_shape=n_hidden_nodes, activation='tanh'))
+    model.add(LSTM(n_hidden_nodes, input_shape=n_hidden_nodes, activation="tanh"))
     # and a dropout layer (which only does something if dropout > 0).
     model.add(Dropout(0.05))
     # Finally we have a fully connected layer with 2 to 3 nodes - the x and y positions,
     # and optionally the stimulus diameter (automatically extracted from the dataset).
-    model.add(Dense(2, activation='linear'))
+    model.add(Dense(2, activation="linear"))
     # Compile the model with euclidean error and adagrad
-    optimizer = optimizers.Adagrad(lr=0.05, epsilon=None, clipnorm=1.)
+    optimizer = optimizers.Adagrad(lr=0.05, epsilon=None, clipnorm=1.0)
     model.compile(loss=euclidean_error_loss, optimizer=optimizer)
     return model
 
@@ -150,7 +150,9 @@ def main(n_nodes, window_size, stride, model_type="ELM"):
     # ===========================================
 
     # load dataset
-    x_train, y_train, x_test, y_test = load_data_csv("../data/simulation_data/combined_groups/combined.npy", 0.8)
+    x_train, y_train, x_test, y_test = load_data_csv(
+        "../data/simulation_data/combined_groups/combined.npy", 0.8
+    )
     # Get the 8 middle sensors of the 128 sensors of x_train
     print(x_train.shape)
     x_train = x_train[:, 60:68]
@@ -189,7 +191,6 @@ def main(n_nodes, window_size, stride, model_type="ELM"):
     x_train_init = x_train[:border]
     y_train_init = y_train[:border]
 
-
     x_train_seq = x_train[border:]
     y_train_seq = y_train[border:]
 
@@ -199,7 +200,7 @@ def main(n_nodes, window_size, stride, model_type="ELM"):
             n_input_nodes=n_input_nodes,
             n_hidden_nodes=n_hidden_nodes,
             n_output_nodes=n_output_nodes,
-            loss='mean_squared_error',
+            loss="mean_squared_error",
         )
     elif model_type == "LSTM":
         model = build_lstm(n_input_nodes, n_hidden_nodes)
@@ -213,17 +214,16 @@ def main(n_nodes, window_size, stride, model_type="ELM"):
     # ===========================================
     if model_type == "ELM":
         # the initial training phase
-        pbar = tqdm.tqdm(total=len(x_train), desc='initial training phase')
+        pbar = tqdm.tqdm(total=len(x_train), desc="initial training phase")
         model.init_train(x_train_init, y_train_init)
         pbar.update(n=len(x_train_init))
 
-
         # the sequential training phase
-        pbar.set_description('sequential training phase')
+        pbar.set_description("sequential training phase")
         batch_size = 64
         for i in range(0, len(x_train_seq), batch_size):
-            x_batch = x_train_seq[i:i + batch_size]
-            t_batch = y_train_seq[i:i + batch_size]
+            x_batch = x_train_seq[i : i + batch_size]
+            t_batch = y_train_seq[i : i + batch_size]
             model.seq_train(x_batch, t_batch)
             pbar.update(n=len(x_batch))
             pbar.close()
@@ -235,26 +235,35 @@ def main(n_nodes, window_size, stride, model_type="ELM"):
 
     # print random 10 results, compared to labels.
     for i in np.random.permutation(len(y))[:10]:
-        print('========== sample index %d ==========' % i)
-        print('estimated answer: (%.2f, %.2f)' % (y[i][0], y[i][1]))
-        print('true answer: (%.2f, %.2f)' % (t[i][0], t[i][1]))
-        print('error: %.2f' % mse(y[i], t[i]))
+        print("========== sample index %d ==========" % i)
+        print("estimated answer: (%.2f, %.2f)" % (y[i][0], y[i][1]))
+        print("true answer: (%.2f, %.2f)" % (t[i][0], t[i][1]))
+        print("error: %.2f" % mse(y[i], t[i]))
 
     dists = np.zeros(len(x_test))
     for i in range(len(x_test)):
         dists[i] = mse(y[i], t[i])
 
     # print errors +/- std.dev.
-    print('mean error on all test samples: %.2f' % np.mean(dists))
-    print('standard deviation on test    : %.2f' % np.std(dists))
+    print("mean error on all test samples: %.2f" % np.mean(dists))
+    print("standard deviation on test    : %.2f" % np.std(dists))
 
     # save results
     raw_t = dt.datetime.now()
     init_t = raw_t.strftime("%Y_%m_%d_%X")
 
-    dirname = "results/" + init_t + "_" + str(
-        n_hidden_nodes) + "_" + "test_dataset" + "_" + str(
-            window_size) + "_" + str(stride)
+    dirname = (
+        "results/"
+        + init_t
+        + "_"
+        + str(n_hidden_nodes)
+        + "_"
+        + "test_dataset"
+        + "_"
+        + str(window_size)
+        + "_"
+        + str(stride)
+    )
     if not os.path.isdir(dirname):
         os.mkdir(dirname)
     res = [np.mean(dists), np.std(dists)]
@@ -264,7 +273,7 @@ def main(n_nodes, window_size, stride, model_type="ELM"):
     np.savetxt(dirname + "/" + "res.out", res)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # TODO: Make this a proper argparse
     _l = len(sys.argv) == 4
@@ -275,11 +284,16 @@ if __name__ == '__main__':
 
     if not _l:
         print("[[WARNING]] INCORRECT NUMBER OF ARGUMENTS SPECIFIED.")
-        print(
-            "[[WARNING]] PLEASE SPECIFY 3 ARGUMENTS (nodes, window size, stride)."
-        )
+        print("[[WARNING]] PLEASE SPECIFY 3 ARGUMENTS (nodes, window size, stride).")
         print("[[WARNING]] USING DEFAULT ARGUMENTS.")
 
-    print("Starting run with:\n", "nodes:\t\t", n_nodes, "\nwindow size:\t",
-          window_size, "\nstride:\t\t", stride)
+    print(
+        "Starting run with:\n",
+        "nodes:\t\t",
+        n_nodes,
+        "\nwindow size:\t",
+        window_size,
+        "\nstride:\t\t",
+        stride,
+    )
     main(n_nodes, window_size, stride)

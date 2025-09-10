@@ -6,7 +6,7 @@ import INN.hydro as hydro
 from translation_key import translation_key, model_key
 
 if __name__ == "__main__":
-    sys.path.insert(1, os.path.join(sys.path[0], '..'))
+    sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 import numpy as np
 import tensorflow as tf
@@ -20,9 +20,10 @@ from lib.params import Data, Settings
 np.random.seed(42)
 
 from matplotlib import rc
-#rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
-rc('font',**{'family':'serif','serif':['Times']})
-rc('text', usetex=True)
+
+# rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+rc("font", **{"family": "serif", "serif": ["Times"]})
+rc("text", usetex=True)
 
 
 def find_min_and_max(data):
@@ -30,12 +31,10 @@ def find_min_and_max(data):
     max_value = np.max(data)
     return min_value, max_value
 
-def get_speed_from_inn_predicts(preds,
-                                labels,
-                                timestamp,
-                                step_size=16,
-                                div_number=1024,
-                                epsilon=0.1):
+
+def get_speed_from_inn_predicts(
+    preds, labels, timestamp, step_size=16, div_number=1024, epsilon=0.1
+):
     prev_x = [0, 0]
     prev_time = 0
 
@@ -58,8 +57,7 @@ def get_speed_from_inn_predicts(preds,
         time = timestamp[idx][0]
 
         if idx != 0:
-            speed = math.dist(preds[idx][0:1],
-                              prev_x) / abs(time - prev_time + epsilon)
+            speed = math.dist(preds[idx][0:1], prev_x) / abs(time - prev_time + epsilon)
 
             speeds.append(speed)
 
@@ -71,10 +69,7 @@ def get_speed_from_inn_predicts(preds,
     # return np.mean(real_speeds)
 
 
-def get_speed_from_model_predicts(model_predicts,
-                                  labels,
-                                  timestamp,
-                                  window_size=16):
+def get_speed_from_model_predicts(model_predicts, labels, timestamp, window_size=16):
     prev_x = [0, 0]
     prev_time = 0
 
@@ -95,7 +90,7 @@ def get_speed_from_model_predicts(model_predicts,
 
     speeds = []
     for idx, y_pred in enumerate(model_predicts):
-        if (len(model_predicts) + window_size > len(timestamp)):
+        if len(model_predicts) + window_size > len(timestamp):
             window_size -= 1
         time = timestamp[idx + window_size][0]
 
@@ -110,12 +105,7 @@ def get_speed_from_model_predicts(model_predicts,
     return np.mean(speeds), np.mean(real_speeds)
 
 
-def get_speed_from_data(data,
-                        labels,
-                        timestamp,
-                        model,
-                        window_size=16,
-                        num_sensors=8):
+def get_speed_from_data(data, labels, timestamp, model, window_size=16, num_sensors=8):
     prev_x = [0, 0]
     prev_time = 0
     prev_x_label = [0, 0]
@@ -123,7 +113,7 @@ def get_speed_from_data(data,
     speeds = []
     real_speeds = []
     for idx in range(0, 1024, window_size * 8):
-        input_data = data[idx:idx + window_size]
+        input_data = data[idx : idx + window_size]
         input_data = np.reshape(input_data, (1, window_size, num_sensors * 2))
         y_pred = model.predict(input_data, verbose=0)
         time = timestamp[idx][0]
@@ -132,8 +122,7 @@ def get_speed_from_data(data,
         if idx != 0:
             # TODO: Adjust speed calculation for varying y
             speed = math.dist(y_pred[0][0:1], prev_x) / abs(time - prev_time)
-            real_speed = math.dist(x_label,
-                                   prev_x_label) / abs(time - prev_time)
+            real_speed = math.dist(x_label, prev_x_label) / abs(time - prev_time)
 
             speeds.append(speed)
             real_speeds.append(real_speed)
@@ -151,7 +140,6 @@ def main(subset="offset", model_type="INN", noise_experiment=False, saving=True)
         print("No valid model type given")
         return
 
-
     if noise_experiment:
         # old_subset = subset
         # if subset == "high_noise_saw" or subset == "low_noise_saw":
@@ -166,9 +154,9 @@ def main(subset="offset", model_type="INN", noise_experiment=False, saving=True)
         train_location = f"../data/simulation_data/{subset}/combined.npy"
         trained_model_location = "../data/trained_models/LSTM/window_size=16&stride=2&n_nodes=256&alpha=0.05&decay=1e-09&n_epochs=16&shuffle_data=True&data_split=0.8&dropout_ratio=0&ac_fun=tanh&num_sensors=8&seed=None"
 
-
-    settings = Settings.from_model_location(trained_model_location,
-                                            data_location=train_location)
+    settings = Settings.from_model_location(
+        trained_model_location, data_location=train_location
+    )
     settings.num_sensors = 8
     settings.shuffle_data = True
     settings.seed = 42
@@ -189,10 +177,12 @@ def main(subset="offset", model_type="INN", noise_experiment=False, saving=True)
     real_speeds = []
 
     for run_idx in range(data.test_data.shape[0]):
-        speed_results = get_speed_from_data(data.test_data[run_idx],
-                                            data.test_labels[run_idx],
-                                            data.test_timestamp[run_idx],
-                                            new_model)
+        speed_results = get_speed_from_data(
+            data.test_data[run_idx],
+            data.test_labels[run_idx],
+            data.test_timestamp[run_idx],
+            new_model,
+        )
         speeds.append(speed_results[0])
         real_speeds.append(speed_results[1])
 
@@ -208,9 +198,9 @@ def main(subset="offset", model_type="INN", noise_experiment=False, saving=True)
     else:
         return speeds, real_speeds
 
+
 def set_to_closest_ten(num):
     return round(num / 10) * 10
-
 
 
 def save_results(speeds, real_speeds, model_type, subset, name):
@@ -218,13 +208,11 @@ def save_results(speeds, real_speeds, model_type, subset, name):
     for idx in range(len(speeds)):
         line_x_values = [idx, idx]
         line_y_values = [speeds[idx], real_speeds_rounded[idx]]
-        plt.plot(line_x_values,
-                 line_y_values,
-                 "-",
-                 color="#264653AA",
-                 linewidth=1.5)
+        plt.plot(line_x_values, line_y_values, "-", color="#264653AA", linewidth=1.5)
 
-    plt.plot(real_speeds_rounded, "s", label="Real Speed", color="#2A9D8F", markersize=3)
+    plt.plot(
+        real_speeds_rounded, "s", label="Real Speed", color="#2A9D8F", markersize=3
+    )
     plt.plot(speeds, ".", label="Predicted Speed", color="#E76F51")
 
     plt.ylim((0, 70))
@@ -249,18 +237,23 @@ def save_results(speeds, real_speeds, model_type, subset, name):
     plt.title(
         f"Predicted vs Real Speed Per Run\n{model_key[model_type]} - {translation_key[name]}"
     )
-    plt.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
-    plt.legend(loc="best", bbox_to_anchor=(0.6, 0., 0.4, 1.0) )
+    plt.grid(axis="y", linestyle="-", color="#AAAAAA", linewidth=1.0, alpha=0.5)
+    plt.legend(loc="best", bbox_to_anchor=(0.6, 0.0, 0.4, 1.0))
     # plt.show()
-    plt.savefig(f"../results/speed_{model_type}_{name}.png", bbox_inches="tight", dpi=600, transparent=True, pad_inches=0.1)
+    plt.savefig(
+        f"../results/speed_{model_type}_{name}.png",
+        bbox_inches="tight",
+        dpi=600,
+        transparent=True,
+        pad_inches=0.1,
+    )
     plt.close()
 
     # Get result data
     results = {}
     results[f"combined"] = (MSE, 0)
 
-    with open(f"../results/speed_{model_type}_{name}_results.json",
-              "w") as write_file:
+    with open(f"../results/speed_{model_type}_{name}_results.json", "w") as write_file:
         json.dump(results, write_file, indent=4)
 
 
@@ -272,8 +265,9 @@ def main_inn(subset="offset", model_type="INN", noise_experiment=False, saving=T
         train_location = f"../data/simulation_data/{subset}/combined.npy"
         trained_model_location = "../data/trained_models/LSTM/window_size=16&stride=2&n_nodes=256&alpha=0.05&decay=1e-09&n_epochs=16&shuffle_data=True&data_split=0.8&dropout_ratio=0&ac_fun=tanh&num_sensors=8&seed=None"
 
-    settings = Settings.from_model_location(trained_model_location,
-                                            data_location=train_location)
+    settings = Settings.from_model_location(
+        trained_model_location, data_location=train_location
+    )
 
     settings.shuffle_data = True
     settings.num_sensors = 8
@@ -287,15 +281,11 @@ def main_inn(subset="offset", model_type="INN", noise_experiment=False, saving=T
     # new_model = tf.keras.models.load_model(trained_model_location)
 
     if model_type == "LSTM":
-        x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
-                                                                           0:3]
-        x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
-                                                                           0:3]
+        x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:, 0:3]
+        x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:, 0:3]
     else:
-        x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
-                                                                           0:3]
-        x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:,
-                                                                           0:3]
+        x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
+        x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
 
     # hydro.plot_results_from_array(x_data, x_pred, subset, 8, title=f"Sensors: 8", savefig=False)
 
@@ -335,8 +325,7 @@ def main_inn(subset="offset", model_type="INN", noise_experiment=False, saving=T
             start_offset = (1024 - div_number) if model_type == "LSTM" else 0
 
         label_lower_bound = (div_number + start_offset) * run_idx
-        label_upper_bound = div_number + (
-            (div_number + start_offset) * run_idx)
+        label_upper_bound = div_number + ((div_number + start_offset) * run_idx)
 
         pred_lower_bound = (div_number) * run_idx
         pred_upper_bound = div_number + ((div_number) * run_idx)
@@ -345,7 +334,8 @@ def main_inn(subset="offset", model_type="INN", noise_experiment=False, saving=T
             x_pred[pred_lower_bound:pred_upper_bound],
             x_data[label_lower_bound:label_upper_bound],
             data.test_timestamp[run_idx],
-            step_size=step_size)
+            step_size=step_size,
+        )
         speeds.append(speed_results[0])
         real_speeds.append(speed_results[1])
 
@@ -355,7 +345,7 @@ def main_inn(subset="offset", model_type="INN", noise_experiment=False, saving=T
         return speeds, real_speeds
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     noise_experiment = True
     models = ["INN", "PINN", "LSTM"]
     # models = ["INN", "PINN"]
@@ -363,13 +353,19 @@ if __name__ == '__main__':
     # models = ["INN"]
     if noise_experiment:
         subsets = [
-            "low_noise_parallel", "high_noise_parallel",
+            "low_noise_parallel",
+            "high_noise_parallel",
             "low_noise_saw",
             "high_noise_saw",
         ]
     else:
         subsets = [
-                "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+            "offset",
+            "offset_inverse",
+            "mult_path",
+            "parallel",
+            "far_off_parallel",
+            "sine",
         ]
     for model in models:
         for subset in subsets:

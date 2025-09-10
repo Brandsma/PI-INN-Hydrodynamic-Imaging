@@ -11,12 +11,19 @@ def test_inn():
     noise_experiment = True
     if noise_experiment:
         subsets = [
-            "low_noise_parallel", "high_noise_parallel",
-            "low_noise_saw", "high_noise_saw",
+            "low_noise_parallel",
+            "high_noise_parallel",
+            "low_noise_saw",
+            "high_noise_saw",
         ]
     else:
         subsets = [
-            "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+            "offset",
+            "offset_inverse",
+            "mult_path",
+            "parallel",
+            "far_off_parallel",
+            "sine",
         ]
     sensor_options = [8]
 
@@ -27,8 +34,13 @@ def test_inn():
             #           num_sensors=num_sensors,
             #           use_pde=False,
             #           config=config)
-            run_test_on_model(subset=subset, num_sensors=num_sensors, noise_experiment=noise_experiment, test_pinn=False)
+            run_test_on_model(
+                subset=subset,
+                num_sensors=num_sensors,
+                noise_experiment=noise_experiment,
+                test_pinn=False,
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_inn()

@@ -1,5 +1,6 @@
 if __name__ == "__main__":
     import sys
+
     sys.path.append("..")
 
 import math
@@ -12,12 +13,13 @@ import matplotlib.pyplot as plt
 
 from sklearn.metrics import mean_squared_error
 
-plt.rcParams['axes.axisbelow'] = True
-plt.rcParams['text.usetex'] = True
+plt.rcParams["axes.axisbelow"] = True
+plt.rcParams["text.usetex"] = True
 from matplotlib import rc
-#rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
-rc('font',**{'family':'serif','serif':['Times']})
-rc('text', usetex=True)
+
+# rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+rc("font", **{"family": "serif", "serif": ["Times"]})
+rc("text", usetex=True)
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
@@ -29,7 +31,7 @@ from lib.params import Data, Settings
 
 np.random.seed(42)
 
-np.seterr('raise')
+np.seterr("raise")
 
 count_idx = 1
 MSE = 0
@@ -40,17 +42,17 @@ EPSILON = 1e-8
 
 @jit
 def wavelet_e(p):
-    return (1 - 2 * p**2) / ((1 + p**2)**(5 / 2))
+    return (1 - 2 * p**2) / ((1 + p**2) ** (5 / 2))
 
 
 @jit
 def wavelet_o(p):
-    return (-3 * p) / ((1 + p**2)**(5 / 2))
+    return (-3 * p) / ((1 + p**2) ** (5 / 2))
 
 
 @jit
 def wavelet_n(p):
-    return (2 - p**2) / ((1 + p**2)**(5 / 2))
+    return (2 - p**2) / ((1 + p**2) ** (5 / 2))
 
 
 @jit
@@ -64,16 +66,15 @@ def inverse_volume_vx_calculation(vx, sensor, speed, x, y, theta):
 
     # print(f"p: {p}, we: {we}, wo: {wo}")
 
-    above_line = (2 * (y**3) * vx)
-    below_line = (speed *
-                  (-we * math.cos(theta) + wo * math.sin(theta)))# + EPSILON
+    above_line = 2 * (y**3) * vx
+    below_line = speed * (-we * math.cos(theta) + wo * math.sin(theta))  # + EPSILON
 
     # if (above_line / below_line) < 0:
     #     return None
 
     # print(above_line, below_line, above_line / below_line)
 
-    return abs(above_line / below_line)**(1. / 3.)
+    return abs(above_line / below_line) ** (1.0 / 3.0)
 
 
 @jit
@@ -82,38 +83,39 @@ def inverse_volume_vy_calculation(vy, sensor, speed, x, y, theta):
     wo = wavelet_o(p)
     wn = wavelet_n(p)
 
-    above_line = (2 * (y**3) * vy)
-    below_line = (speed *
-                  (wn * math.sin(theta) + wo * math.cos(theta)))# + EPSILON
+    above_line = 2 * (y**3) * vy
+    below_line = speed * (wn * math.sin(theta) + wo * math.cos(theta))  # + EPSILON
 
     # if (above_line / below_line) < 0:
     #     return None
 
-    return abs(above_line / below_line)**(1. / 3.)
+    return abs(above_line / below_line) ** (1.0 / 3.0)
 
 
-def extract_volume(points,
-                   speed,
-                   vx_data,
-                   vy_data,
-                   labels=None,
-                   window_size=16,
-                   num_sensors=8,
-                   sensor_range=(-200, 200),
-                   real_volume=None,
-                   model_type="inn",
-                   subset="offset"):
+def extract_volume(
+    points,
+    speed,
+    vx_data,
+    vy_data,
+    labels=None,
+    window_size=16,
+    num_sensors=8,
+    sensor_range=(-200, 200),
+    real_volume=None,
+    model_type="inn",
+    subset="offset",
+):
 
     # Simulation Parameters
 
     # TODO: Account for forward and backward runs
 
     total_number_of_sensors = 64
-    input_sensors = np.linspace(sensor_range[0],
-                                sensor_range[1],
-                                num=total_number_of_sensors)
-    lower_bound_sensor = (total_number_of_sensors // 2 - num_sensors // 2)
-    upper_bound_sensor = (total_number_of_sensors // 2 + num_sensors // 2)
+    input_sensors = np.linspace(
+        sensor_range[0], sensor_range[1], num=total_number_of_sensors
+    )
+    lower_bound_sensor = total_number_of_sensors // 2 - num_sensors // 2
+    upper_bound_sensor = total_number_of_sensors // 2 + num_sensors // 2
     input_sensors = list(input_sensors[lower_bound_sensor:upper_bound_sensor])
 
     volumes = []
@@ -128,27 +130,41 @@ def extract_volume(points,
             # print(labels[point_idx + window_size], " - ", pos)
             volume_vx = inverse_volume_vx_calculation(
                 vx_data[point_idx + window_size, sensor_idx],
-                input_sensors[sensor_idx], speed, pos[0], pos[1], pos[2])
+                input_sensors[sensor_idx],
+                speed,
+                pos[0],
+                pos[1],
+                pos[2],
+            )
             volume_vy = inverse_volume_vy_calculation(
                 vy_data[point_idx + window_size, sensor_idx],
-                input_sensors[sensor_idx], speed, pos[0], pos[1], pos[2])
+                input_sensors[sensor_idx],
+                speed,
+                pos[0],
+                pos[1],
+                pos[2],
+            )
 
             if volume_vx is None or volume_vy is None:
                 # print("Divide by zero encountered or other error, skipping...")
                 continue
 
             real_volume_vx = inverse_volume_vx_calculation(
-                vx_data[point_idx + window_size,
-                        sensor_idx], input_sensors[sensor_idx], speed,
+                vx_data[point_idx + window_size, sensor_idx],
+                input_sensors[sensor_idx],
+                speed,
                 labels[point_idx + window_size][0],
                 labels[point_idx + window_size][1],
-                labels[point_idx + window_size][2])
+                labels[point_idx + window_size][2],
+            )
             real_volume_vy = inverse_volume_vy_calculation(
-                vy_data[point_idx + window_size,
-                        sensor_idx], input_sensors[sensor_idx], speed,
+                vy_data[point_idx + window_size, sensor_idx],
+                input_sensors[sensor_idx],
+                speed,
                 labels[point_idx + window_size][0],
                 labels[point_idx + window_size][1],
-                labels[point_idx + window_size][2])
+                labels[point_idx + window_size][2],
+            )
 
             if real_volume_vx is None or real_volume_vy is None:
                 # print("Divide by zero encountered or other error, skipping...")
@@ -219,8 +235,9 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
         train_location = f"../data/simulation_data/{subset}/combined.npy"
 
     # Load settings
-    settings = Settings.from_model_location(trained_model_location,
-                                            data_location=train_location)
+    settings = Settings.from_model_location(
+        trained_model_location, data_location=train_location
+    )
 
     settings.num_sensors = 8
     settings.shuffle_data = True
@@ -229,25 +246,18 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
     # Load data
     data = Data(settings, train_location)
 
-
     old_subset = subset
     # if subset == "high_noise_saw" or subset == "low_noise_saw":
     #     subset = "mult_path"
     # Load data
     if model_type == "LSTM":
-        x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:,
-                                                                           0:3]
-        y_data = np.load(
-            f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:16]
-        x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:,
-                                                                           0:3]
+        x_pred = np.load(f"../results/{model_type}/{subset}/y_pred_8.npy")[:, 0:3]
+        y_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:16]
+        x_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:, 0:3]
     else:
-        x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:,
-                                                                           0:3]
-        x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:,
-                                                                           0:3]
-        y_data = np.load(
-            f"../results/{model_type}/{subset}/y_data_8.npy")[:, 0:16]
+        x_pred = np.load(f"../results/{model_type}/{subset}/x_pred_8.npy")[:, 0:3]
+        x_data = np.load(f"../results/{model_type}/{subset}/x_data_8.npy")[:, 0:3]
+        y_data = np.load(f"../results/{model_type}/{subset}/y_data_8.npy")[:, 0:16]
 
     # print(x_pred.shape, x_data.shape, y_data.shape)
     div_number = 1024
@@ -292,8 +302,7 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
             start_offset = (1024 - div_number) if model_type == "LSTM" else 0
 
         label_lower_bound = (div_number + start_offset) * run_idx
-        label_upper_bound = div_number + (
-            (div_number + start_offset) * run_idx)
+        label_upper_bound = div_number + ((div_number + start_offset) * run_idx)
 
         pred_lower_bound = (div_number) * run_idx
         pred_upper_bound = div_number + ((div_number) * run_idx)
@@ -419,11 +428,9 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
         for idx in range(len(volumes)):
             line_x_values = [idx, idx]
             line_y_values = [volumes[idx], real_volumes[idx]]
-            plt.plot(line_x_values,
-                    line_y_values,
-                    "-",
-                    color="#264653AA",
-                    linewidth=1.5)
+            plt.plot(
+                line_x_values, line_y_values, "-", color="#264653AA", linewidth=1.5
+            )
 
         plt.plot(real_volumes, "s", label="Real Volume", color="#2A9D8F", markersize=3)
         plt.plot(volumes, ".", label="Predicted Volume", color="#E76F51")
@@ -451,29 +458,35 @@ def retrieve_volume(subset, model_type, noise_experiment, saving=True):
         plt.title(
             f"Predicted vs Real Volume Radius Per Run\n{model_key[model_type]} - {translation_key[subset]}"
         )
-        plt.grid(axis='y', linestyle='-', color="#AAAAAA", linewidth=1., alpha=0.5)
-        plt.legend(loc="best", bbox_to_anchor=(0.6, 0., 0.4, 1.0))
+        plt.grid(axis="y", linestyle="-", color="#AAAAAA", linewidth=1.0, alpha=0.5)
+        plt.legend(loc="best", bbox_to_anchor=(0.6, 0.0, 0.4, 1.0))
         # plt.figure()
         # plt.show()
 
-        plt.savefig(f"../results/volume_{model_type}_{subset}.png", bbox_inches="tight", dpi=600, transparent=True, pad_inches=0.1)
+        plt.savefig(
+            f"../results/volume_{model_type}_{subset}.png",
+            bbox_inches="tight",
+            dpi=600,
+            transparent=True,
+            pad_inches=0.1,
+        )
         plt.close()
 
         # Get result data
         results = {}
         for key in volume_error:
-            results[f"{key}"] = (np.mean(volume_error[key]),
-                                np.std(volume_error[key]))
+            results[f"{key}"] = (np.mean(volume_error[key]), np.std(volume_error[key]))
         results[f"combined"] = (MSE, 0)
 
-        with open(f"../results/volume_{model_type}_{subset}_results.json",
-                "w") as write_file:
+        with open(
+            f"../results/volume_{model_type}_{subset}_results.json", "w"
+        ) as write_file:
             json.dump(results, write_file, indent=4)
     else:
         return volumes, real_volumes
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     noise_experiment = True
     # models = "INN"
     models = ["INN", "PINN", "LSTM"]
@@ -481,12 +494,19 @@ if __name__ == '__main__':
     # models = ["LSTM"]
     if noise_experiment:
         subsets = [
-            "low_noise_parallel", "high_noise_parallel",
-            "low_noise_saw", "high_noise_saw",
+            "low_noise_parallel",
+            "high_noise_parallel",
+            "low_noise_saw",
+            "high_noise_saw",
         ]
     else:
         subsets = [
-                "offset", "offset_inverse", "mult_path", "parallel", "far_off_parallel", "sine"
+            "offset",
+            "offset_inverse",
+            "mult_path",
+            "parallel",
+            "far_off_parallel",
+            "sine",
         ]
     for model in models:
         for subset in subsets:
